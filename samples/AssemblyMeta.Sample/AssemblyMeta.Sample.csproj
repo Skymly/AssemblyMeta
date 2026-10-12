@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.2.3-beta.4</Version>
+    <AssemblyVersion>1.2.3.0</AssemblyVersion>
+    <FileVersion>1.2.3.4</FileVersion>
+    <InformationalVersion>1.2.3-beta.4+local</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Company>Skymly</Company>
+    <Product>AssemblyMeta 示例</Product>
+    <AssemblyTitle>AssemblyMeta 示例标题</AssemblyTitle>
+    <Description>第一行&#10;第二行 "引号" ; 分号 # 井号</Description>
+    <Copyright>Copyright © 2026 Skymly</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AssemblyMeta" Version="0.1.0" />
+    <Content Include="Content\Docs\License.md" />
+    <Content Include="Content\Docs\12. Readme (copy).txt" />
+    <Content Include="..\linked\Readme.txt" Link="Included\Readme.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FileConstant Include="@(Content)" />
+    <Constant Include="Http.TimeoutSeconds" Value="30" Type="int" Comment="请求超时（秒）" />
+    <Constant Include="Banner" Value="line1&#10;line2" />
+    <Constant Include="Weird" Value="a;b#c &quot;q&quot;" />
+    <Constant Include="ExpectedConfiguration" Value="$(Configuration)" />
+  </ItemGroup>
+</Project>

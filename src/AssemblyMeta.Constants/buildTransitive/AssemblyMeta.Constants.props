@@ -1,0 +1,14 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_ConstantsPayload" />
+    <CompilerVisibleItemMetadata Include="Constant" MetadataName="Value" />
+    <CompilerVisibleItemMetadata Include="Constant" MetadataName="Type" />
+    <CompilerVisibleItemMetadata Include="Constant" MetadataName="Comment" />
+    <CompilerVisibleItemMetadata Include="FileConstant" MetadataName="Value" />
+    <CompilerVisibleItemMetadata Include="FileConstant" MetadataName="Link" />
+    <CompilerVisibleItemMetadata Include="FileConstant" MetadataName="Comment" />
+
+    <PackageReference Update="AssemblyMeta.Constants" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

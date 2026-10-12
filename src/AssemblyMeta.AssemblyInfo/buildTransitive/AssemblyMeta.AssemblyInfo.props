@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_AssemblyInfoPayload" />
+    <CompilerVisibleItemMetadata Include="AssemblyAttribute" MetadataName="_Parameter1" />
+
+    <!-- 直接引用时也不要再向外传递分析器。 -->
+    <PackageReference Update="AssemblyMeta.AssemblyInfo" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

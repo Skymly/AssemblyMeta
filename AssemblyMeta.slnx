@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AssemblyMeta.AssemblyInfo.Generator/AssemblyMeta.AssemblyInfo.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.AssemblyInfo/AssemblyMeta.AssemblyInfo.csproj" />
+    <Project Path="src/AssemblyMeta.Constants.Generator/AssemblyMeta.Constants.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Constants/AssemblyMeta.Constants.csproj" />
+    <Project Path="src/AssemblyMeta.Core/AssemblyMeta.Core.csproj" />
+    <Project Path="src/AssemblyMeta.Tasks/AssemblyMeta.Tasks.csproj" />
+    <Project Path="src/AssemblyMeta/AssemblyMeta.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AssemblyMeta.Generator.Tests/AssemblyMeta.Generator.Tests.csproj" />
+  </Folder>
+</Solution>

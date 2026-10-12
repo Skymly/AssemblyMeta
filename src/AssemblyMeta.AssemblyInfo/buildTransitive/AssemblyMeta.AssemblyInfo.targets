@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaAssemblyInfoTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaAssemblyInfoTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeAssemblyInfo"
+             AssemblyFile="$(_AssemblyMetaAssemblyInfoTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaAssemblyInfoTasksAssembly)')" />
+
+  <!--
+    在生成 editorconfig 之前把 SDK 程序集特性投影为单个属性。
+    Roslyn 无法在没有源文件/AdditionalFiles 时枚举 build_metadata，因此生成器只读 build_property。
+    即使 GenerateAssemblyInfo=false，仍依赖 GetAssemblyAttributes 以填充 AssemblyVersion 等推导值。
+  -->
+  <Target Name="AssemblyMetaPrepareAssemblyInfo"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          DependsOnTargets="GetAssemblyAttributes"
+          Condition="Exists('$(_AssemblyMetaAssemblyInfoTasksAssembly)')">
+    <EncodeAssemblyInfo
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      Configuration="$(Configuration)"
+      Company="$(Company)"
+      Title="$(AssemblyTitle)"
+      Description="$(Description)"
+      Product="$(Product)"
+      Copyright="$(Copyright)"
+      Version="$(AssemblyVersion)"
+      InformationalVersion="$(InformationalVersion)"
+      FileVersion="$(FileVersion)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_AssemblyInfoPayload" />
+    </EncodeAssemblyInfo>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 AssemblyInfo 载荷。" />
+  </Target>
+</Project>

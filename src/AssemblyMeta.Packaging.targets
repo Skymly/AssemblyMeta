@@ -1,0 +1,66 @@
+﻿<Project>
+  <PropertyGroup>
+    <Version>$(AssemblyMetaPackageVersion)</Version>
+    <Authors>Skymly</Authors>
+    <Company>Skymly</Company>
+    <Copyright>Copyright © Skymly</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Skymly/AssemblyMeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Skymly/AssemblyMeta</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <IncludeSource>false</IncludeSource>
+    <IncludeSymbols>false</IncludeSymbols>
+    <NoWarn>$(NoWarn);NU5100;NU5128;NU5104;NU5125</NoWarn>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU5100;NU5128;NU5104;NU5125</WarningsNotAsErrors>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AssemblyMetaAddPackageFiles</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)PackageMarker.cs" Link="PackageMarker.cs" />
+    <ProjectReference Include="$(AssemblyMetaGeneratorProject)">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)AssemblyMeta.Tasks\AssemblyMeta.Tasks.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+    <None Include="$(AssemblyMetaPackageReadme)" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="$(AssemblyMetaBuildTransitiveDir)buildTransitive\*.props" Pack="true" PackagePath="buildTransitive" />
+    <None Include="$(AssemblyMetaBuildTransitiveDir)buildTransitive\*.targets" Pack="true" PackagePath="buildTransitive" />
+  </ItemGroup>
+
+  <Target Name="_AssemblyMetaAddPackageFiles" DependsOnTargets="Build">
+    <PropertyGroup>
+      <_GeneratorOut>$(AssemblyMetaGeneratorProjectDir)bin\$(Configuration)\netstandard2.0\</_GeneratorOut>
+      <_TasksOut>$(MSBuildThisFileDirectory)AssemblyMeta.Tasks\bin\$(Configuration)\netstandard2.0\</_TasksOut>
+      <_Placeholder>$(IntermediateOutputPath)_._</_Placeholder>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)')"
+           Text="找不到生成器输出：$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)。请先生成对应的 Generator 项目。" />
+    <Error Condition="!Exists('$(_GeneratorOut)AssemblyMeta.Core.dll')"
+           Text="找不到 AssemblyMeta.Core.dll：$(_GeneratorOut)" />
+    <Error Condition="!Exists('$(_TasksOut)AssemblyMeta.Tasks.dll')"
+           Text="找不到任务程序集：$(_TasksOut)AssemblyMeta.Tasks.dll" />
+    <WriteLinesToFile File="$(_Placeholder)" Lines="" Overwrite="true" />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(_GeneratorOut)AssemblyMeta.Core.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Tasks.dll" PackagePath="tasks/netstandard2.0" />
+      <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Core.dll" PackagePath="tasks/netstandard2.0" />
+      <TfmSpecificPackageFile Include="$(_Placeholder)" PackagePath="lib/netstandard2.0" />
+    </ItemGroup>
+  </Target>
+</Project>

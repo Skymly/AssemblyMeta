@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Version>$(AssemblyMetaPackageVersion)</Version>
+    <Authors>Skymly</Authors>
+    <Company>Skymly</Company>
+    <Copyright>Copyright © Skymly</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Skymly/AssemblyMeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Skymly/AssemblyMeta</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <NoWarn>$(NoWarn);NU5128;NU5104;NU5125</NoWarn>
+    <PackageId>AssemblyMeta</PackageId>
+    <Description>AssemblyMeta 元包，聚合 AssemblyInfo 与 Constants，把程序集元信息在编译期生成为强类型常量。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>roslyn;source-generator;constants;msbuild</PackageTags>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AssemblyMetaAddPlaceholder</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\PackageMarker.cs" Link="PackageMarker.cs" />
+    <!-- ReferenceOutputAssembly 必须为 true，否则 SDK pack 不会把项目引用写成包依赖。 -->
+    <ProjectReference Include="..\AssemblyMeta.AssemblyInfo\AssemblyMeta.AssemblyInfo.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>all</IncludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AssemblyMeta.Constants\AssemblyMeta.Constants.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>all</IncludeAssets>
+    </ProjectReference>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <Target Name="_AssemblyMetaAddPlaceholder">
+    <WriteLinesToFile File="$(IntermediateOutputPath)_._" Lines="" Overwrite="true" />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib/netstandard2.0" />
+    </ItemGroup>
+  </Target>
+</Project>

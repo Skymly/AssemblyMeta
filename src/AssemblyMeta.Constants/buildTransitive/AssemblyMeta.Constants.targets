@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaConstantsTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaConstantsTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeConstants"
+             AssemblyFile="$(_AssemblyMetaConstantsTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaConstantsTasksAssembly)')" />
+
+  <!--
+    用户可在此目标之前追加 Constant / FileConstant。
+    项数据在任务里编码为 Base64 属性，避开 editorconfig 对换行、# 和分号的截断。
+  -->
+  <Target Name="AssemblyMetaPrepareConstants"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          Condition="Exists('$(_AssemblyMetaConstantsTasksAssembly)')">
+    <EncodeConstants
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      Constants="@(Constant)"
+      FileConstants="@(FileConstant)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_ConstantsPayload" />
+    </EncodeConstants>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 Constants 载荷。" />
+  </Target>
+</Project>
