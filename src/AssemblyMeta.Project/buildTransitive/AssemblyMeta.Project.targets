@@ -1,0 +1,36 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaProjectTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaProjectTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeProject"
+             AssemblyFile="$(_AssemblyMetaProjectTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaProjectTasksAssembly)')" />
+
+  <!--
+    用户可在此目标之前追加 ProjectProperty。
+    $(ProjectProperty) 按分号拆开后并入同一项组，供 file-based apps 的 #:property 使用。
+  -->
+  <Target Name="AssemblyMetaPrepareProject"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          Condition="Exists('$(_AssemblyMetaProjectTasksAssembly)')">
+    <ItemGroup>
+      <ProjectProperty Include="$(ProjectProperty)" Condition="'$(ProjectProperty)' != ''" />
+    </ItemGroup>
+    <ItemGroup>
+      <_AssemblyMetaProjectProperty Include="@(ProjectProperty -> Distinct())" />
+    </ItemGroup>
+    <ItemGroup>
+      <_AssemblyMetaResolvedProjectProperty Include="@(_AssemblyMetaProjectProperty -> '%(Identity)')"
+                                            Value="$(%(_AssemblyMetaProjectProperty.Identity))"
+                                            Comment="%(_AssemblyMetaProjectProperty.Comment)" />
+    </ItemGroup>
+    <EncodeProject
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      Properties="@(_AssemblyMetaResolvedProjectProperty)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_ProjectPayload" />
+    </EncodeProject>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 Project 载荷。" />
+  </Target>
+</Project>

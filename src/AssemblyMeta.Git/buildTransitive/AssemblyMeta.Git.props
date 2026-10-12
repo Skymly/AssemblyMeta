@@ -1,0 +1,18 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_GitPayload" />
+
+    <PackageReference Update="AssemblyMeta.Git" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    本文件在 SDK 的 SourceLink props 之前导入。
+    设计时 / Live Unit Testing 若还没指定 EnableSourceControlManagerQueries，先写成 false，
+    避免 SourceLink 把它默认成 true 后仍然查询。
+    命令行或项目文件显式设为 true 时不会被这里覆盖，真实构建会填充。
+  -->
+  <PropertyGroup>
+    <EnableSourceControlManagerQueries Condition="'$(EnableSourceControlManagerQueries)' == '' and ('$(DesignTimeBuild)' == 'true' or '$(BuildingForLiveUnitTesting)' == 'true')">false</EnableSourceControlManagerQueries>
+  </PropertyGroup>
+</Project>

@@ -72,6 +72,27 @@ public sealed class ConstantsModel
     public IReadOnlyList<ConstantRecord> Constants { get; init; } = Array.Empty<ConstantRecord>();
 }
 
+/// <summary>Git 生成模型。设计时未查询时，五个字符串是占位符而不是空值。</summary>
+public sealed class GitModel
+{
+    public string? Namespace { get; init; }
+
+    public MemberVisibility Visibility { get; init; }
+
+    public string Commit { get; init; } = "";
+
+    public string Sha { get; init; } = "";
+
+    public string Root { get; init; } = "";
+
+    public string Url { get; init; } = "";
+
+    public string Branch { get; init; } = "";
+
+    /// <summary>真实构建已查询，但没有提交号。生成器应报 AM0006，仍输出成员。</summary>
+    public bool Unavailable { get; init; }
+}
+
 /// <summary>一次生成结果。Source 为 null 表示不输出文件。</summary>
 public sealed class EmitResult
 {

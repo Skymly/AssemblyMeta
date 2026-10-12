@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AssemblyMeta.Core.Emit;
 
-/// <summary>把 AssemblyInfo / Constants 模型写成 C#。不引用 Roslyn，便于任务程序集复用同一套模型。</summary>
+/// <summary>把 AssemblyInfo / Constants / Project / Metadata / Git 模型写成 C#。不引用 Roslyn，便于任务程序集复用同一套模型。</summary>
 public sealed class CSharpSourceEmitter : ISourceEmitter
 {
     public SourceLanguage Language => SourceLanguage.CSharp;
@@ -72,6 +72,92 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
             WriteRoot(builder, indent, model.Visibility);
             indent++;
             WriteNestedClassOpen(builder, indent, "Constants", "由 Constant / FileConstant MSBuild 项生成的编译期常量。");
+            indent++;
+            EmitChildren(builder, root, indent, model.Visibility);
+            indent--;
+            WriteClose(builder, indent);
+            indent--;
+            WriteClose(builder, indent);
+        }
+
+        return new EmitResult { Source = builder.ToString(), Diagnostics = diagnostics };
+    }
+
+    public EmitResult EmitProject(ConstantsModel model, int csharpLanguageVersion)
+        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Project", "Project", "由 ProjectProperty 项生成的项目属性常量。", "项目属性");
+
+    public EmitResult EmitMetadata(ConstantsModel model, int csharpLanguageVersion)
+        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Metadata", "Metadata", "由 AssemblyMetadata 项生成的程序集元数据常量。", "程序集元数据");
+
+    public EmitResult EmitGit(GitModel model, int csharpLanguageVersion)
+    {
+        if (model is null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+
+        var diagnostics = new List<DiagnosticReport>();
+        if (model.Unavailable)
+        {
+            diagnostics.Add(Warning("AM0006", "Git 信息不可用", "未能取得 Git 提交号。确认项目位于 Git 仓库内，且 EnableSourceControlManagerQueries 为 true。"));
+        }
+
+        var ns = ResolveNamespace(model.Namespace, diagnostics);
+        var builder = new StringBuilder();
+        WriteHeader(builder, "AssemblyMeta.Git");
+        using (var scope = new NamespaceScope(builder, ns))
+        {
+            var indent = scope.Indent;
+            WriteRoot(builder, indent, model.Visibility);
+            indent++;
+            WriteNestedClassOpen(builder, indent, "Git", "编译期 Git 信息。设计时构建默认不查询，值为 [pending build]。");
+            indent++;
+            WriteStringMember(builder, indent, model.Visibility, "Commit", model.Commit, "当前提交的完整哈希。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Sha", model.Sha, "Commit 的前 9 位。不足 9 位时与 Commit 相同。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Root", model.Root, "仓库根目录，使用正斜杠，并以斜杠结尾。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Url", model.Url, "仓库地址。仅当 PublishRepositoryUrl=true，或已经设置 RepositoryUrl 时填充。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Branch", model.Branch, "当前分支。拉取请求场景为 pr 加编号。", csharpLanguageVersion);
+            indent--;
+            WriteClose(builder, indent);
+            indent--;
+            WriteClose(builder, indent);
+        }
+
+        return new EmitResult { Source = builder.ToString(), Diagnostics = diagnostics };
+    }
+
+    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix)
+    {
+        if (model is null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+
+        var diagnostics = new List<DiagnosticReport>();
+        var ns = ResolveNamespace(model.Namespace, diagnostics);
+        var root = new Node();
+        if (model.Constants is not null)
+        {
+            foreach (var constant in model.Constants)
+            {
+                var comment = constant.Comment;
+                if (string.IsNullOrWhiteSpace(comment))
+                {
+                    comment = defaultCommentPrefix + " " + (constant.Name ?? "") + "。";
+                }
+
+                AddConstant(root, new ConstantRecord(constant.Name ?? "", constant.Value ?? "", "string", comment ?? ""), model.Visibility, languageVersion, diagnostics);
+            }
+        }
+
+        var builder = new StringBuilder();
+        WriteHeader(builder, packageId);
+        using (var scope = new NamespaceScope(builder, ns))
+        {
+            var indent = scope.Indent;
+            WriteRoot(builder, indent, model.Visibility);
+            indent++;
+            WriteNestedClassOpen(builder, indent, className, classSummary);
             indent++;
             EmitChildren(builder, root, indent, model.Visibility);
             indent--;

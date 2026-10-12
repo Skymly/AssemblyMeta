@@ -15,7 +15,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 
 ## 当前进度
 
-M1 已落地：解决方案脚手架、元包 `AssemblyMeta`、`AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`。生成器是 `IIncrementalGenerator`，数据经 `CompilerVisibleProperty` 进入 `build_property.*`，不使用 `AdditionalFiles`。
+M2 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git。生成器是 `IIncrementalGenerator`，数据经 Base64 载荷进入 `build_property.*`，不使用 `AdditionalFiles`。
 
 - 架构说明：[docs/架构.md](docs/架构.md)
 - 使用说明：[docs/使用说明.md](docs/使用说明.md)
@@ -43,9 +43,9 @@ M1 已落地：解决方案脚手架、元包 `AssemblyMeta`、`AssemblyMeta.Ass
 | `AssemblyMeta` | meta 包，汇总全部子包 | P0 |
 | `AssemblyMeta.AssemblyInfo` | AssemblyVersion/InformationalVersion/Title 等特性常量 | P0 |
 | `AssemblyMeta.Constants` | `<Constant>` MSBuild 项 → 强类型常量（含 `FileConstant` 文件常量） | P0 |
-| `AssemblyMeta.Project` | `<ProjectProperty>` opt-in 项目属性常量 | P1 |
-| `AssemblyMeta.Metadata` | `<AssemblyMetadata>` 项常量 | P1 |
-| `AssemblyMeta.Git` | Commit/Sha/Branch/Url（依赖 SourceLink） | P1 |
+| `AssemblyMeta.Project` | `<ProjectProperty>` opt-in 项目属性常量 | M2 |
+| `AssemblyMeta.Metadata` | `<AssemblyMetadata>` 项常量 | M2 |
+| `AssemblyMeta.Git` | Commit/Sha/Branch/Url（依赖 SourceLink） | M2 |
 | `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） | P2 |
 | `AssemblyMeta.Strings` | resx 资源常量 | P2 |
 | `AssemblyMeta.Build`（候选） | TFM、构建信息、CI 环境快照 | P2 |
@@ -76,7 +76,7 @@ MSBuild props/targets
 ## 里程碑
 
 - **M1** 骨架端到端：meta 包 + AssemblyInfo + Constants，`dotnet pack` → 真实 `dotnet build` 验证生成代码
-- **M2** Project + Metadata + Git
+- **M2** Project + Metadata + Git（已落地）
 - **M3** Resources + Strings + 文档站
 
 ## 测试策略

@@ -14,6 +14,9 @@
     <AssemblyTitle>AssemblyMeta 示例标题</AssemblyTitle>
     <Description>第一行&#10;第二行 "引号" ; 分号 # 井号</Description>
     <Copyright>Copyright © 2026 Skymly</Copyright>
+    <BannerTitle>AssemblyMeta 横幅</BannerTitle>
+    <WeirdProject>a;b#c&#10;第二行</WeirdProject>
+    <ProjectProperty>BannerTitle;Configuration</ProjectProperty>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,5 +32,9 @@
     <Constant Include="Banner" Value="line1&#10;line2" />
     <Constant Include="Weird" Value="a;b#c &quot;q&quot;" />
     <Constant Include="ExpectedConfiguration" Value="$(Configuration)" />
+    <ProjectProperty Include="Company" Comment="公司名称" />
+    <ProjectProperty Include="WeirdProject" />
+    <AssemblyMetadata Include="DemoKey" Value="a;b#c" />
+    <AssemblyMetadata Include="Area.Name" Value="nested" Comment="区域" />
   </ItemGroup>
 </Project>

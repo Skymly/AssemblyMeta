@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <AssemblyName>AssemblyMeta.Git.Sample</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AssemblyMeta.Git" Version="0.1.0" />
+  </ItemGroup>
+
+  <!-- 证明 InitializeGitInformation 把属性交给下游，而不只是生成常量。 -->
+  <Target Name="AssertAssemblyMetaGitProperties" DependsOnTargets="InitializeGitInformation" BeforeTargets="CoreCompile">
+    <Error Condition="'$(EnableSourceControlManagerQueries)' == 'true' and '$(RepositoryCommit)' == ''"
+           Text="InitializeGitInformation 未设置 RepositoryCommit。" />
+    <Error Condition="'$(EnableSourceControlManagerQueries)' == 'true' and '$(RepositorySha)' == ''"
+           Text="InitializeGitInformation 未设置 RepositorySha。" />
+    <Error Condition="'$(EnableSourceControlManagerQueries)' == 'true' and !$(RepositoryRoot.Contains('/'))"
+           Text="RepositoryRoot 应使用正斜杠。" />
+    
+    <Error Condition="'$(EnableSourceControlManagerQueries)' == 'true' and '$(RepositoryBranch)' == ''"
+           Text="InitializeGitInformation 未设置 RepositoryBranch。" />
+    <Error Condition="'$(EnableSourceControlManagerQueries)' == 'true' and '$(PublishRepositoryUrl)' == 'true' and '$(RepositoryUrl)' == ''"
+           Text="PublishRepositoryUrl=true 时 RepositoryUrl 应有值。" />
+  </Target>
+</Project>

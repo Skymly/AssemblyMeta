@@ -1,6 +1,6 @@
 # AssemblyMeta
 
-元包。引用它等同于同时引用 `AssemblyMeta.AssemblyInfo` 与 `AssemblyMeta.Constants`。
+元包。引用它等同于同时引用 `AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata` 与 `AssemblyMeta.Git`。
 
 ```xml
 <PackageReference Include="AssemblyMeta" Version="0.1.0" />

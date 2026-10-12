@@ -5,6 +5,12 @@
     <Project Path="src/AssemblyMeta.Constants.Generator/AssemblyMeta.Constants.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Constants/AssemblyMeta.Constants.csproj" />
     <Project Path="src/AssemblyMeta.Core/AssemblyMeta.Core.csproj" />
+    <Project Path="src/AssemblyMeta.Git.Generator/AssemblyMeta.Git.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Git/AssemblyMeta.Git.csproj" />
+    <Project Path="src/AssemblyMeta.Metadata.Generator/AssemblyMeta.Metadata.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Metadata/AssemblyMeta.Metadata.csproj" />
+    <Project Path="src/AssemblyMeta.Project.Generator/AssemblyMeta.Project.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Project/AssemblyMeta.Project.csproj" />
     <Project Path="src/AssemblyMeta.Tasks/AssemblyMeta.Tasks.csproj" />
     <Project Path="src/AssemblyMeta/AssemblyMeta.csproj" />
   </Folder>

@@ -97,6 +97,58 @@ internal static class GeneratorTestHost
         return field.GetValue(null)?.ToString() ?? "";
     }
 
+    public static void AssertCached(IIncrementalGenerator generator, string payloadKey, string payload, string changedPayload)
+    {
+        var values = new Dictionary<string, string>
+        {
+            [payloadKey] = payload,
+        };
+        var provider = new TestAnalyzerConfigOptionsProvider(values);
+        var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp12);
+        var compilation = CSharpCompilation.Create(
+            "incremental",
+            new[] { CSharpSyntaxTree.ParseText("class A {}") },
+            References,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            new[] { generator.AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: parseOptions,
+            optionsProvider: provider,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
+        driver = driver.RunGenerators(compilation);
+        var first = driver.GetRunResult().Results[0].GeneratedSources[0].SourceText.ToString();
+
+        var updated = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText("class B {}"));
+        driver = driver.RunGenerators(updated);
+        var secondResult = driver.GetRunResult();
+        Assert.Equal(first, secondResult.Results[0].GeneratedSources[0].SourceText.ToString());
+
+        var reasons = secondResult.Results[0].TrackedSteps
+            .SelectMany(pair => pair.Value)
+            .SelectMany(step => step.Outputs)
+            .Select(output => output.Reason)
+            .ToArray();
+        Assert.Contains(IncrementalStepRunReason.Cached, reasons);
+        Assert.DoesNotContain(IncrementalStepRunReason.Modified, reasons);
+
+        driver = driver.WithUpdatedAnalyzerConfigOptions(new TestAnalyzerConfigOptionsProvider(new Dictionary<string, string>
+        {
+            [payloadKey] = changedPayload,
+        }));
+        driver = driver.RunGenerators(updated);
+        var third = driver.GetRunResult();
+        var changedReasons = third.Results[0].TrackedSteps
+            .SelectMany(pair => pair.Value)
+            .SelectMany(step => step.Outputs)
+            .Select(output => output.Reason)
+            .ToArray();
+        Assert.Contains(IncrementalStepRunReason.Modified, changedReasons);
+        Assert.NotEqual(first, third.Results[0].GeneratedSources[0].SourceText.ToString());
+    }
+
     private static MetadataReference[] CreateReferences()
     {
         var directory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;

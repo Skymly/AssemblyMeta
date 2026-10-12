@@ -16,5 +16,8 @@
     <ProjectReference Include="..\..\src\AssemblyMeta.Core\AssemblyMeta.Core.csproj" />
     <ProjectReference Include="..\..\src\AssemblyMeta.AssemblyInfo.Generator\AssemblyMeta.AssemblyInfo.Generator.csproj" />
     <ProjectReference Include="..\..\src\AssemblyMeta.Constants.Generator\AssemblyMeta.Constants.Generator.csproj" />
+    <ProjectReference Include="..\..\src\AssemblyMeta.Project.Generator\AssemblyMeta.Project.Generator.csproj" />
+    <ProjectReference Include="..\..\src\AssemblyMeta.Metadata.Generator\AssemblyMeta.Metadata.Generator.csproj" />
+    <ProjectReference Include="..\..\src\AssemblyMeta.Git.Generator\AssemblyMeta.Git.Generator.csproj" />
   </ItemGroup>
 </Project>

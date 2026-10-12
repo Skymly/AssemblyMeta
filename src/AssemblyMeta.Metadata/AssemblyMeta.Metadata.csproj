@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Metadata.Generator\AssemblyMeta.Metadata.Generator.csproj</AssemblyMetaGeneratorProject>
+    <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Metadata.Generator\</AssemblyMetaGeneratorProjectDir>
+    <AssemblyMetaGeneratorAssembly>AssemblyMeta.Metadata.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
+    <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
+    <PackageId>AssemblyMeta.Metadata</PackageId>
+    <Description>把 AssemblyMetadata 项生成为 AssemblyMeta.Metadata 编译期常量，不重复生成程序集特性。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>roslyn;source-generator;metadata;constants;msbuild</PackageTags>
+  </PropertyGroup>
+  <Import Project="..\AssemblyMeta.Packaging.targets" />
+</Project>

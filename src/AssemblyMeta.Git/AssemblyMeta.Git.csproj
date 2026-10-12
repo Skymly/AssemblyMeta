@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Git.Generator\AssemblyMeta.Git.Generator.csproj</AssemblyMetaGeneratorProject>
+    <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Git.Generator\</AssemblyMetaGeneratorProjectDir>
+    <AssemblyMetaGeneratorAssembly>AssemblyMeta.Git.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
+    <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
+    <PackageId>AssemblyMeta.Git</PackageId>
+    <Description>把 SourceLink 与 CI 环境中的 Git 信息生成为 AssemblyMeta.Git 编译期常量。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>roslyn;source-generator;git;sourcelink;constants</PackageTags>
+  </PropertyGroup>
+  <Import Project="..\AssemblyMeta.Packaging.targets" />
+</Project>

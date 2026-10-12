@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Project.Generator\AssemblyMeta.Project.Generator.csproj</AssemblyMetaGeneratorProject>
+    <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Project.Generator\</AssemblyMetaGeneratorProjectDir>
+    <AssemblyMetaGeneratorAssembly>AssemblyMeta.Project.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
+    <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
+    <PackageId>AssemblyMeta.Project</PackageId>
+    <Description>把 opt-in 的项目属性生成为 AssemblyMeta.Project 编译期常量。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>roslyn;source-generator;project;constants;msbuild</PackageTags>
+  </PropertyGroup>
+  <Import Project="..\AssemblyMeta.Packaging.targets" />
+</Project>

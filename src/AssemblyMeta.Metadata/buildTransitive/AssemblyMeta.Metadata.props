@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_MetadataPayload" />
+    <CompilerVisibleItemMetadata Include="AssemblyMetadata" MetadataName="Value" />
+    <CompilerVisibleItemMetadata Include="AssemblyMetadata" MetadataName="Comment" />
+
+    <PackageReference Update="AssemblyMeta.Metadata" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,86 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaGitTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaGitTasksAssembly>
+    <AssemblyMetaGitInitializeDependsOn Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">InitializeSourceControlInformation</AssemblyMetaGitInitializeDependsOn>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.ResolveGitInformation"
+             AssemblyFile="$(_AssemblyMetaGitTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaGitTasksAssembly)')" />
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeGit"
+             AssemblyFile="$(_AssemblyMetaGitTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaGitTasksAssembly)')" />
+
+  <!--
+    下游 targets 可以 DependsOnTargets="InitializeGitInformation"，读取：
+    RepositoryCommit、RepositorySha、RepositoryRoot、RepositoryUrl、RepositoryBranch。
+    Root 使用正斜杠。Url 仅在 PublishRepositoryUrl=true 或调用方已设置 RepositoryUrl 时有值。
+    .NET 8+ SDK 内置 SourceLink，本目标复用 InitializeSourceControlInformation。
+  -->
+  <Target Name="InitializeGitInformation"
+          BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun"
+          DependsOnTargets="$(AssemblyMetaGitInitializeDependsOn)"
+          Condition="Exists('$(_AssemblyMetaGitTasksAssembly)')">
+    <ItemGroup>
+      <_AssemblyMetaGitCi Include="GITHUB_REF" Value="$(GITHUB_REF)" />
+      <_AssemblyMetaGitCi Include="BUILD_SOURCEBRANCH" Value="$(BUILD_SOURCEBRANCH)" />
+      <_AssemblyMetaGitCi Include="SYSTEM_PULLREQUEST_PULLREQUESTID" Value="$(SYSTEM_PULLREQUEST_PULLREQUESTID)" />
+      <_AssemblyMetaGitCi Include="APPVEYOR_PULL_REQUEST_NUMBER" Value="$(APPVEYOR_PULL_REQUEST_NUMBER)" />
+      <_AssemblyMetaGitCi Include="APPVEYOR_REPO_TAG_NAME" Value="$(APPVEYOR_REPO_TAG_NAME)" />
+      <_AssemblyMetaGitCi Include="APPVEYOR_REPO_BRANCH" Value="$(APPVEYOR_REPO_BRANCH)" />
+      <_AssemblyMetaGitCi Include="TEAMCITY_BUILD_BRANCH" Value="$(TEAMCITY_BUILD_BRANCH)" />
+      <_AssemblyMetaGitCi Include="TRAVIS_PULL_REQUEST" Value="$(TRAVIS_PULL_REQUEST)" />
+      <_AssemblyMetaGitCi Include="TRAVIS_BRANCH" Value="$(TRAVIS_BRANCH)" />
+      <_AssemblyMetaGitCi Include="CIRCLE_PR_NUMBER" Value="$(CIRCLE_PR_NUMBER)" />
+      <_AssemblyMetaGitCi Include="CIRCLE_TAG" Value="$(CIRCLE_TAG)" />
+      <_AssemblyMetaGitCi Include="CIRCLE_BRANCH" Value="$(CIRCLE_BRANCH)" />
+      <_AssemblyMetaGitCi Include="CI_COMMIT_TAG" Value="$(CI_COMMIT_TAG)" />
+      <_AssemblyMetaGitCi Include="CI_MERGE_REQUEST_IID" Value="$(CI_MERGE_REQUEST_IID)" />
+      <_AssemblyMetaGitCi Include="CI_EXTERNAL_PULL_REQUEST_IID" Value="$(CI_EXTERNAL_PULL_REQUEST_IID)" />
+      <_AssemblyMetaGitCi Include="CI_COMMIT_BRANCH" Value="$(CI_COMMIT_BRANCH)" />
+      <_AssemblyMetaGitCi Include="BUDDY_EXECUTION_PULL_REQUEST_NO" Value="$(BUDDY_EXECUTION_PULL_REQUEST_NO)" />
+      <_AssemblyMetaGitCi Include="BUDDY_EXECUTION_TAG" Value="$(BUDDY_EXECUTION_TAG)" />
+      <_AssemblyMetaGitCi Include="BUDDY_EXECUTION_BRANCH" Value="$(BUDDY_EXECUTION_BRANCH)" />
+      <_AssemblyMetaGitCi Include="CHANGE_ID" Value="$(CHANGE_ID)" />
+      <_AssemblyMetaGitCi Include="GIT_LOCAL_BRANCH" Value="$(GIT_LOCAL_BRANCH)" />
+    </ItemGroup>
+    <ResolveGitInformation
+      QueriesEnabled="$(EnableSourceControlManagerQueries)"
+      RepositoryCommit="$(RepositoryCommit)"
+      RepositorySha="$(RepositorySha)"
+      RepositoryRoot="$(RepositoryRoot)"
+      RepositoryUrl="$(RepositoryUrl)"
+      RepositoryBranch="$(RepositoryBranch)"
+      SourceRevisionId="$(SourceRevisionId)"
+      PrivateRepositoryUrl="$(PrivateRepositoryUrl)"
+      PublishRepositoryUrl="$(PublishRepositoryUrl)"
+      SourceBranchName="$(SourceBranchName)"
+      SourceRoots="@(SourceRoot)"
+      Ci="@(_AssemblyMetaGitCi)">
+      <Output TaskParameter="Commit" PropertyName="RepositoryCommit" />
+      <Output TaskParameter="Sha" PropertyName="RepositorySha" />
+      <Output TaskParameter="Root" PropertyName="RepositoryRoot" />
+      <Output TaskParameter="Url" PropertyName="RepositoryUrl" />
+      <Output TaskParameter="Branch" PropertyName="RepositoryBranch" />
+    </ResolveGitInformation>
+    <Message Importance="Low" Text="AssemblyMeta Git: commit=$(RepositoryCommit) sha=$(RepositorySha) branch=$(RepositoryBranch) root=$(RepositoryRoot)" />
+  </Target>
+
+  <Target Name="AssemblyMetaPrepareGit"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          DependsOnTargets="InitializeGitInformation"
+          Condition="Exists('$(_AssemblyMetaGitTasksAssembly)')">
+    <EncodeGit
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      QueriesEnabled="$(EnableSourceControlManagerQueries)"
+      Commit="$(RepositoryCommit)"
+      Sha="$(RepositorySha)"
+      Root="$(RepositoryRoot)"
+      Url="$(RepositoryUrl)"
+      Branch="$(RepositoryBranch)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_GitPayload" />
+    </EncodeGit>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 Git 载荷。" />
+  </Target>
+</Project>

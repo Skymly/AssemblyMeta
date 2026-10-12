@@ -27,6 +27,26 @@ Check("Http.TimeoutSeconds", AssemblyMeta.Constants.Http.TimeoutSeconds.ToString
 Check(nameof(AssemblyMeta.Constants.Content.Docs.License), AssemblyMeta.Constants.Content.Docs.License, "Content/Docs/License.md");
 Check("readme", AssemblyMeta.Constants.Content.Docs._12._Readme_copy_, "Content/Docs/12. Readme (copy).txt");
 Check(nameof(AssemblyMeta.Constants.Included.Readme), AssemblyMeta.Constants.Included.Readme, "Included/Readme.txt");
+Check(nameof(AssemblyMeta.Project.BannerTitle), AssemblyMeta.Project.BannerTitle, "AssemblyMeta 横幅");
+Check(nameof(AssemblyMeta.Project.Configuration), AssemblyMeta.Project.Configuration, AssemblyMeta.Info.Configuration);
+Check(nameof(AssemblyMeta.Project.Company), AssemblyMeta.Project.Company, "Skymly");
+Check(nameof(AssemblyMeta.Project.WeirdProject), AssemblyMeta.Project.WeirdProject, "a;b#c\n第二行");
+Check(nameof(AssemblyMeta.Project.AssemblyName), AssemblyMeta.Project.AssemblyName, "AssemblyMeta.Sample");
+Check(nameof(AssemblyMeta.Project.TargetFrameworkIdentifier), AssemblyMeta.Project.TargetFrameworkIdentifier, ".NETCoreApp");
+Check(nameof(AssemblyMeta.Metadata.DemoKey), AssemblyMeta.Metadata.DemoKey, "a;b#c");
+Check(nameof(AssemblyMeta.Metadata.Area.Name), AssemblyMeta.Metadata.Area.Name, "nested");
+Check("Git.Sha", AssemblyMeta.Git.Commit.StartsWith(AssemblyMeta.Git.Sha, StringComparison.Ordinal) ? "ok" : AssemblyMeta.Git.Sha, "ok");
+if (AssemblyMeta.Git.Commit.Length == 0 || AssemblyMeta.Git.Commit == "[pending build]")
+{
+    failures.Add("Git.Commit 未在真实构建中填充");
+}
+if (AssemblyMeta.Git.Root.Contains('\\'))
+{
+    failures.Add("Git.Root 仍包含反斜杠: " + AssemblyMeta.Git.Root);
+}
+var demo = System.Reflection.CustomAttributeExtensions.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>(typeof(Program).Assembly)
+    .FirstOrDefault(attribute => attribute.Key == "DemoKey");
+Check("AssemblyMetadataAttribute", demo?.Value ?? "", "a;b#c");
 
 if (failures.Count > 0)
 {

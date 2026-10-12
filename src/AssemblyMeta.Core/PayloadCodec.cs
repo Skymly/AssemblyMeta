@@ -13,6 +13,9 @@ public static class PayloadCodec
 {
     private static readonly byte[] AssemblyInfoMagic = { (byte)'A', (byte)'M', (byte)'A', (byte)'I' };
     private static readonly byte[] ConstantsMagic = { (byte)'A', (byte)'M', (byte)'C', (byte)'S' };
+    private static readonly byte[] ProjectMagic = { (byte)'A', (byte)'M', (byte)'P', (byte)'R' };
+    private static readonly byte[] MetadataMagic = { (byte)'A', (byte)'M', (byte)'M', (byte)'D' };
+    private static readonly byte[] GitMagic = { (byte)'A', (byte)'M', (byte)'G', (byte)'T' };
     private const int Version = 1;
 
     public static string EncodeAssemblyInfo(AssemblyInfoModel model)
@@ -109,6 +112,116 @@ public static class PayloadCodec
         {
             var offset = 2 + (i * 4);
             constants[i] = new ConstantRecord(fields[offset], fields[offset + 1], fields[offset + 2], fields[offset + 3]);
+        }
+
+        model = new ConstantsModel
+        {
+            Namespace = NullIfEmpty(fields[0]),
+            Visibility = visibility,
+            Constants = constants,
+        };
+        return true;
+    }
+
+    public static string EncodeProject(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
+        => EncodeNamed(ProjectMagic, ns, visibility, constants);
+
+    public static bool TryDecodeProject(string? payload, out ConstantsModel model)
+        => TryDecodeNamed(payload, ProjectMagic, out model);
+
+    public static string EncodeMetadata(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
+        => EncodeNamed(MetadataMagic, ns, visibility, constants);
+
+    public static bool TryDecodeMetadata(string? payload, out ConstantsModel model)
+        => TryDecodeNamed(payload, MetadataMagic, out model);
+
+    public static string EncodeGit(GitModel model)
+    {
+        if (model is null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+
+        return Encode(GitMagic, new[]
+        {
+            model.Namespace ?? "",
+            VisibilityToken(model.Visibility),
+            model.Commit ?? "",
+            model.Sha ?? "",
+            model.Root ?? "",
+            model.Url ?? "",
+            model.Branch ?? "",
+            model.Unavailable ? "1" : "0",
+        });
+    }
+
+    public static bool TryDecodeGit(string? payload, out GitModel model)
+    {
+        model = new GitModel();
+        if (!TryDecode(payload, GitMagic, out var fields) || fields.Count != 8)
+        {
+            return false;
+        }
+
+        if (!MemberVisibilityParser.TryParse(fields[1], out var visibility, out _))
+        {
+            visibility = MemberVisibility.Internal;
+        }
+
+        model = new GitModel
+        {
+            Namespace = NullIfEmpty(fields[0]),
+            Visibility = visibility,
+            Commit = fields[2],
+            Sha = fields[3],
+            Root = fields[4],
+            Url = fields[5],
+            Branch = fields[6],
+            Unavailable = fields[7] == "1",
+        };
+        return true;
+    }
+
+    private static string EncodeNamed(byte[] magic, string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
+    {
+        var fields = new List<string>
+        {
+            ns ?? "",
+            VisibilityToken(visibility),
+        };
+
+        if (constants is not null)
+        {
+            foreach (var constant in constants)
+            {
+                fields.Add(constant.Name ?? "");
+                fields.Add(constant.Value ?? "");
+                fields.Add(constant.Comment ?? "");
+            }
+        }
+
+        return Encode(magic, fields);
+    }
+
+    private static bool TryDecodeNamed(string? payload, byte[] magic, out ConstantsModel model)
+    {
+        model = new ConstantsModel();
+        if (!TryDecode(payload, magic, out var fields) || fields.Count < 2 || (fields.Count - 2) % 3 != 0)
+        {
+            return false;
+        }
+
+        if (!MemberVisibilityParser.TryParse(fields[1], out var visibility, out _))
+        {
+            visibility = MemberVisibility.Internal;
+        }
+
+        var count = (fields.Count - 2) / 3;
+        var constants = new ConstantRecord[count];
+        for (var i = 0; i < count; i++)
+        {
+            var offset = 2 + (i * 3);
+            constants[i] = new ConstantRecord(fields[offset], fields[offset + 1], "string", fields[offset + 2]);
         }
 
         model = new ConstantsModel

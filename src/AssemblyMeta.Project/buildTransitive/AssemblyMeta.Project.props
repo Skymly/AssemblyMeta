@@ -1,0 +1,19 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_ProjectPayload" />
+    <CompilerVisibleItemMetadata Include="ProjectProperty" MetadataName="Value" />
+    <CompilerVisibleItemMetadata Include="ProjectProperty" MetadataName="Comment" />
+
+    <PackageReference Update="AssemblyMeta.Project" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+
+    <!-- 与 ThisAssembly.Project 相同的默认 opt-in。调用方仍可用 Remove 去掉。 -->
+    <ProjectProperty Include="AssemblyName" />
+    <ProjectProperty Include="RootNamespace" />
+    <ProjectProperty Include="TargetFrameworkIdentifier" />
+    <ProjectProperty Include="TargetFrameworkMoniker" />
+    <ProjectProperty Include="TargetFrameworkVersion" />
+    <ProjectProperty Include="RuntimeIdentifier" />
+    <ProjectProperty Include="RuntimeIdentifiers" />
+  </ItemGroup>
+</Project>

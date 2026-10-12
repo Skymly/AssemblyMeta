@@ -1,0 +1,28 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaMetadataTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaMetadataTasksAssembly>
+    <!-- 外层多目标构建没有 GetAssemblyAttributes，不要因此失败。 -->
+    <_AssemblyMetaMetadataDependsOn Condition="'$(IsCrossTargetingBuild)' != 'true'">GetAssemblyAttributes</_AssemblyMetaMetadataDependsOn>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeMetadata"
+             AssemblyFile="$(_AssemblyMetaMetadataTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaMetadataTasksAssembly)')" />
+
+  <!--
+    只读取 @(AssemblyMetadata)，不添加、不删除、不改写。
+    SDK 的 GetAssemblyAttributes 会把同一项写成程序集特性，这里不能再消费一遍。
+  -->
+  <Target Name="AssemblyMetaPrepareMetadata"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          DependsOnTargets="$(_AssemblyMetaMetadataDependsOn)"
+          Condition="Exists('$(_AssemblyMetaMetadataTasksAssembly)')">
+    <EncodeMetadata
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      Items="@(AssemblyMetadata)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_MetadataPayload" />
+    </EncodeMetadata>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 Metadata 载荷。" />
+  </Target>
+</Project>
