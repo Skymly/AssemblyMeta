@@ -1,0 +1,17 @@
+{
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.{md,yml}"]
+      }
+    ],
+    "output": "../artifacts/docs",
+    "template": ["default", "modern"],
+    "globalMetadata": {
+      "_appName": "AssemblyMeta",
+      "_appTitle": "AssemblyMeta",
+      "_enableSearch": true,
+      "_disableContribution": true
+    }
+  }
+}

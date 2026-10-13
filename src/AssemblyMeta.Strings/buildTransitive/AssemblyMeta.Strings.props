@@ -1,0 +1,12 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_StringsPayload" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="WithCulture" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="Culture" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="Link" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="AssemblyMetaStrings" />
+
+    <PackageReference Update="AssemblyMeta.Strings" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

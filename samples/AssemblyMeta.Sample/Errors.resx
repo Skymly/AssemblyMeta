@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="NotFound" xml:space="preserve">
+    <value>找不到 {0}</value>
+  </data>
+</root>

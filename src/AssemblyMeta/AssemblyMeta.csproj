@@ -21,7 +21,7 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <NoWarn>$(NoWarn);NU5128;NU5104;NU5125</NoWarn>
     <PackageId>AssemblyMeta</PackageId>
-    <Description>AssemblyMeta 元包，聚合 AssemblyInfo、Constants、Project、Metadata 与 Git，把程序集元信息在编译期生成为强类型常量。</Description>
+    <Description>AssemblyMeta 元包，聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources 与 Strings，把程序集元信息在编译期生成为强类型常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;constants;msbuild</PackageTags>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AssemblyMetaAddPlaceholder</TargetsForTfmSpecificContentInPackage>
@@ -47,6 +47,14 @@
       <IncludeAssets>all</IncludeAssets>
     </ProjectReference>
     <ProjectReference Include="..\AssemblyMeta.Git\AssemblyMeta.Git.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>all</IncludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AssemblyMeta.Resources\AssemblyMeta.Resources.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>all</IncludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AssemblyMeta.Strings\AssemblyMeta.Strings.csproj">
       <PrivateAssets>none</PrivateAssets>
       <IncludeAssets>all</IncludeAssets>
     </ProjectReference>

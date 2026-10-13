@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaStringsTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaStringsTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeStrings"
+             AssemblyFile="$(_AssemblyMetaStringsTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaStringsTasksAssembly)')" />
+
+  <!--
+    AssignCulture 会在 PrepareResourceNames 里给卫星 resx 标上 WithCulture=true。
+    那些文件不进入常量。任务读取的是 resx 源文件，不是编译后的 .resources。
+  -->
+  <Target Name="AssemblyMetaPrepareStrings"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          DependsOnTargets="PrepareResourceNames"
+          Condition="Exists('$(_AssemblyMetaStringsTasksAssembly)') and '$(IsCrossTargetingBuild)' != 'true'">
+    <EncodeStrings
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      ProjectDirectory="$(MSBuildProjectDirectory)"
+      Items="@(EmbeddedResource)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_StringsPayload" />
+    </EncodeStrings>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 Strings 载荷。" />
+  </Target>
+</Project>

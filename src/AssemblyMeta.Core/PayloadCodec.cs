@@ -16,6 +16,8 @@ public static class PayloadCodec
     private static readonly byte[] ProjectMagic = { (byte)'A', (byte)'M', (byte)'P', (byte)'R' };
     private static readonly byte[] MetadataMagic = { (byte)'A', (byte)'M', (byte)'M', (byte)'D' };
     private static readonly byte[] GitMagic = { (byte)'A', (byte)'M', (byte)'G', (byte)'T' };
+    private static readonly byte[] ResourcesMagic = { (byte)'A', (byte)'M', (byte)'R', (byte)'S' };
+    private static readonly byte[] StringsMagic = { (byte)'A', (byte)'M', (byte)'S', (byte)'T' };
     private const int Version = 1;
 
     public static string EncodeAssemblyInfo(AssemblyInfoModel model)
@@ -181,6 +183,50 @@ public static class PayloadCodec
         };
         return true;
     }
+
+    public static string EncodeResources(string? ns, MemberVisibility visibility, IReadOnlyList<ResourceRecord> resources)
+    {
+        var constants = new List<ConstantRecord>();
+        if (resources is not null)
+        {
+            foreach (var resource in resources)
+            {
+                constants.Add(new ConstantRecord(resource.Name ?? "", resource.ManifestName ?? "", "string", resource.Comment ?? ""));
+            }
+        }
+
+        return EncodeNamed(ResourcesMagic, ns, visibility, constants);
+    }
+
+    public static bool TryDecodeResources(string? payload, out ResourcesModel model)
+    {
+        model = new ResourcesModel();
+        if (!TryDecodeNamed(payload, ResourcesMagic, out var constants))
+        {
+            return false;
+        }
+
+        var resources = new ResourceRecord[constants.Constants.Count];
+        for (var i = 0; i < resources.Length; i++)
+        {
+            var constant = constants.Constants[i];
+            resources[i] = new ResourceRecord(constant.Name, constant.Value, constant.Comment);
+        }
+
+        model = new ResourcesModel
+        {
+            Namespace = constants.Namespace,
+            Visibility = constants.Visibility,
+            Resources = resources,
+        };
+        return true;
+    }
+
+    public static string EncodeStrings(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
+        => EncodeNamed(StringsMagic, ns, visibility, constants);
+
+    public static bool TryDecodeStrings(string? payload, out ConstantsModel model)
+        => TryDecodeNamed(payload, StringsMagic, out model);
 
     private static string EncodeNamed(byte[] magic, string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
     {

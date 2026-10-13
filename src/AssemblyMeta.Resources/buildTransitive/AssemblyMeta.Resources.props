@@ -1,0 +1,13 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyMeta_ResourcesPayload" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="ManifestResourceName" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="LogicalName" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="Link" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="Comment" />
+    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="AssemblyMetaResource" />
+
+    <PackageReference Update="AssemblyMeta.Resources" PrivateAssets="all" />
+    <PackageReference Update="AssemblyMeta" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

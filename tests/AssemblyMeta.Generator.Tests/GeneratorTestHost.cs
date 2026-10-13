@@ -97,6 +97,48 @@ internal static class GeneratorTestHost
         return field.GetValue(null)?.ToString() ?? "";
     }
 
+    public static object ExecuteMember(string source, string typeName, string memberName, bool method, params (string Name, byte[] Content)[] manifestResources)
+    {
+        var tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.CSharp12));
+        var compilation = CSharpCompilation.Create(
+            "AssemblyMeta.Generated.Probe." + Guid.NewGuid().ToString("N"),
+            new[] { tree },
+            References,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        var descriptions = manifestResources.Select(resource => new ResourceDescription(
+            resource.Name,
+            () => new MemoryStream(resource.Content, writable: false),
+            isPublic: true)).ToArray();
+        using var pe = new MemoryStream();
+        var emit = compilation.Emit(pe, manifestResources: descriptions);
+        if (!emit.Success)
+        {
+            var errors = string.Join(Environment.NewLine, emit.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+            throw new InvalidOperationException(errors + Environment.NewLine + source);
+        }
+
+        var assembly = Assembly.Load(pe.ToArray());
+        var type = assembly.GetType(typeName, throwOnError: true)!;
+        if (method)
+        {
+            var found = type.GetMethod(memberName, BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+            if (found is null)
+            {
+                throw new MissingMethodException(typeName, memberName);
+            }
+
+            return found.Invoke(null, null)!;
+        }
+
+        var property = type.GetProperty(memberName, BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+        if (property is null)
+        {
+            throw new MissingMemberException(typeName, memberName);
+        }
+
+        return property.GetValue(null)!;
+    }
+
     public static void AssertCached(IIncrementalGenerator generator, string payloadKey, string payload, string changedPayload)
     {
         var values = new Dictionary<string, string>

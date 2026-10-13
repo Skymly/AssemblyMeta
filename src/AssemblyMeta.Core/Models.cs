@@ -93,6 +93,19 @@ public sealed class GitModel
     public bool Unavailable { get; init; }
 }
 
+/// <summary>一条嵌入资源。Name 使用点号表示嵌套，ManifestName 是运行时清单名。</summary>
+public sealed record ResourceRecord(string Name, string ManifestName, string Comment);
+
+/// <summary>Resources 生成模型。</summary>
+public sealed class ResourcesModel
+{
+    public string? Namespace { get; init; }
+
+    public MemberVisibility Visibility { get; init; }
+
+    public IReadOnlyList<ResourceRecord> Resources { get; init; } = Array.Empty<ResourceRecord>();
+}
+
 /// <summary>一次生成结果。Source 为 null 表示不输出文件。</summary>
 public sealed class EmitResult
 {

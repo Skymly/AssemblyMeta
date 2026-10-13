@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Strings.Generator\AssemblyMeta.Strings.Generator.csproj</AssemblyMetaGeneratorProject>
+    <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Strings.Generator\</AssemblyMetaGeneratorProjectDir>
+    <AssemblyMetaGeneratorAssembly>AssemblyMeta.Strings.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
+    <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
+    <PackageId>AssemblyMeta.Strings</PackageId>
+    <Description>把中性 resx 生成为 AssemblyMeta.Strings 编译期字符串常量。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>roslyn;source-generator;resx;strings;constants;msbuild</PackageTags>
+  </PropertyGroup>
+  <Import Project="..\AssemblyMeta.Packaging.targets" />
+</Project>

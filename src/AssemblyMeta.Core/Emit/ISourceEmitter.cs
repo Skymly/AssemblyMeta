@@ -17,6 +17,10 @@ public interface ISourceEmitter
     EmitResult EmitMetadata(ConstantsModel model, int csharpLanguageVersion);
 
     EmitResult EmitGit(GitModel model, int csharpLanguageVersion);
+
+    EmitResult EmitResources(ResourcesModel model, int csharpLanguageVersion);
+
+    EmitResult EmitStrings(ConstantsModel model, int csharpLanguageVersion);
 }
 
 /// <summary>语言到 emitter 的分派表。未注册的语言返回 null，生成器应跳过而不是输出错误语言。</summary>

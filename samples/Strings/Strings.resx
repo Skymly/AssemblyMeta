@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Hello" xml:space="preserve">
+    <value>仅 Strings 包</value>
+    <comment>直接引用</comment>
+  </data>
+  <data name="Area_Name" xml:space="preserve">
+    <value>区域</value>
+  </data>
+</root>

@@ -15,7 +15,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 
 ## 当前进度
 
-M2 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git。生成器是 `IIncrementalGenerator`，数据经 Base64 载荷进入 `build_property.*`，不使用 `AdditionalFiles`。
+M3 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings。生成器是 `IIncrementalGenerator`，数据经 Base64 载荷进入 `build_property.*`，不使用 `AdditionalFiles`。文档站用 `dotnet docfx docs/docfx.json` 构建到 `artifacts/docs`。
 
 - 架构说明：[docs/架构.md](docs/架构.md)
 - 使用说明：[docs/使用说明.md](docs/使用说明.md)
@@ -46,8 +46,8 @@ M2 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git�
 | `AssemblyMeta.Project` | `<ProjectProperty>` opt-in 项目属性常量 | M2 |
 | `AssemblyMeta.Metadata` | `<AssemblyMetadata>` 项常量 | M2 |
 | `AssemblyMeta.Git` | Commit/Sha/Branch/Url（依赖 SourceLink） | M2 |
-| `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） | P2 |
-| `AssemblyMeta.Strings` | resx 资源常量 | P2 |
+| `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） | M3 |
+| `AssemblyMeta.Strings` | resx 资源常量 | M3 |
 | `AssemblyMeta.Build`（候选） | TFM、构建信息、CI 环境快照 | P2 |
 
 ## 技术架构
@@ -77,7 +77,7 @@ MSBuild props/targets
 
 - **M1** 骨架端到端：meta 包 + AssemblyInfo + Constants，`dotnet pack` → 真实 `dotnet build` 验证生成代码
 - **M2** Project + Metadata + Git（已落地）
-- **M3** Resources + Strings + 文档站
+- **M3** Resources + Strings + 文档站（已落地）
 
 ## 测试策略
 

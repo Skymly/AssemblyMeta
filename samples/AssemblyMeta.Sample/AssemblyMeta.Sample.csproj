@@ -24,6 +24,10 @@
     <Content Include="Content\Docs\License.md" />
     <Content Include="Content\Docs\12. Readme (copy).txt" />
     <Content Include="..\linked\Readme.txt" Link="Included\Readme.txt" />
+    <EmbeddedResource Include="Content\Docs\License.md" />
+    <EmbeddedResource Include="Content\Docs\12. Readme (copy).txt" />
+    <EmbeddedResource Include="Content\Blob.bin" />
+    <EmbeddedResource Include="..\linked\Readme.txt" Link="Included\Readme.txt" />
   </ItemGroup>
 
   <ItemGroup>

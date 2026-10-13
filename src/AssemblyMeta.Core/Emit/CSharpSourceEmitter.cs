@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AssemblyMeta.Core.Emit;
 
-/// <summary>把 AssemblyInfo / Constants / Project / Metadata / Git 模型写成 C#。不引用 Roslyn，便于任务程序集复用同一套模型。</summary>
+/// <summary>把 AssemblyInfo / Constants / Project / Metadata / Git / Resources / Strings 模型写成 C#。不引用 Roslyn，便于任务程序集复用同一套模型。</summary>
 public sealed class CSharpSourceEmitter : ISourceEmitter
 {
     public SourceLanguage Language => SourceLanguage.CSharp;
@@ -60,7 +60,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         {
             foreach (var constant in model.Constants)
             {
-                AddConstant(root, constant, model.Visibility, csharpLanguageVersion, diagnostics);
+                AddConstant(root, constant, model.Visibility, csharpLanguageVersion, diagnostics, "Constants", avoidEnclosingName: false);
             }
         }
 
@@ -126,7 +126,52 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         return new EmitResult { Source = builder.ToString(), Diagnostics = diagnostics };
     }
 
-    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix)
+    public EmitResult EmitResources(ResourcesModel model, int csharpLanguageVersion)
+    {
+        if (model is null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+
+        var diagnostics = new List<DiagnosticReport>();
+        var ns = ResolveNamespace(model.Namespace, diagnostics);
+        var root = new NameNode<ResourceRecord>();
+        if (model.Resources is not null)
+        {
+            foreach (var resource in model.Resources)
+            {
+                AddResource(root, resource, diagnostics);
+            }
+        }
+
+        var builder = new StringBuilder();
+        WriteHeader(builder, "AssemblyMeta.Resources");
+        using (var scope = new NamespaceScope(builder, ns))
+        {
+            var indent = scope.Indent;
+            WriteRoot(builder, indent, model.Visibility);
+            indent++;
+            WriteNestedClassOpen(builder, indent, "Resources", "嵌入资源的强类型访问。Text 按 UTF-8 读取并缓存，GetBytes 与 GetStream 每次重新打开。");
+            indent++;
+            EmitResourceChildren(builder, root, indent);
+            if (root.ChildOrder.Count > 0)
+            {
+                WriteManifest(builder, indent);
+            }
+
+            indent--;
+            WriteClose(builder, indent);
+            indent--;
+            WriteClose(builder, indent);
+        }
+
+        return new EmitResult { Source = builder.ToString(), Diagnostics = diagnostics };
+    }
+
+    public EmitResult EmitStrings(ConstantsModel model, int csharpLanguageVersion)
+        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "字符串资源", avoidEnclosingName: true);
+
+    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix, bool avoidEnclosingName = false)
     {
         if (model is null)
         {
@@ -146,7 +191,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
                     comment = defaultCommentPrefix + " " + (constant.Name ?? "") + "。";
                 }
 
-                AddConstant(root, new ConstantRecord(constant.Name ?? "", constant.Value ?? "", "string", comment ?? ""), model.Visibility, languageVersion, diagnostics);
+                AddConstant(root, new ConstantRecord(constant.Name ?? "", constant.Value ?? "", "string", comment ?? ""), model.Visibility, languageVersion, diagnostics, className, avoidEnclosingName);
             }
         }
 
@@ -169,7 +214,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         return new EmitResult { Source = builder.ToString(), Diagnostics = diagnostics };
     }
 
-    private static void AddConstant(Node root, ConstantRecord constant, MemberVisibility visibility, int languageVersion, List<DiagnosticReport> diagnostics)
+    private static void AddConstant(Node root, ConstantRecord constant, MemberVisibility visibility, int languageVersion, List<DiagnosticReport> diagnostics, string enclosingType, bool avoidEnclosingName)
     {
         var name = constant.Name ?? "";
         if (string.IsNullOrWhiteSpace(name))
@@ -199,33 +244,29 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         }
 
         var node = root;
+        var parent = enclosingType ?? "";
         for (var i = 0; i < identifiers.Length; i++)
         {
+            var identifier = identifiers[i];
+            if (avoidEnclosingName && parent.Length > 0 && string.Equals(Bare(identifier), parent, StringComparison.Ordinal))
+            {
+                var renamed = identifier + "_";
+                diagnostics.Add(Warning(
+                    "AM0008",
+                    "名称与外层类型冲突",
+                    "常量“" + name + "”的片段“" + Bare(identifier) + "”与外层类型同名，已改为“" + Bare(renamed) + "”。"));
+                identifier = renamed;
+            }
+
             var isLeaf = i == identifiers.Length - 1;
-            if (!node.Children.TryGetValue(identifiers[i], out var child))
+            var child = node.TryDescend(identifier, isLeaf, name, "常量", diagnostics);
+            if (child is null)
             {
-                if (node.Leaf is not null)
-                {
-                    diagnostics.Add(Error("AM0001", "常量名重复", "常量“" + name + "”与已有成员“" + node.LeafPath + "”冲突，已忽略。"));
-                    return;
-                }
-
-                child = new Node { Identifier = identifiers[i] };
-                node.Children.Add(identifiers[i], child);
-                node.ChildOrder.Add(identifiers[i]);
-            }
-            else if (isLeaf && (child.Leaf is not null || child.Children.Count > 0))
-            {
-                diagnostics.Add(Error("AM0001", "常量名重复", "常量“" + name + "”与已有成员冲突，已忽略。"));
-                return;
-            }
-            else if (!isLeaf && child.Leaf is not null)
-            {
-                diagnostics.Add(Error("AM0001", "常量名重复", "常量“" + name + "”与已有成员“" + child.LeafPath + "”冲突，已忽略。"));
                 return;
             }
 
-            node = child;
+            node = (Node)child;
+            parent = Bare(identifier);
         }
 
         node.Leaf = constant;
@@ -242,7 +283,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
     {
         foreach (var name in node.ChildOrder)
         {
-            var child = node.Children[name];
+            var child = (Node)node.Children[name];
             if (child.Leaf is not null && child.Children.Count == 0)
             {
                 WriteMember(builder, indent, child);
@@ -350,6 +391,173 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         Line(builder, indent, "/// </summary>");
     }
 
+    private static void AddResource(NameNode<ResourceRecord> root, ResourceRecord resource, List<DiagnosticReport> diagnostics)
+    {
+        var name = resource.Name ?? "";
+        var manifest = resource.ManifestName ?? "";
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(manifest))
+        {
+            diagnostics.Add(Error("AM0002", "资源名无效", "存在空的资源名或清单名，已忽略。"));
+            return;
+        }
+
+        var segments = name.Split('.');
+        var identifiers = new string[segments.Length];
+        for (var i = 0; i < segments.Length; i++)
+        {
+            if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
+            {
+                diagnostics.Add(Error("AM0002", "资源名无效", "资源“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
+                return;
+            }
+
+            identifiers[i] = identifier;
+        }
+
+        var node = root;
+        var parent = "Resources";
+        for (var i = 0; i < identifiers.Length; i++)
+        {
+            var isLeaf = i == identifiers.Length - 1;
+            var identifier = DisambiguateResource(identifiers[i], parent, i == 0, isLeaf, name, diagnostics);
+            var child = node.TryDescend(identifier, isLeaf, name, "资源", diagnostics);
+            if (child is null)
+            {
+                return;
+            }
+
+            node = child;
+            parent = Bare(identifier);
+        }
+
+        node.Leaf = resource;
+        node.LeafPath = name;
+    }
+
+    private static string DisambiguateResource(string identifier, string parent, bool isRootSegment, bool isLeaf, string path, List<DiagnosticReport> diagnostics)
+    {
+        var bare = Bare(identifier);
+        string? reason = null;
+        if (parent.Length > 0 && string.Equals(bare, parent, StringComparison.Ordinal))
+        {
+            reason = "与外层类型同名";
+        }
+        else if (isRootSegment && string.Equals(bare, "Manifest", StringComparison.Ordinal))
+        {
+            reason = "与生成的 Manifest 访问器同名";
+        }
+        else if (isLeaf && (bare == "Text" || bare == "GetBytes" || bare == "GetStream"))
+        {
+            reason = "与资源成员 Text、GetBytes 或 GetStream 同名";
+        }
+
+        if (reason is null)
+        {
+            return identifier;
+        }
+
+        var renamed = identifier + "_";
+        diagnostics.Add(Warning("AM0008", "资源名已调整", "资源“" + path + "”的片段“" + bare + "”" + reason + "，已改为“" + Bare(renamed) + "”。"));
+        return renamed;
+    }
+
+    private static void EmitResourceChildren(StringBuilder builder, NameNode<ResourceRecord> node, int indent)
+    {
+        foreach (var name in node.ChildOrder)
+        {
+            var child = node.Children[name];
+            var summary = child.Leaf is null ? null : ResourceSummary(child.Leaf);
+            WriteNestedClassOpen(builder, indent, child.Identifier, summary);
+            if (child.Leaf is not null && child.Children.Count == 0)
+            {
+                WriteResourceMembers(builder, indent + 1, child.Leaf);
+            }
+            else
+            {
+                EmitResourceChildren(builder, child, indent + 1);
+            }
+
+            WriteClose(builder, indent);
+        }
+    }
+
+    private static string ResourceSummary(ResourceRecord resource)
+    {
+        var manifest = "清单资源名 " + (resource.ManifestName ?? "") + "。";
+        if (string.IsNullOrWhiteSpace(resource.Comment))
+        {
+            return manifest;
+        }
+
+        return resource.Comment.Trim() + " " + manifest;
+    }
+
+    private static void WriteResourceMembers(StringBuilder builder, int indent, ResourceRecord resource)
+    {
+        var literal = CSharpLiteral.EscapedString(resource.ManifestName ?? "");
+        Line(builder, indent, "private static string _text;");
+        Line(builder, indent, "public static string Text");
+        Line(builder, indent, "{");
+        Line(builder, indent + 1, "get");
+        Line(builder, indent + 1, "{");
+        Line(builder, indent + 2, "var value = _text;");
+        Line(builder, indent + 2, "if (value == null)");
+        Line(builder, indent + 2, "{");
+        Line(builder, indent + 3, "value = Manifest.ReadText(" + literal + ");");
+        Line(builder, indent + 3, "_text = value;");
+        Line(builder, indent + 2, "}");
+        Line(builder, indent + 2, "return value;");
+        Line(builder, indent + 1, "}");
+        Line(builder, indent, "}");
+        builder.Append('\n');
+        Line(builder, indent, "public static byte[] GetBytes() => Manifest.ReadBytes(" + literal + ");");
+        builder.Append('\n');
+        Line(builder, indent, "public static System.IO.Stream GetStream() => Manifest.Open(" + literal + ");");
+        builder.Append('\n');
+    }
+
+    private static void WriteManifest(StringBuilder builder, int indent)
+    {
+        Line(builder, indent, "private static class Manifest");
+        Line(builder, indent, "{");
+        var inner = indent + 1;
+        Line(builder, inner, "private static readonly System.Reflection.Assembly Assembly = typeof(AssemblyMeta).Assembly;");
+        builder.Append('\n');
+        Line(builder, inner, "public static System.IO.Stream Open(string name)");
+        Line(builder, inner, "{");
+        Line(builder, inner + 1, "var stream = Assembly.GetManifestResourceStream(name);");
+        Line(builder, inner + 1, "if (stream == null)");
+        Line(builder, inner + 1, "{");
+        Line(builder, inner + 2, "throw new System.InvalidOperationException(\"找不到嵌入资源“\" + name + \"”。\");");
+        Line(builder, inner + 1, "}");
+        Line(builder, inner + 1, "return stream;");
+        Line(builder, inner, "}");
+        builder.Append('\n');
+        Line(builder, inner, "public static byte[] ReadBytes(string name)");
+        Line(builder, inner, "{");
+        Line(builder, inner + 1, "using (var stream = Open(name))");
+        Line(builder, inner + 1, "using (var memory = new System.IO.MemoryStream())");
+        Line(builder, inner + 1, "{");
+        Line(builder, inner + 2, "stream.CopyTo(memory);");
+        Line(builder, inner + 2, "return memory.ToArray();");
+        Line(builder, inner + 1, "}");
+        Line(builder, inner, "}");
+        builder.Append('\n');
+        Line(builder, inner, "public static string ReadText(string name)");
+        Line(builder, inner, "{");
+        Line(builder, inner + 1, "using (var stream = Open(name))");
+        Line(builder, inner + 1, "using (var reader = new System.IO.StreamReader(stream, System.Text.Encoding.UTF8, true))");
+        Line(builder, inner + 1, "{");
+        Line(builder, inner + 2, "return reader.ReadToEnd();");
+        Line(builder, inner + 1, "}");
+        Line(builder, inner, "}");
+        Line(builder, indent, "}");
+        builder.Append('\n');
+    }
+
+    private static string Bare(string identifier)
+        => identifier.StartsWith("@", StringComparison.Ordinal) ? identifier.Substring(1) : identifier;
+
     private static string XmlEscape(string value)
         => value.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 
@@ -370,14 +578,56 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
     private static DiagnosticReport Warning(string id, string title, string message)
         => new(id, title, message, DiagnosticSeverityKind.Warning);
 
-    private sealed class Node
+    /// <summary>常量树和资源树共用的分段插入。冲突时报告 AM0001 并返回 null。</summary>
+    private class NameNode<TLeaf> where TLeaf : class
     {
         public string Identifier { get; set; } = "";
 
         public string? LeafPath { get; set; }
 
-        public ConstantRecord? Leaf { get; set; }
+        public TLeaf? Leaf { get; set; }
 
+        public Dictionary<string, NameNode<TLeaf>> Children { get; } = new(StringComparer.Ordinal);
+
+        public List<string> ChildOrder { get; } = new();
+
+        public NameNode<TLeaf>? TryDescend(string identifier, bool isLeaf, string path, string kind, List<DiagnosticReport> diagnostics)
+        {
+            if (!Children.TryGetValue(identifier, out var existing))
+            {
+                if (Leaf is not null)
+                {
+                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
+                    return null;
+                }
+
+                var created = CreateChild(identifier);
+                Children.Add(identifier, created);
+                ChildOrder.Add(identifier);
+                return created;
+            }
+
+            if (isLeaf && (existing.Leaf is not null || existing.Children.Count > 0))
+            {
+                diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员冲突，已忽略。"));
+                return null;
+            }
+
+            if (!isLeaf && existing.Leaf is not null)
+            {
+                diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
+                return null;
+            }
+
+            return existing;
+        }
+
+        protected virtual NameNode<TLeaf> CreateChild(string identifier)
+            => new() { Identifier = identifier };
+    }
+
+    private sealed class Node : NameNode<ConstantRecord>
+    {
         public string TypeName { get; set; } = "string";
 
         public string? Rhs { get; set; }
@@ -386,9 +636,8 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
 
         public string? Comment { get; set; }
 
-        public Dictionary<string, Node> Children { get; } = new(StringComparer.Ordinal);
-
-        public List<string> ChildOrder { get; } = new();
+        protected override NameNode<ConstantRecord> CreateChild(string identifier)
+            => new Node { Identifier = identifier };
     }
 
     private readonly struct NamespaceScope : IDisposable

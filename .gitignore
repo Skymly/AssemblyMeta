@@ -1,6 +1,8 @@
 bin/
 obj/
 artifacts/
+docs/obj/
+docs/_site/
 .vs/
 .idea/
 *.user

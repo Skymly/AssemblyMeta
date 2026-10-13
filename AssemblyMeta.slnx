@@ -11,6 +11,10 @@
     <Project Path="src/AssemblyMeta.Metadata/AssemblyMeta.Metadata.csproj" />
     <Project Path="src/AssemblyMeta.Project.Generator/AssemblyMeta.Project.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Project/AssemblyMeta.Project.csproj" />
+    <Project Path="src/AssemblyMeta.Resources.Generator/AssemblyMeta.Resources.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Resources/AssemblyMeta.Resources.csproj" />
+    <Project Path="src/AssemblyMeta.Strings.Generator/AssemblyMeta.Strings.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Strings/AssemblyMeta.Strings.csproj" />
     <Project Path="src/AssemblyMeta.Tasks/AssemblyMeta.Tasks.csproj" />
     <Project Path="src/AssemblyMeta/AssemblyMeta.csproj" />
   </Folder>

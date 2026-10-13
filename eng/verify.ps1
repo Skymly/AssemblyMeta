@@ -19,7 +19,9 @@ foreach ($id in @(
     'assemblymeta.constants',
     'assemblymeta.project',
     'assemblymeta.metadata',
-    'assemblymeta.git'
+    'assemblymeta.git',
+    'assemblymeta.resources',
+    'assemblymeta.strings'
 )) {
     $dir = Join-Path $nugetRoot $id
     if (Test-Path -LiteralPath $dir) {
@@ -75,6 +77,39 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host '== file-based ProjectProperty =='
 dotnet run --file .\samples\file-app\App.cs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+Write-Host '== 直接引用 Resources =='
+dotnet build .\samples\Resources\Resources.csproj -c Release
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+dotnet run --project .\samples\Resources\Resources.csproj -c Release --no-build
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+Write-Host '== 直接引用 Strings =='
+dotnet build .\samples\Strings\Strings.csproj -c Release
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+dotnet run --project .\samples\Strings\Strings.csproj -c Release --no-build
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+Write-Host '== 文档站 =='
+dotnet tool restore
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (Test-Path -LiteralPath .\artifacts\docs) {
+    Remove-Item -LiteralPath .\artifacts\docs -Recurse -Force
+}
+dotnet docfx .\docs\docfx.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$index = Join-Path .\artifacts\docs 'index.html'
+if (-not (Test-Path -LiteralPath $index)) {
+    Write-Error '文档站没有生成 index.html'
+    exit 1
+}
+$mention = Get-ChildItem -LiteralPath .\artifacts\docs -Recurse -File |
+    Select-String -Pattern 'AssemblyMeta.Resources' -SimpleMatch -List |
+    Select-Object -First 1
+if (-not $mention) {
+    Write-Error '文档站产物里没有 AssemblyMeta.Resources'
+    exit 1
+}
 
 Write-Host '验证通过。'
 

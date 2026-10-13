@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <_AssemblyMetaResourcesTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaResourcesTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeResources"
+             AssemblyFile="$(_AssemblyMetaResourcesTasksAssembly)"
+             Condition="Exists('$(_AssemblyMetaResourcesTasksAssembly)')" />
+
+  <!--
+    依赖 PrepareResourceNames，这样 ManifestResourceName 已经由 SDK 填好。
+    在该目标之前追加的 EmbeddedResource 会参与生成。
+    .resx 默认跳过，除非 AssemblyMetaResource=true。
+  -->
+  <Target Name="AssemblyMetaPrepareResources"
+          BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          DependsOnTargets="PrepareResourceNames"
+          Condition="Exists('$(_AssemblyMetaResourcesTasksAssembly)') and '$(IsCrossTargetingBuild)' != 'true'">
+    <EncodeResources
+      Namespace="$(AssemblyMetaNamespace)"
+      Visibility="$(AssemblyMetaVisibility)"
+      Items="@(EmbeddedResource)">
+      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_ResourcesPayload" />
+    </EncodeResources>
+    <Message Importance="Low" Text="AssemblyMeta 已准备 Resources 载荷。" />
+  </Target>
+</Project>

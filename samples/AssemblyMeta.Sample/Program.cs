@@ -1,6 +1,7 @@
 using System.Reflection;
 
 [assembly: AssemblyMetadata("Banner", AssemblyMeta.Constants.Banner)]
+[assembly: AssemblyMetadata("StringHello", AssemblyMeta.Strings.Hello)]
 
 var failures = new List<string>();
 
@@ -47,6 +48,43 @@ if (AssemblyMeta.Git.Root.Contains('\\'))
 var demo = System.Reflection.CustomAttributeExtensions.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>(typeof(Program).Assembly)
     .FirstOrDefault(attribute => attribute.Key == "DemoKey");
 Check("AssemblyMetadataAttribute", demo?.Value ?? "", "a;b#c");
+var stringHello = System.Reflection.CustomAttributeExtensions.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>(typeof(Program).Assembly)
+    .FirstOrDefault(attribute => attribute.Key == "StringHello");
+Check("StringHello", stringHello?.Value ?? "", "你好");
+const string license = "示例许可证文本。\r\n";
+var licenseText = AssemblyMeta.Resources.Content.Docs.License.Text;
+Check("Resources.License", licenseText, license);
+if (!object.ReferenceEquals(licenseText, AssemblyMeta.Resources.Content.Docs.License.Text))
+{
+    failures.Add("Resources.License.Text 没有缓存");
+}
+var licenseBytes = AssemblyMeta.Resources.Content.Docs.License.GetBytes();
+Check("Resources.License.GetBytes", System.Text.Encoding.UTF8.GetString(licenseBytes), license);
+using (var stream = AssemblyMeta.Resources.Content.Docs.License.GetStream())
+{
+    using var copy = new System.IO.MemoryStream();
+    stream.CopyTo(copy);
+    Check("Resources.License.GetStream", System.Text.Encoding.UTF8.GetString(copy.ToArray()), license);
+}
+Check("Resources.Readme", AssemblyMeta.Resources.Content.Docs._12._Readme_copy_.Text, "这是一份带空格和括号的说明。\r\n");
+Check("Resources.Linked", AssemblyMeta.Resources.Included.Readme.Text, "链接进来的说明文件。\r\n");
+var blob = AssemblyMeta.Resources.Content.Blob.GetBytes();
+if (blob.Length != 4 || blob[0] != 1 || blob[1] != 2 || blob[2] != 3 || blob[3] != 255)
+{
+    failures.Add("Resources.Blob 字节不符: " + string.Join(",", blob));
+}
+Check(nameof(AssemblyMeta.Strings.Hello), AssemblyMeta.Strings.Hello, "你好");
+Check(nameof(AssemblyMeta.Strings.User.InvalidCredentials), AssemblyMeta.Strings.User.InvalidCredentials, "凭证无效");
+Check(nameof(AssemblyMeta.Strings.Greeting), AssemblyMeta.Strings.Greeting, "你好，{0}");
+Check(nameof(AssemblyMeta.Strings.Errors.NotFound), AssemblyMeta.Strings.Errors.NotFound, "找不到 {0}");
+var resourceType = typeof(AssemblyMeta).GetNestedType("Resources");
+foreach (var unexpected in new[] { "Strings", "Strings_", "Errors" })
+{
+    if (resourceType?.GetNestedType(unexpected) is not null)
+    {
+        failures.Add("resx 进入了 Resources." + unexpected);
+    }
+}
 
 if (failures.Count > 0)
 {

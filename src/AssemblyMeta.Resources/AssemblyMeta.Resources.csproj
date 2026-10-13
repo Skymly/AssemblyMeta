@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Resources.Generator\AssemblyMeta.Resources.Generator.csproj</AssemblyMetaGeneratorProject>
+    <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Resources.Generator\</AssemblyMetaGeneratorProjectDir>
+    <AssemblyMetaGeneratorAssembly>AssemblyMeta.Resources.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
+    <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
+    <PackageId>AssemblyMeta.Resources</PackageId>
+    <Description>把 EmbeddedResource 生成为 AssemblyMeta.Resources，提供 Text、GetBytes 与 GetStream。</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>roslyn;source-generator;resources;embedded;msbuild</PackageTags>
+  </PropertyGroup>
+  <Import Project="..\AssemblyMeta.Packaging.targets" />
+</Project>
