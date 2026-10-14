@@ -48,7 +48,6 @@ M3 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git�
 | `AssemblyMeta.Git` | Commit/Sha/Branch/Url（依赖 SourceLink） | M2 |
 | `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） | M3 |
 | `AssemblyMeta.Strings` | resx 资源常量 | M3 |
-| `AssemblyMeta.Build`（候选） | TFM、构建信息、CI 环境快照 | P2 |
 
 ## 技术架构
 

@@ -19,6 +19,6 @@ var foo = AssemblyMeta.Project.Foo;
 
 `$(ProjectProperty)` 按分号拆分，file-based apps 可以写 `#:property ProjectProperty=Foo`。
 
-默认还会带上 `AssemblyName`、`RootNamespace`、`TargetFrameworkIdentifier`、`TargetFrameworkMoniker`、`TargetFrameworkVersion`、`RuntimeIdentifier`、`RuntimeIdentifiers`。不需要的用 `<ProjectProperty Remove="..." />` 去掉。
+默认还会带上 `AssemblyName`、`RootNamespace`、`TargetFrameworkIdentifier`、`TargetFrameworkMoniker`、`TargetFrameworkVersion`、`RuntimeIdentifier`、`RuntimeIdentifiers`。这是目标框架标识，不含短名 `TargetFramework`。不需要的用 `<ProjectProperty Remove="..." />` 去掉。要短名就再点名 `TargetFramework`。
 
 点号会变成嵌套类型。空注释会生成“项目属性 {名称}。”
