@@ -268,7 +268,7 @@
 
 - 边界情形：调用方可以用 MSBuild 的 Remove 去掉默认项。公开 README 的 Project 一节没有逐个列出这七个名字，名单来自 v2.1.6 的 props。
 - AssemblyMeta 现状：已对齐
-- 证据：`src/AssemblyMeta.Project/buildTransitive/AssemblyMeta.Project.props`；`src/AssemblyMeta.Project/README.md`；`docs/使用说明.md`。本仓把这组称为目标框架标识，短名要另外点 `TargetFramework`。
+- 证据：`src/AssemblyMeta.Project/buildTransitive/AssemblyMeta.Project.props`；`src/AssemblyMeta.Project/README.md`；`docs/使用说明.md`。本仓把标识符、Moniker 和版本称为目标框架标识。目标框架短名要另外点名 `TargetFramework`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Project/ThisAssembly.Project.props>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>
 
 ### AssemblyMetadata
