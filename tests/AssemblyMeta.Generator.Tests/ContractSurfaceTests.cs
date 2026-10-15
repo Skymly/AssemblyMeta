@@ -42,6 +42,7 @@ public class ContractSurfaceTests
         {
             new ConstantRecord("class", "keyword", "string", ""),
             new ConstantRecord("a--b", "x", "string", ""),
+            new ConstantRecord("1ab", "n", "string", ""),
             new ConstantRecord("Content.Docs.License", "Content/Docs/License.md", "string", ""),
             new ConstantRecord("Http.Timeout", "30", "int", ""),
         }), SourceKind.Constants, 1100);
@@ -49,6 +50,7 @@ public class ContractSurfaceTests
         Assert.Contains("public static partial class Constants", constants.Source);
         Assert.Contains("public static readonly string @class = \"keyword\";", constants.Source);
         Assert.Contains("public static readonly string a_b = \"x\";", constants.Source);
+        Assert.Contains("public static readonly string _1ab = \"n\";", constants.Source);
         var httpClass = constants.Source.IndexOf("public static partial class Http", StringComparison.Ordinal);
         Assert.True(httpClass >= 0);
         Assert.Contains("public static readonly int Timeout = 30;", constants.Source.Substring(httpClass));
@@ -141,12 +143,14 @@ public class ContractSurfaceTests
             new ConstantRecord("Hello", "Hello {who}", "string", ""),
         }), SourceKind.Strings, 1100);
         Assert.NotNull(strings.Source);
-        Assert.Contains("public static partial class Strings", strings.Source);
+        var stringsClass = strings.Source.IndexOf("public static partial class Strings\n", StringComparison.Ordinal);
+        Assert.True(stringsClass >= 0);
         var shopClass = strings.Source.IndexOf("public static partial class Shop", StringComparison.Ordinal);
+        Assert.True(shopClass > stringsClass);
         Assert.True(shopClass >= 0);
         Assert.Contains("public const string Closed = \"Closed today {0}\";", strings.Source.Substring(shopClass));
         var errorsClass = strings.Source.IndexOf("public static partial class Errors", StringComparison.Ordinal);
-        Assert.True(errorsClass >= 0);
+        Assert.True(errorsClass > stringsClass);
         Assert.Contains("public const string NotFound = \"missing\";", strings.Source.Substring(errorsClass));
         Assert.Contains("public const string Hello = \"Hello {who}\";", strings.Source);
         Assert.DoesNotContain("Hello(", strings.Source);
