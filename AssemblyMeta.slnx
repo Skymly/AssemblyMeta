@@ -20,5 +20,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AssemblyMeta.Generator.Tests/AssemblyMeta.Generator.Tests.csproj" />
+    <Project Path="tests/AssemblyMeta.Packaging.Tests/AssemblyMeta.Packaging.Tests.csproj" />
   </Folder>
 </Solution>
