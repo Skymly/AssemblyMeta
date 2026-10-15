@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta.Strings" Version="0.1.0" />
+    <PackageReference Include="AssemblyMeta.Strings" Version="1.0.0" />
   </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@
     <AssemblyName>AssemblyMeta.Git.Sample</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta.Git" Version="0.1.0" />
+    <PackageReference Include="AssemblyMeta.Git" Version="1.0.0" />
   </ItemGroup>
 
   <!-- 证明 InitializeGitInformation 把属性交给下游，而不只是生成常量。 -->

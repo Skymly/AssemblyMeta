@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta.Resources" Version="0.1.0" />
+    <PackageReference Include="AssemblyMeta.Resources" Version="1.0.0" />
     <EmbeddedResource Include="Content\Note.txt" />
   </ItemGroup>
 </Project>

@@ -7,6 +7,6 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta.AssemblyInfo" Version="0.1.0" />
+    <PackageReference Include="AssemblyMeta.AssemblyInfo" Version="1.0.0" />
   </ItemGroup>
 </Project>
