@@ -363,6 +363,19 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Source_emission_rejects_null_payload_and_an_unknown_kind()
+    {
+        Assert.Throws<ArgumentNullException>(() => SourceEmission.Emit(null!, SourceKind.Constants, 1100));
+        Assert.Throws<ArgumentOutOfRangeException>(() => SourceEmission.Emit("", (SourceKind)99, 1100));
+
+        var rejected = SourceEmission.Emit("", SourceKind.Git, 1100);
+        Assert.Null(rejected.Source);
+        var diagnostic = Assert.Single(rejected.Diagnostics);
+        Assert.Equal("AM0004", diagnostic.Id);
+        Assert.Equal("无法解析 Git 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
+    }
+
+    [Fact]
     public void Oversized_diagnostic_count_is_rejected()
     {
         var payload = CraftConstantsPayload("2147483647");
