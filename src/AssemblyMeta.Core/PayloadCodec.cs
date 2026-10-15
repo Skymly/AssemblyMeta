@@ -502,7 +502,7 @@ public static class PayloadCodec
         }
 
         index++;
-        if (index + (count * 4) > fields.Count)
+        if (index > fields.Count || (long)count * 4 > fields.Count - index)
         {
             return false;
         }

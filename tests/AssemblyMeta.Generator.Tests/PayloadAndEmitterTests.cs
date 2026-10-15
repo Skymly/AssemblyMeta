@@ -350,4 +350,34 @@ public class PayloadAndEmitterTests
         Assert.Contains("public static readonly string Version", source);
         Assert.DoesNotContain("const string Version", source);
     }
+
+    [Fact]
+    public void Oversized_diagnostic_count_is_rejected()
+    {
+        var payload = CraftConstantsPayload("2147483647");
+        Assert.False(PayloadCodec.TryDecodeConstants(payload, out _));
+    }
+
+    private static string CraftConstantsPayload(string diagnosticCount)
+    {
+        using var stream = new System.IO.MemoryStream();
+        using (var writer = new System.IO.BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            writer.Write(new byte[] { (byte)'A', (byte)'M', (byte)'C', (byte)'S' });
+            writer.Write(2);
+            writer.Write(3);
+            WriteField(writer, "");
+            WriteField(writer, "internal");
+            WriteField(writer, diagnosticCount);
+        }
+
+        return Convert.ToBase64String(stream.ToArray());
+    }
+
+    private static void WriteField(System.IO.BinaryWriter writer, string value)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(value);
+        writer.Write(bytes.Length);
+        writer.Write(bytes);
+    }
 }
