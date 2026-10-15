@@ -119,6 +119,13 @@ public class ContractSurfaceTests
                     ManifestName = "Demo.Content.Docs.License.md",
                 },
                 new ResourceNameInput { Name = "Resources.readme", ManifestName = "Demo.Resources.readme.txt" },
+                new ResourceNameInput
+                {
+                    RelativeDir = @"Docs\Docs\",
+                    Filename = "file",
+                    Extension = ".txt",
+                    ManifestName = "Demo.Docs.Docs.file.txt",
+                },
             },
         });
         var resourceRecords = new ResourceRecord[namedResources.Members.Count];
@@ -137,6 +144,7 @@ public class ContractSurfaceTests
         var resourceText = resources.Source.Replace("\r\n", "\n");
         Assert.Contains("public static partial class Resources\n", resourceText);
         Assert.Contains("public static partial class Resources_\n", resourceText);
+        Assert.Contains("public static partial class Docs_\n", resourceText);
         var resourceDocs = resourceText.IndexOf("public static partial class Docs", StringComparison.Ordinal);
         Assert.True(resourceDocs > resourceText.IndexOf("public static partial class Content", StringComparison.Ordinal));
         Assert.Contains("public static string Text\n", resourceText.Substring(resourceDocs));

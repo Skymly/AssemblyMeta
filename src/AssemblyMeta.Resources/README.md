@@ -18,4 +18,4 @@ using var stream = AssemblyMeta.Resources.Content.Docs.License.GetStream();
 
 `.resx` 默认不进入这里。`AssemblyMetaResource=false` 可排除其它项；`AssemblyMetaResource=true` 可强制纳入 `.resx` 编译后的清单项。
 
-和 `Resources` 同名的片段会改成带下划线的名字，例如 `Resources/readme.txt` 是 `AssemblyMeta.Resources.Resources_.readme`，并报告 `AM0008`。叶子名 `Text`、`GetBytes`、`GetStream`，以及根上的 `Manifest`，也会改写。
+与外层类型同名的片段会在末尾加下划线并报告 `AM0008`。例如 `Resources/readme.txt` 是 `AssemblyMeta.Resources.Resources_.readme`，`Docs/Docs/file.txt` 是 `AssemblyMeta.Resources.Docs.Docs_.file`。叶子名 `Text`、`GetBytes`、`GetStream`，以及根上的 `Manifest`，也会改写。
