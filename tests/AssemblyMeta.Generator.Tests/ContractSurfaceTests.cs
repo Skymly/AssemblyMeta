@@ -33,6 +33,9 @@ public class ContractSurfaceTests
             Assert.Contains($"public const string {name} =", infoBody);
         }
 
+        Assert.Contains("public const string Description = \"\";", infoBody);
+        Assert.Contains("public const string Copyright = \"\";", infoBody);
+
         Assert.DoesNotContain("Trademark", info.Source);
 
         var constants = SourceEmission.Emit(PayloadCodec.EncodeConstants(null, MemberVisibility.Public, new[]
@@ -72,7 +75,22 @@ public class ContractSurfaceTests
             Assert.Contains($"public const string {name} =", git.Source);
         }
 
+        Assert.Contains("public const string Root = \"C:/repo/\";", git.Source);
+        Assert.Contains("public const string Url = \"\";", git.Source);
         Assert.Equal("abcdef", GeneratorTestHost.ExecuteConstant(git.Source!, "AssemblyMeta+Git", "Sha"));
+
+        var pending = SourceEmission.Emit(PayloadCodec.EncodeGit(new GitModel
+        {
+            Commit = "[pending build]",
+            Sha = "[pending build]",
+            Root = "[pending build]",
+            Url = "[pending build]",
+            Branch = "[pending build]",
+        }), SourceKind.Git, 1100);
+        foreach (var name in new[] { "Commit", "Sha", "Root", "Url", "Branch" })
+        {
+            Assert.Contains($"public const string {name} = \"[pending build]\";", pending.Source);
+        }
 
         var resources = SourceEmission.Emit(PayloadCodec.EncodeResources(null, MemberVisibility.Internal, new[]
         {
