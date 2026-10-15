@@ -119,12 +119,16 @@ public class ContractSurfaceTests
         var strings = SourceEmission.Emit(PayloadCodec.EncodeStrings(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("Shop.Closed", "Closed today {0}", "string", ""),
+            new ConstantRecord("Errors.NotFound", "missing", "string", ""),
         }), SourceKind.Strings, 1100);
         Assert.NotNull(strings.Source);
         Assert.Contains("public static partial class Strings", strings.Source);
         var shopClass = strings.Source.IndexOf("public static partial class Shop", StringComparison.Ordinal);
         Assert.True(shopClass >= 0);
         Assert.Contains("public const string Closed = \"Closed today {0}\";", strings.Source.Substring(shopClass));
+        var errorsClass = strings.Source.IndexOf("public static partial class Errors", StringComparison.Ordinal);
+        Assert.True(errorsClass >= 0);
+        Assert.Contains("public const string NotFound = \"missing\";", strings.Source.Substring(errorsClass));
         Assert.DoesNotContain("Closed(", strings.Source);
     }
 }
