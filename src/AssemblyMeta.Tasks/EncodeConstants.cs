@@ -29,31 +29,44 @@ public sealed class EncodeConstants : Microsoft.Build.Utilities.Task
                 Log.LogWarning("无法识别 AssemblyMetaVisibility“{0}”，已使用 internal。", Visibility);
             }
 
-            var records = new List<ConstantRecord>();
+            var constants = new List<ConstantNameInput>();
             foreach (var item in Constants ?? Array.Empty<ITaskItem>())
             {
-                records.Add(new ConstantRecord(
-                    item.ItemSpec ?? "",
-                    item.GetMetadata("Value"),
-                    item.GetMetadata("Type"),
-                    item.GetMetadata("Comment")));
+                constants.Add(new ConstantNameInput
+                {
+                    Name = item.ItemSpec ?? "",
+                    Value = item.GetMetadata("Value"),
+                    Type = item.GetMetadata("Type"),
+                    Comment = item.GetMetadata("Comment"),
+                });
             }
 
+            var files = new List<FileConstantNameInput>();
             foreach (var item in FileConstants ?? Array.Empty<ITaskItem>())
             {
-                var input = new FileConstantNaming.Input(
-                    item.GetMetadata("RelativeDir"),
-                    item.GetMetadata("Filename"),
-                    item.GetMetadata("Extension"),
-                    item.GetMetadata("Link"),
-                    item.GetMetadata("Comment"));
-                if (FileConstantNaming.TryCreate(input, out var record))
+                files.Add(new FileConstantNameInput
                 {
-                    records.Add(record);
-                }
+                    RelativeDir = item.GetMetadata("RelativeDir"),
+                    Filename = item.GetMetadata("Filename"),
+                    Extension = item.GetMetadata("Extension"),
+                    Link = item.GetMetadata("Link"),
+                    Comment = item.GetMetadata("Comment"),
+                });
             }
 
-            Payload = PayloadCodec.EncodeConstants(Namespace, visibility, records);
+            var named = MemberNames.Name(new MemberNameRequest
+            {
+                Area = MemberNameArea.Constants,
+                Constants = constants,
+                FileConstants = files,
+            });
+            var records = new List<ConstantRecord>();
+            foreach (var member in named.Members)
+            {
+                records.Add(new ConstantRecord(member.Name, member.Value, member.Type, member.Comment));
+            }
+
+            Payload = PayloadCodec.EncodeConstants(Namespace, visibility, records, named.GeneratorDiagnostics);
             return !Log.HasLoggedErrors;
         }
         catch (Exception ex)

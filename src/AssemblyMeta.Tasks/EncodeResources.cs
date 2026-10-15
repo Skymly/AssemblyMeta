@@ -22,7 +22,7 @@ public sealed class EncodeResources : Microsoft.Build.Utilities.Task
         try
         {
             var visibility = TaskSupport.ParseVisibility(this, Visibility);
-            var records = new List<ResourceRecord>();
+            var inputs = new List<ResourceNameInput>();
             foreach (var item in Items ?? Array.Empty<ITaskItem>())
             {
                 if (TaskSupport.IsFalse(item.GetMetadata("AssemblyMetaResource")))
@@ -30,9 +30,9 @@ public sealed class EncodeResources : Microsoft.Build.Utilities.Task
                     continue;
                 }
 
-                var input = TaskSupport.ReadFileInput(item);
-                var hasLogical = FileConstantNaming.TryCreate(input, out var named);
-                var logical = hasLogical ? named.Value : item.ItemSpec ?? "";
+                var file = TaskSupport.ReadFileInput(item);
+                var hasLogical = FileConstantNaming.TryCreate(file, out var namedPath);
+                var logical = hasLogical ? namedPath.Value : item.ItemSpec ?? "";
                 var force = TaskSupport.IsTrue(item.GetMetadata("AssemblyMetaResource"));
                 if (!force && ResourceNaming.IsResx(item.GetMetadata("Extension"), logical))
                 {
@@ -45,22 +45,35 @@ public sealed class EncodeResources : Microsoft.Build.Utilities.Task
                     manifest = item.GetMetadata("LogicalName");
                 }
 
-                if (string.IsNullOrWhiteSpace(manifest))
+                inputs.Add(new ResourceNameInput
                 {
-                    TaskSupport.LogCodeWarning(this, "AM0009", item.ItemSpec, "嵌入资源“{0}”没有清单名，已跳过。", item.ItemSpec ?? "");
-                    continue;
-                }
-
-                if (!ResourceNaming.TryCreate(input, manifest, out var record))
-                {
-                    TaskSupport.LogCodeWarning(this, "AM0010", item.ItemSpec, "嵌入资源“{0}”无法映射为标识符，已跳过。", item.ItemSpec ?? "");
-                    continue;
-                }
-
-                records.Add(record);
+                    RelativeDir = file.RelativeDir,
+                    Filename = file.FileName,
+                    Extension = file.Extension,
+                    Link = file.Link,
+                    Comment = file.Comment,
+                    ManifestName = manifest,
+                    Spec = item.ItemSpec,
+                });
             }
 
-            Payload = PayloadCodec.EncodeResources(Namespace, visibility, records);
+            var named = MemberNames.Name(new MemberNameRequest
+            {
+                Area = MemberNameArea.Resources,
+                Resources = inputs,
+            });
+            foreach (var diagnostic in named.TaskDiagnostics)
+            {
+                TaskSupport.LogCodeWarning(this, diagnostic.Id, "", diagnostic.Message);
+            }
+
+            var records = new List<ResourceRecord>();
+            foreach (var member in named.Members)
+            {
+                records.Add(new ResourceRecord(member.Name, member.ManifestName ?? "", member.Comment));
+            }
+
+            Payload = PayloadCodec.EncodeResources(Namespace, visibility, records, named.GeneratorDiagnostics);
             return !Log.HasLoggedErrors;
         }
         catch (Exception ex)

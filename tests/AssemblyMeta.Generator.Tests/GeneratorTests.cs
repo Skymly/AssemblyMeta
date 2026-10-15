@@ -58,14 +58,26 @@ public class GeneratorTests
     [Fact]
     public void Constants_generator_emits_nested_typed_members_and_duplicate_diagnostic()
     {
-        var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+        var named = MemberNames.Name(new MemberNameRequest
         {
-            new ConstantRecord("Http.TimeoutSeconds", "30", "int", "请求超时（秒）"),
-            new ConstantRecord("class", "keyword", "", ""),
-            new ConstantRecord("Foo.Bar", "1", "int", ""),
-            new ConstantRecord("Foo", "2", "int", ""),
-            new ConstantRecord("Banner", "line1\nline2", "string", ""),
+            Area = MemberNameArea.Constants,
+            Constants = new[]
+            {
+                new ConstantNameInput { Name = "Http.TimeoutSeconds", Value = "30", Type = "int", Comment = "请求超时（秒）" },
+                new ConstantNameInput { Name = "class", Value = "keyword" },
+                new ConstantNameInput { Name = "Foo.Bar", Value = "1", Type = "int" },
+                new ConstantNameInput { Name = "Foo", Value = "2", Type = "int" },
+                new ConstantNameInput { Name = "Banner", Value = "line1\nline2", Type = "string" },
+            },
         });
+        var records = new ConstantRecord[named.Members.Count];
+        for (var i = 0; i < records.Length; i++)
+        {
+            var member = named.Members[i];
+            records[i] = new ConstantRecord(member.Name, member.Value, member.Type, member.Comment);
+        }
+
+        var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, records, named.GeneratorDiagnostics);
 
         var (diagnostics, source) = GeneratorTestHost.Run(
             new ConstantsGenerator(),

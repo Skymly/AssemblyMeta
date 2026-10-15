@@ -25,7 +25,7 @@ public sealed class EncodeStrings : Microsoft.Build.Utilities.Task
         try
         {
             var visibility = TaskSupport.ParseVisibility(this, Visibility);
-            var records = new List<ConstantRecord>();
+            var inputs = new List<StringNameInput>();
             foreach (var item in Items ?? Array.Empty<ITaskItem>())
             {
                 if (!ResourceNaming.IsResx(item.GetMetadata("Extension"), item.ItemSpec) || TaskSupport.IsFalse(item.GetMetadata("AssemblyMetaStrings")))
@@ -34,14 +34,14 @@ public sealed class EncodeStrings : Microsoft.Build.Utilities.Task
                 }
 
                 var input = TaskSupport.ReadFileInput(item);
-                if (!FileConstantNaming.TryCreate(input, out var named))
+                if (!FileConstantNaming.TryCreate(input, out var namedPath))
                 {
-                    TaskSupport.LogCodeWarning(this, "AM0010", item.ItemSpec, "resx“{0}”位于项目外且没有 Link，已跳过。", item.ItemSpec ?? "");
+                    inputs.Add(new StringNameInput { OutsideWithoutLink = true, Spec = item.ItemSpec });
                     continue;
                 }
 
                 var withCulture = item.GetMetadata("WithCulture");
-                if (TaskSupport.IsTrue(withCulture) || (string.IsNullOrEmpty(withCulture) && StringResourceNaming.IsSatellitePath(named.Value)))
+                if (TaskSupport.IsTrue(withCulture) || (string.IsNullOrEmpty(withCulture) && StringResourceNaming.IsSatellitePath(namedPath.Value)))
                 {
                     continue;
                 }
@@ -77,17 +77,34 @@ public sealed class EncodeStrings : Microsoft.Build.Utilities.Task
 
                 foreach (var entry in entries)
                 {
-                    if (!StringResourceNaming.TryCreate(named.Value, entry.Name, entry.Value, entry.Comment, out var record))
+                    inputs.Add(new StringNameInput
                     {
-                        TaskSupport.LogCodeWarning(this, "AM0010", fullPath, "已忽略 resx“{0}”中的无效键“{1}”。", fullPath, entry.Name);
-                        continue;
-                    }
-
-                    records.Add(record);
+                        LogicalPath = namedPath.Value,
+                        Key = entry.Name,
+                        Value = entry.Value,
+                        Comment = entry.Comment,
+                        Spec = fullPath,
+                    });
                 }
             }
 
-            Payload = PayloadCodec.EncodeStrings(Namespace, visibility, records);
+            var named = MemberNames.Name(new MemberNameRequest
+            {
+                Area = MemberNameArea.Strings,
+                Strings = inputs,
+            });
+            foreach (var diagnostic in named.TaskDiagnostics)
+            {
+                TaskSupport.LogCodeWarning(this, diagnostic.Id, "", diagnostic.Message);
+            }
+
+            var records = new List<ConstantRecord>();
+            foreach (var member in named.Members)
+            {
+                records.Add(new ConstantRecord(member.Name, member.Value, member.Type, member.Comment));
+            }
+
+            Payload = PayloadCodec.EncodeStrings(Namespace, visibility, records, named.GeneratorDiagnostics);
             return !Log.HasLoggedErrors;
         }
         catch (Exception ex)

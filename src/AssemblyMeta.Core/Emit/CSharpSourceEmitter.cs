@@ -54,13 +54,18 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         }
 
         var diagnostics = new List<DiagnosticReport>();
+        if (model.NamesAreFinal)
+        {
+            diagnostics.AddRange(model.NamingDiagnostics);
+        }
+
         var ns = ResolveNamespace(model.Namespace, diagnostics);
         var root = new Node();
         if (model.Constants is not null)
         {
             foreach (var constant in model.Constants)
             {
-                AddConstant(root, constant, model.Visibility, csharpLanguageVersion, diagnostics, "Constants", avoidEnclosingName: false);
+                AddConstant(root, constant, model.Visibility, csharpLanguageVersion, diagnostics, "Constants", avoidEnclosingName: false, namesAreFinal: model.NamesAreFinal);
             }
         }
 
@@ -134,13 +139,18 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         }
 
         var diagnostics = new List<DiagnosticReport>();
+        if (model.NamesAreFinal)
+        {
+            diagnostics.AddRange(model.NamingDiagnostics);
+        }
+
         var ns = ResolveNamespace(model.Namespace, diagnostics);
         var root = new NameNode<ResourceRecord>();
         if (model.Resources is not null)
         {
             foreach (var resource in model.Resources)
             {
-                AddResource(root, resource, diagnostics);
+                AddResource(root, resource, diagnostics, model.NamesAreFinal);
             }
         }
 
@@ -169,9 +179,9 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
     }
 
     public EmitResult EmitStrings(ConstantsModel model, int csharpLanguageVersion)
-        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "字符串资源", avoidEnclosingName: true);
+        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "字符串资源", avoidEnclosingName: model is null || !model.NamesAreFinal, namesAreFinal: model is not null && model.NamesAreFinal);
 
-    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix, bool avoidEnclosingName = false)
+    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix, bool avoidEnclosingName = false, bool namesAreFinal = false)
     {
         if (model is null)
         {
@@ -179,6 +189,11 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         }
 
         var diagnostics = new List<DiagnosticReport>();
+        if (namesAreFinal)
+        {
+            diagnostics.AddRange(model.NamingDiagnostics);
+        }
+
         var ns = ResolveNamespace(model.Namespace, diagnostics);
         var root = new Node();
         if (model.Constants is not null)
@@ -191,7 +206,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
                     comment = defaultCommentPrefix + " " + (constant.Name ?? "") + "。";
                 }
 
-                AddConstant(root, new ConstantRecord(constant.Name ?? "", constant.Value ?? "", "string", comment ?? ""), model.Visibility, languageVersion, diagnostics, className, avoidEnclosingName);
+                AddConstant(root, new ConstantRecord(constant.Name ?? "", constant.Value ?? "", "string", comment ?? ""), model.Visibility, languageVersion, diagnostics, className, avoidEnclosingName, namesAreFinal);
             }
         }
 
@@ -214,7 +229,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         return new EmitResult { Source = builder.ToString(), Diagnostics = diagnostics };
     }
 
-    private static void AddConstant(Node root, ConstantRecord constant, MemberVisibility visibility, int languageVersion, List<DiagnosticReport> diagnostics, string enclosingType, bool avoidEnclosingName)
+    private static void AddConstant(Node root, ConstantRecord constant, MemberVisibility visibility, int languageVersion, List<DiagnosticReport> diagnostics, string enclosingType, bool avoidEnclosingName, bool namesAreFinal = false)
     {
         var name = constant.Name ?? "";
         if (string.IsNullOrWhiteSpace(name))
@@ -227,13 +242,25 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         var identifiers = new string[segments.Length];
         for (var i = 0; i < segments.Length; i++)
         {
-            if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
+            if (namesAreFinal)
+            {
+                if (!IdentifierSanitizer.IsValidIdentifier(segments[i]))
+                {
+                    diagnostics.Add(Error("AM0002", "常量名无效", "常量“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
+                    return;
+                }
+
+                identifiers[i] = segments[i];
+            }
+            else if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
             {
                 diagnostics.Add(Error("AM0002", "常量名无效", "常量“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
                 return;
             }
-
-            identifiers[i] = identifier;
+            else
+            {
+                identifiers[i] = identifier;
+            }
         }
 
         var typeName = constant.EffectiveType;
@@ -248,7 +275,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         for (var i = 0; i < identifiers.Length; i++)
         {
             var identifier = identifiers[i];
-            if (avoidEnclosingName && parent.Length > 0 && string.Equals(Bare(identifier), parent, StringComparison.Ordinal))
+            if (!namesAreFinal && avoidEnclosingName && parent.Length > 0 && string.Equals(Bare(identifier), parent, StringComparison.Ordinal))
             {
                 var renamed = identifier + "_";
                 diagnostics.Add(Warning(
@@ -391,7 +418,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         Line(builder, indent, "/// </summary>");
     }
 
-    private static void AddResource(NameNode<ResourceRecord> root, ResourceRecord resource, List<DiagnosticReport> diagnostics)
+    private static void AddResource(NameNode<ResourceRecord> root, ResourceRecord resource, List<DiagnosticReport> diagnostics, bool namesAreFinal = false)
     {
         var name = resource.Name ?? "";
         var manifest = resource.ManifestName ?? "";
@@ -405,13 +432,25 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         var identifiers = new string[segments.Length];
         for (var i = 0; i < segments.Length; i++)
         {
-            if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
+            if (namesAreFinal)
+            {
+                if (!IdentifierSanitizer.IsValidIdentifier(segments[i]))
+                {
+                    diagnostics.Add(Error("AM0002", "资源名无效", "资源“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
+                    return;
+                }
+
+                identifiers[i] = segments[i];
+            }
+            else if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
             {
                 diagnostics.Add(Error("AM0002", "资源名无效", "资源“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
                 return;
             }
-
-            identifiers[i] = identifier;
+            else
+            {
+                identifiers[i] = identifier;
+            }
         }
 
         var node = root;
@@ -419,7 +458,9 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         for (var i = 0; i < identifiers.Length; i++)
         {
             var isLeaf = i == identifiers.Length - 1;
-            var identifier = DisambiguateResource(identifiers[i], parent, i == 0, isLeaf, name, diagnostics);
+            var identifier = namesAreFinal
+                ? identifiers[i]
+                : DisambiguateResource(identifiers[i], parent, i == 0, isLeaf, name, diagnostics);
             var child = node.TryDescend(identifier, isLeaf, name, "资源", diagnostics);
             if (child is null)
             {

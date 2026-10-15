@@ -77,13 +77,25 @@ public class ResourcesStringsTests
     [Fact]
     public void Resources_generator_reads_manifest_and_renames_conflicts()
     {
-        var payload = PayloadCodec.EncodeResources(null, MemberVisibility.Internal, new[]
+        var named = MemberNames.Name(new MemberNameRequest
         {
-            new ResourceRecord("Content.Docs.License", "Host.License.md", "许可证"),
-            new ResourceRecord("Resources.readme", "readme.txt", ""),
-            new ResourceRecord("Content.Text", "text.bin", ""),
-            new ResourceRecord("Manifest", "root.bin", ""),
+            Area = MemberNameArea.Resources,
+            Resources = new[]
+            {
+                new ResourceNameInput { Name = "Content.Docs.License", ManifestName = "Host.License.md", Comment = "许可证" },
+                new ResourceNameInput { Name = "Resources.readme", ManifestName = "readme.txt" },
+                new ResourceNameInput { Name = "Content.Text", ManifestName = "text.bin" },
+                new ResourceNameInput { Name = "Manifest", ManifestName = "root.bin" },
+            },
         });
+        var records = new ResourceRecord[named.Members.Count];
+        for (var i = 0; i < records.Length; i++)
+        {
+            var member = named.Members[i];
+            records[i] = new ResourceRecord(member.Name, member.ManifestName ?? "", member.Comment);
+        }
+
+        var payload = PayloadCodec.EncodeResources(null, MemberVisibility.Internal, records, named.GeneratorDiagnostics);
         var (diagnostics, source) = GeneratorTestHost.Run(new ResourcesGenerator(), ResourcesGenerator.PayloadKey, payload);
         Assert.NotNull(source);
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == "AM0008");
@@ -125,14 +137,26 @@ public class ResourcesStringsTests
     [Fact]
     public void Strings_generator_emits_constants_and_cache_hits()
     {
-        var payload = PayloadCodec.EncodeStrings("Demo", MemberVisibility.Internal, new[]
+        var named = MemberNames.Name(new MemberNameRequest
         {
-            new ConstantRecord("Hello", "你好", "", "问候"),
-            new ConstantRecord("Shopping.OutOfStock", "缺货", "", ""),
-            new ConstantRecord("Greeting", "你好，{0}", "", ""),
-            new ConstantRecord("Strings", "self", "", ""),
-            new ConstantRecord("Hello", "other", "", ""),
+            Area = MemberNameArea.Strings,
+            Strings = new[]
+            {
+                new StringNameInput { Name = "Hello", Value = "你好", Comment = "问候" },
+                new StringNameInput { Name = "Shopping.OutOfStock", Value = "缺货" },
+                new StringNameInput { Name = "Greeting", Value = "你好，{0}" },
+                new StringNameInput { Name = "Strings", Value = "self" },
+                new StringNameInput { Name = "Hello", Value = "other" },
+            },
         });
+        var records = new ConstantRecord[named.Members.Count];
+        for (var i = 0; i < records.Length; i++)
+        {
+            var member = named.Members[i];
+            records[i] = new ConstantRecord(member.Name, member.Value, member.Type, member.Comment);
+        }
+
+        var payload = PayloadCodec.EncodeStrings("Demo", MemberVisibility.Internal, records, named.GeneratorDiagnostics);
         var (diagnostics, source) = GeneratorTestHost.Run(new StringsGenerator(), StringsGenerator.PayloadKey, payload);
         Assert.Contains("namespace Demo", source);
         Assert.Contains("问候", source);

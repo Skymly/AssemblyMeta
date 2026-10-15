@@ -115,6 +115,77 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Duplicate_constant_names_report_AM0001_and_keep_the_first()
+    {
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Constants,
+            Constants = new[]
+            {
+                new ConstantNameInput { Name = "Foo.Bar", Value = "1", Type = "int" },
+                new ConstantNameInput { Name = "Foo", Value = "2", Type = "int" },
+            },
+        });
+
+        var member = Assert.Single(result.Members);
+        Assert.Equal("Foo.Bar", member.Name);
+        var diagnostic = Assert.Single(result.GeneratorDiagnostics);
+        Assert.Equal("AM0001", diagnostic.Id);
+        Assert.Empty(result.TaskDiagnostics);
+    }
+
+    [Fact]
+    public void Resource_names_avoid_reserved_identifiers_and_skip_missing_manifests()
+    {
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Resources,
+            Resources = new[]
+            {
+                new ResourceNameInput { Name = "Resources.readme", ManifestName = "readme.txt", Spec = "readme.txt" },
+                new ResourceNameInput { Name = "Content.Text", ManifestName = "text.bin", Spec = "text.bin" },
+                new ResourceNameInput { Name = "Manifest", ManifestName = "root.bin", Spec = "root.bin" },
+                new ResourceNameInput { Spec = "missing.bin" },
+            },
+        });
+
+        Assert.Equal("Resources_.readme", result.Members[0].Name);
+        Assert.Equal("Content.Text_", result.Members[1].Name);
+        Assert.Equal("Manifest_", result.Members[2].Name);
+        Assert.Equal(3, result.Members.Count);
+        Assert.Equal(3, result.GeneratorDiagnostics.Count);
+        Assert.All(result.GeneratorDiagnostics, diagnostic => Assert.Equal("AM0008", diagnostic.Id));
+        var task = Assert.Single(result.TaskDiagnostics);
+        Assert.Equal("AM0009", task.Id);
+    }
+
+    [Fact]
+    public void String_names_avoid_the_enclosing_type_and_skip_invalid_keys()
+    {
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Strings,
+            Strings = new[]
+            {
+                new StringNameInput { Name = "Hello", Value = "你好", Comment = "问候" },
+                new StringNameInput { Name = "Strings", Value = "self" },
+                new StringNameInput { Name = "Hello", Value = "other" },
+                new StringNameInput { Key = "___", Spec = "Strings.resx", LogicalPath = "Strings.resx" },
+                new StringNameInput { OutsideWithoutLink = true, Spec = @"C:\outside\Strings.resx" },
+            },
+        });
+
+        Assert.Equal("Hello", result.Members[0].Name);
+        Assert.Equal("Strings_", result.Members[1].Name);
+        Assert.Equal("字符串资源 Strings。", result.Members[1].Comment);
+        Assert.Equal(2, result.Members.Count);
+        Assert.Contains(result.GeneratorDiagnostics, diagnostic => diagnostic.Id == "AM0008");
+        Assert.Contains(result.GeneratorDiagnostics, diagnostic => diagnostic.Id == "AM0001");
+        Assert.Equal(2, result.TaskDiagnostics.Count);
+        Assert.All(result.TaskDiagnostics, diagnostic => Assert.Equal("AM0010", diagnostic.Id));
+    }
+
+    [Fact]
     public void FileConstant_uses_forward_slashes_and_link()
     {
         Assert.True(FileConstantNaming.TryCreate(

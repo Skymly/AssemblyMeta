@@ -95,10 +95,47 @@ public static class PayloadCodec
         return Encode(ConstantsMagic, fields);
     }
 
+    public static string EncodeConstants(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants, IReadOnlyList<DiagnosticReport> namingDiagnostics)
+    {
+        var fields = new List<string>
+        {
+            ns ?? "",
+            VisibilityToken(visibility),
+        };
+        AppendDiagnostics(fields, namingDiagnostics);
+        if (constants is not null)
+        {
+            foreach (var constant in constants)
+            {
+                fields.Add(constant.Name ?? "");
+                fields.Add(constant.Value ?? "");
+                fields.Add(constant.Type ?? "");
+                fields.Add(constant.Comment ?? "");
+            }
+        }
+
+        return Encode(ConstantsMagic, fields, version: 2);
+    }
+
     public static bool TryDecodeConstants(string? payload, out ConstantsModel model)
     {
         model = new ConstantsModel();
-        if (!TryDecode(payload, ConstantsMagic, out var fields) || fields.Count < 2 || (fields.Count - 2) % 4 != 0)
+        if (!TryDecode(payload, ConstantsMagic, out var fields, out var version) || fields.Count < 2)
+        {
+            return false;
+        }
+
+        var index = 2;
+        var namingDiagnostics = Array.Empty<DiagnosticReport>();
+        if (version == 2)
+        {
+            if (!TryTakeDiagnostics(fields, ref index, out namingDiagnostics))
+            {
+                return false;
+            }
+        }
+
+        if ((fields.Count - index) % 4 != 0)
         {
             return false;
         }
@@ -108,11 +145,11 @@ public static class PayloadCodec
             visibility = MemberVisibility.Internal;
         }
 
-        var count = (fields.Count - 2) / 4;
+        var count = (fields.Count - index) / 4;
         var constants = new ConstantRecord[count];
         for (var i = 0; i < count; i++)
         {
-            var offset = 2 + (i * 4);
+            var offset = index + (i * 4);
             constants[i] = new ConstantRecord(fields[offset], fields[offset + 1], fields[offset + 2], fields[offset + 3]);
         }
 
@@ -121,6 +158,8 @@ public static class PayloadCodec
             Namespace = NullIfEmpty(fields[0]),
             Visibility = visibility,
             Constants = constants,
+            NamesAreFinal = version == 2,
+            NamingDiagnostics = namingDiagnostics,
         };
         return true;
     }
@@ -218,12 +257,31 @@ public static class PayloadCodec
             Namespace = constants.Namespace,
             Visibility = constants.Visibility,
             Resources = resources,
+            NamesAreFinal = constants.NamesAreFinal,
+            NamingDiagnostics = constants.NamingDiagnostics,
         };
         return true;
     }
 
+    public static string EncodeResources(string? ns, MemberVisibility visibility, IReadOnlyList<ResourceRecord> resources, IReadOnlyList<DiagnosticReport> namingDiagnostics)
+    {
+        var constants = new List<ConstantRecord>();
+        if (resources is not null)
+        {
+            foreach (var resource in resources)
+            {
+                constants.Add(new ConstantRecord(resource.Name ?? "", resource.ManifestName ?? "", "string", resource.Comment ?? ""));
+            }
+        }
+
+        return EncodeNamed(ResourcesMagic, ns, visibility, constants, namingDiagnostics);
+    }
+
     public static string EncodeStrings(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
         => EncodeNamed(StringsMagic, ns, visibility, constants);
+
+    public static string EncodeStrings(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants, IReadOnlyList<DiagnosticReport> namingDiagnostics)
+        => EncodeNamed(StringsMagic, ns, visibility, constants, namingDiagnostics);
 
     public static bool TryDecodeStrings(string? payload, out ConstantsModel model)
         => TryDecodeNamed(payload, StringsMagic, out model);
@@ -249,10 +307,46 @@ public static class PayloadCodec
         return Encode(magic, fields);
     }
 
+    private static string EncodeNamed(byte[] magic, string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants, IReadOnlyList<DiagnosticReport> namingDiagnostics)
+    {
+        var fields = new List<string>
+        {
+            ns ?? "",
+            VisibilityToken(visibility),
+        };
+        AppendDiagnostics(fields, namingDiagnostics);
+        if (constants is not null)
+        {
+            foreach (var constant in constants)
+            {
+                fields.Add(constant.Name ?? "");
+                fields.Add(constant.Value ?? "");
+                fields.Add(constant.Comment ?? "");
+            }
+        }
+
+        return Encode(magic, fields, version: 2);
+    }
+
     private static bool TryDecodeNamed(string? payload, byte[] magic, out ConstantsModel model)
     {
         model = new ConstantsModel();
-        if (!TryDecode(payload, magic, out var fields) || fields.Count < 2 || (fields.Count - 2) % 3 != 0)
+        if (!TryDecode(payload, magic, out var fields, out var version) || fields.Count < 2)
+        {
+            return false;
+        }
+
+        var index = 2;
+        var namingDiagnostics = Array.Empty<DiagnosticReport>();
+        if (version == 2)
+        {
+            if (!TryTakeDiagnostics(fields, ref index, out namingDiagnostics))
+            {
+                return false;
+            }
+        }
+
+        if ((fields.Count - index) % 3 != 0)
         {
             return false;
         }
@@ -262,11 +356,11 @@ public static class PayloadCodec
             visibility = MemberVisibility.Internal;
         }
 
-        var count = (fields.Count - 2) / 3;
+        var count = (fields.Count - index) / 3;
         var constants = new ConstantRecord[count];
         for (var i = 0; i < count; i++)
         {
-            var offset = 2 + (i * 3);
+            var offset = index + (i * 3);
             constants[i] = new ConstantRecord(fields[offset], fields[offset + 1], "string", fields[offset + 2]);
         }
 
@@ -275,17 +369,22 @@ public static class PayloadCodec
             Namespace = NullIfEmpty(fields[0]),
             Visibility = visibility,
             Constants = constants,
+            NamesAreFinal = version == 2,
+            NamingDiagnostics = namingDiagnostics,
         };
         return true;
     }
 
     private static string Encode(byte[] magic, IReadOnlyList<string> fields)
+        => Encode(magic, fields, Version);
+
+    private static string Encode(byte[] magic, IReadOnlyList<string> fields, int version)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(magic);
-            writer.Write(Version);
+            writer.Write(version);
             writer.Write(fields.Count);
             foreach (var field in fields)
             {
@@ -299,8 +398,12 @@ public static class PayloadCodec
     }
 
     private static bool TryDecode(string? payload, byte[] magic, out List<string> fields)
+        => TryDecode(payload, magic, out fields, out _);
+
+    private static bool TryDecode(string? payload, byte[] magic, out List<string> fields, out int version)
     {
         fields = new List<string>();
+        version = 0;
         if (string.IsNullOrWhiteSpace(payload))
         {
             return false;
@@ -334,8 +437,8 @@ public static class PayloadCodec
                 }
             }
 
-            var version = reader.ReadInt32();
-            if (version != Version)
+            version = reader.ReadInt32();
+            if (version != 1 && version != 2)
             {
                 return false;
             }
@@ -376,6 +479,45 @@ public static class PayloadCodec
 
     private static string? NullIfEmpty(string value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static void AppendDiagnostics(List<string> fields, IReadOnlyList<DiagnosticReport> diagnostics)
+    {
+        var items = diagnostics ?? Array.Empty<DiagnosticReport>();
+        fields.Add(items.Count.ToString());
+        foreach (var diagnostic in items)
+        {
+            fields.Add(diagnostic.Id ?? "");
+            fields.Add(diagnostic.Title ?? "");
+            fields.Add(diagnostic.Message ?? "");
+            fields.Add(diagnostic.Severity == DiagnosticSeverityKind.Warning ? "warning" : "error");
+        }
+    }
+
+    private static bool TryTakeDiagnostics(List<string> fields, ref int index, out DiagnosticReport[] diagnostics)
+    {
+        diagnostics = Array.Empty<DiagnosticReport>();
+        if (index >= fields.Count || !int.TryParse(fields[index], out var count) || count < 0)
+        {
+            return false;
+        }
+
+        index++;
+        if (index + (count * 4) > fields.Count)
+        {
+            return false;
+        }
+
+        diagnostics = new DiagnosticReport[count];
+        for (var i = 0; i < count; i++)
+        {
+            var offset = index + (i * 4);
+            var severity = fields[offset + 3] == "warning" ? DiagnosticSeverityKind.Warning : DiagnosticSeverityKind.Error;
+            diagnostics[i] = new DiagnosticReport(fields[offset], fields[offset + 1], fields[offset + 2], severity);
+        }
+
+        index += count * 4;
+        return true;
+    }
 }
 
 /// <summary>解析 $(AssemblyMetaVisibility)。</summary>

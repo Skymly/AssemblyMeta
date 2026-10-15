@@ -70,6 +70,11 @@ public sealed class ConstantsModel
     public MemberVisibility Visibility { get; init; }
 
     public IReadOnlyList<ConstantRecord> Constants { get; init; } = Array.Empty<ConstantRecord>();
+
+    /// <summary>名字已经由 MemberNames 定稿。发射器不再消毒、不再改名。</summary>
+    public bool NamesAreFinal { get; init; }
+
+    public IReadOnlyList<DiagnosticReport> NamingDiagnostics { get; init; } = Array.Empty<DiagnosticReport>();
 }
 
 /// <summary>Git 生成模型。设计时未查询时，五个字符串是占位符而不是空值。</summary>
@@ -104,6 +109,11 @@ public sealed class ResourcesModel
     public MemberVisibility Visibility { get; init; }
 
     public IReadOnlyList<ResourceRecord> Resources { get; init; } = Array.Empty<ResourceRecord>();
+
+    /// <summary>名字已经由 MemberNames 定稿。发射器不再消毒、不再改名。</summary>
+    public bool NamesAreFinal { get; init; }
+
+    public IReadOnlyList<DiagnosticReport> NamingDiagnostics { get; init; } = Array.Empty<DiagnosticReport>();
 }
 
 /// <summary>一次生成结果。Source 为 null 表示不输出文件。</summary>
