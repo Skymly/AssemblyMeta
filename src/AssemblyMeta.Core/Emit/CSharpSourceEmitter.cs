@@ -65,7 +65,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         {
             foreach (var constant in model.Constants)
             {
-                AddConstant(root, constant, model.Visibility, csharpLanguageVersion, diagnostics, "Constants", avoidEnclosingName: false, namesAreFinal: true);
+                AddConstant(root, constant, model.Visibility, csharpLanguageVersion, diagnostics, "Constants", avoidEnclosingName: false, namesAreFinal: model.NamesAreFinal);
             }
         }
 
@@ -150,7 +150,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         {
             foreach (var resource in model.Resources)
             {
-                AddResource(root, resource, diagnostics, namesAreFinal: true);
+                AddResource(root, resource, diagnostics, namesAreFinal: model.NamesAreFinal);
             }
         }
 
@@ -179,7 +179,14 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
     }
 
     public EmitResult EmitStrings(ConstantsModel model, int csharpLanguageVersion)
-        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "字符串资源", avoidEnclosingName: false, namesAreFinal: true);
+    {
+        if (model is null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+
+        return EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "字符串资源", avoidEnclosingName: !model.NamesAreFinal, namesAreFinal: model.NamesAreFinal);
+    }
 
     private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix, bool avoidEnclosingName = false, bool namesAreFinal = false)
     {

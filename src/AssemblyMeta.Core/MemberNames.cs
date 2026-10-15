@@ -150,7 +150,14 @@ public static class MemberNames
         {
             var comment = item.Comment ?? "";
             var type = string.IsNullOrWhiteSpace(item.Type) ? "string" : item.Type!.Trim();
-            Accept(root, members, generatorDiagnostics, item.Name, item.Value ?? "", type, comment, null, AreaKind.Constants, "常量");
+            var value = item.Value ?? "";
+            if (!IdentifierSanitizer.IsStringType(type) && string.IsNullOrWhiteSpace(value))
+            {
+                AppendUnvalued(members, generatorDiagnostics, item.Name, type, comment);
+                continue;
+            }
+
+            Accept(root, members, generatorDiagnostics, item.Name, value, type, comment, null, AreaKind.Constants, "常量");
         }
 
         foreach (var item in request.FileConstants)
@@ -172,6 +179,27 @@ public static class MemberNames
         }
     }
 
+    private static void AppendUnvalued(List<NamedMember> members, List<DiagnosticReport> generatorDiagnostics, string? rawName, string type, string comment)
+    {
+        if (!TrySegments(rawName, out var identifiers, out var invalidSegment))
+        {
+            var raw = rawName ?? "";
+            var message = string.IsNullOrWhiteSpace(raw)
+                ? "存在空的常量名，已忽略。"
+                : "常量“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。";
+            generatorDiagnostics.Add(Error("AM0002", "常量名无效", message));
+            return;
+        }
+
+        members.Add(new NamedMember
+        {
+            Name = string.Join(".", identifiers),
+            Value = "",
+            Type = type,
+            Comment = comment,
+        });
+    }
+
     private static void NameResources(MemberNameRequest request, Node root, List<NamedMember> members, List<DiagnosticReport> taskDiagnostics, List<DiagnosticReport> generatorDiagnostics)
     {
         foreach (var item in request.Resources)
@@ -180,7 +208,7 @@ public static class MemberNames
             var manifest = (item.ManifestName ?? "").Trim();
             if (manifest.Length == 0)
             {
-                taskDiagnostics.Add(Warning("AM0009", "嵌入资源已跳过", "嵌入资源“" + spec + "”没有清单名，已跳过。"));
+                taskDiagnostics.Add(Warning("AM0009", "嵌入资源已跳过", "嵌入资源“" + spec + "”没有清单名，已跳过。") with { File = spec });
                 continue;
             }
 
@@ -202,7 +230,7 @@ public static class MemberNames
                     out var record);
                 if (!created)
                 {
-                    taskDiagnostics.Add(Warning("AM0010", "嵌入资源已跳过", "嵌入资源“" + spec + "”无法映射为标识符，已跳过。"));
+                    taskDiagnostics.Add(Warning("AM0010", "嵌入资源已跳过", "嵌入资源“" + spec + "”无法映射为标识符，已跳过。") with { File = spec });
                     continue;
                 }
 
@@ -221,7 +249,7 @@ public static class MemberNames
             var spec = item.Spec ?? "";
             if (item.OutsideWithoutLink)
             {
-                taskDiagnostics.Add(Warning("AM0010", "字符串资源已跳过", "resx“" + spec + "”位于项目外且没有 Link，已跳过。"));
+                taskDiagnostics.Add(Warning("AM0010", "字符串资源已跳过", "resx“" + spec + "”位于项目外且没有 Link，已跳过。") with { File = spec });
                 continue;
             }
 
@@ -234,7 +262,7 @@ public static class MemberNames
             }
             else if (!StringResourceNaming.TryCreate(item.LogicalPath ?? "", item.Key ?? "", value, comment, out var record))
             {
-                taskDiagnostics.Add(Warning("AM0010", "字符串资源已跳过", "已忽略 resx“" + spec + "”中的无效键“" + (item.Key ?? "") + "”。"));
+                taskDiagnostics.Add(Warning("AM0010", "字符串资源已跳过", "已忽略 resx“" + spec + "”中的无效键“" + (item.Key ?? "") + "”。") with { File = spec });
                 continue;
             }
             else

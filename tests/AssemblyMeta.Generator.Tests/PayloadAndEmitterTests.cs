@@ -250,6 +250,48 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Version1_constant_payload_still_escapes_keywords()
+    {
+        var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+        {
+            new ConstantRecord("class", "keyword", "string", ""),
+        });
+        Assert.True(PayloadCodec.TryDecodeConstants(payload, out var model));
+        Assert.False(model.NamesAreFinal);
+        var result = new CSharpSourceEmitter().EmitConstants(model, 1100);
+        Assert.Contains("const string @class = \"keyword\";", result.Source);
+    }
+
+    [Fact]
+    public void Empty_non_string_does_not_block_a_later_value()
+    {
+        var named = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Constants,
+            Constants = new[]
+            {
+                new ConstantNameInput { Name = "Timeout", Type = "int", Value = "" },
+                new ConstantNameInput { Name = "Timeout", Type = "int", Value = "30" },
+            },
+        });
+
+        Assert.Equal(2, named.Members.Count);
+        Assert.DoesNotContain(named.GeneratorDiagnostics, diagnostic => diagnostic.Id == "AM0001");
+        var records = new ConstantRecord[named.Members.Count];
+        for (var i = 0; i < records.Length; i++)
+        {
+            var member = named.Members[i];
+            records[i] = new ConstantRecord(member.Name, member.Value, member.Type, member.Comment);
+        }
+
+        var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, records, named.GeneratorDiagnostics);
+        Assert.True(PayloadCodec.TryDecodeConstants(payload, out var model));
+        var result = new CSharpSourceEmitter().EmitConstants(model, 1100);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "AM0003");
+        Assert.Contains("const int Timeout = 30;", result.Source);
+    }
+
+    [Fact]
     public void Resource_manifest_names_are_trimmed()
     {
         var result = MemberNames.Name(new MemberNameRequest

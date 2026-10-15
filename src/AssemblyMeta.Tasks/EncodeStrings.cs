@@ -95,7 +95,7 @@ public sealed class EncodeStrings : Microsoft.Build.Utilities.Task
             });
             foreach (var diagnostic in named.TaskDiagnostics)
             {
-                TaskSupport.LogCodeWarning(this, diagnostic.Id, "", diagnostic.Message);
+                TaskSupport.LogCodeWarning(this, diagnostic.Id, diagnostic.File, diagnostic.Message);
             }
 
             var records = new List<ConstantRecord>();

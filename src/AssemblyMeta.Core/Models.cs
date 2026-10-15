@@ -28,7 +28,10 @@ public enum DiagnosticSeverityKind
 }
 
 /// <summary>生成器要上报的诊断。消息已经格式化，不再包含占位符。</summary>
-public readonly record struct DiagnosticReport(string Id, string Title, string Message, DiagnosticSeverityKind Severity);
+public readonly record struct DiagnosticReport(string Id, string Title, string Message, DiagnosticSeverityKind Severity)
+{
+    public string? File { get; init; }
+}
 
 /// <summary>一条尚未消毒的常量。Name 使用点号表示嵌套。</summary>
 public sealed record ConstantRecord(string Name, string Value, string Type, string Comment)
