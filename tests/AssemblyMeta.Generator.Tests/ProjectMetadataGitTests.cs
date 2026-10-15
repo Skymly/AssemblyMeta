@@ -1,5 +1,4 @@
 using AssemblyMeta.Core;
-using AssemblyMeta.Core.Emit;
 using AssemblyMeta.Git;
 using AssemblyMeta.Metadata;
 using AssemblyMeta.Project;
@@ -176,14 +175,14 @@ public class ProjectMetadataGitTests
     [Fact]
     public void Public_git_uses_static_readonly_and_invalid_namespace_warns()
     {
-        var source = new CSharpSourceEmitter().EmitGit(new GitModel
+        var source = SourceEmission.Emit(PayloadCodec.EncodeGit(new GitModel
         {
             Namespace = "1Bad",
             Visibility = MemberVisibility.Public,
             Commit = "abc",
             Sha = "abc",
             Branch = "main",
-        }, 1200);
+        }), SourceKind.Git, 1200);
         Assert.Contains(source.Diagnostics, d => d.Id == "AM0005");
         Assert.Contains("public static readonly string Commit", source.Source);
         Assert.DoesNotContain("namespace ", source.Source);

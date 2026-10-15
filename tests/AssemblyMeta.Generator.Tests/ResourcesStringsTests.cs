@@ -1,6 +1,5 @@
 using System.Text;
 using AssemblyMeta.Core;
-using AssemblyMeta.Core.Emit;
 using AssemblyMeta.Resources;
 using AssemblyMeta.Strings;
 using Microsoft.CodeAnalysis;
@@ -216,11 +215,10 @@ public class ResourcesStringsTests
     [Fact]
     public void Invalid_namespace_warns_for_resources()
     {
-        var source = new CSharpSourceEmitter().EmitResources(new ResourcesModel
-        {
-            Namespace = "1Bad",
-            Resources = new[] { new ResourceRecord("Note", "Note.txt", "") },
-        }, 1200);
+        var source = SourceEmission.Emit(
+            PayloadCodec.EncodeResources("1Bad", MemberVisibility.Internal, new[] { new ResourceRecord("Note", "Note.txt", "") }),
+            SourceKind.Resources,
+            1200);
         Assert.Contains(source.Diagnostics, diagnostic => diagnostic.Id == "AM0005");
         Assert.DoesNotContain("namespace ", source.Source);
         Assert.Contains("Note.txt", source.Source);

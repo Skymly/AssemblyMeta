@@ -4,7 +4,7 @@ using System.Text;
 namespace AssemblyMeta.Core.Emit;
 
 /// <summary>C# 字面量格式化。多行字符串在 C# 11+ 使用 raw string，否则退回转义字符串。</summary>
-public static class CSharpLiteral
+internal static class CSharpLiteral
 {
     public const int RawStringVersion = 1100;
 

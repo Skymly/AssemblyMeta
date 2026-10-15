@@ -1,5 +1,4 @@
 using AssemblyMeta.Core;
-using AssemblyMeta.Core.Emit;
 
 namespace AssemblyMeta.Generator.Tests;
 
@@ -55,14 +54,6 @@ public class PayloadAndEmitterTests
     {
         Assert.False(PayloadCodec.TryDecodeAssemblyInfo("@@@", out _));
         Assert.False(PayloadCodec.TryDecodeConstants("", out _));
-    }
-
-    [Fact]
-    public void Registry_reserves_vb_and_fsharp()
-    {
-        Assert.NotNull(EmitterRegistry.Shared.TryResolve(SourceLanguage.CSharp));
-        Assert.Null(EmitterRegistry.Shared.TryResolve(SourceLanguage.VisualBasic));
-        Assert.Null(EmitterRegistry.Shared.TryResolve(SourceLanguage.FSharp));
     }
 
     [Fact]
@@ -242,8 +233,7 @@ public class PayloadAndEmitterTests
                 new ConstantRecord("...", "3", "int", ""),
             },
             Array.Empty<DiagnosticReport>());
-        Assert.True(PayloadCodec.TryDecodeConstants(payload, out var model));
-        var result = new CSharpSourceEmitter().EmitConstants(model, 1100);
+        var result = SourceEmission.Emit(payload, SourceKind.Constants, 1100);
         Assert.DoesNotContain(result.Diagnostics, diagnostic => diagnostic.Id == "AM0001" || diagnostic.Id == "AM0002");
         Assert.Contains("const int Foo = 1;", result.Source);
         Assert.DoesNotContain("= 2;", result.Source);
@@ -258,7 +248,7 @@ public class PayloadAndEmitterTests
         });
         Assert.True(PayloadCodec.TryDecodeConstants(payload, out var model));
         Assert.False(model.NamesAreFinal);
-        var result = new CSharpSourceEmitter().EmitConstants(model, 1100);
+        var result = SourceEmission.Emit(payload, SourceKind.Constants, 1100);
         Assert.Contains("const string @class = \"keyword\";", result.Source);
     }
 
@@ -285,8 +275,7 @@ public class PayloadAndEmitterTests
         }
 
         var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, records, named.GeneratorDiagnostics);
-        Assert.True(PayloadCodec.TryDecodeConstants(payload, out var model));
-        var result = new CSharpSourceEmitter().EmitConstants(model, 1100);
+        var result = SourceEmission.Emit(payload, SourceKind.Constants, 1100);
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "AM0003");
         Assert.Contains("const int Timeout = 30;", result.Source);
     }
@@ -323,7 +312,7 @@ public class PayloadAndEmitterTests
             Description = "第一行\n第二行 \"引号\"",
             Version = "1.0.0.0",
         };
-        var source = new CSharpSourceEmitter().EmitAssemblyInfo(model, 1200).Source!;
+        var source = SourceEmission.Emit(PayloadCodec.EncodeAssemblyInfo(model), SourceKind.AssemblyInfo, 1200).Source!;
         Assert.Contains("\"\"\"", source);
         Assert.Equal(model.Description, GeneratorTestHost.ExecuteConstant(source, "AssemblyMeta+Info", "Description", Microsoft.CodeAnalysis.CSharp.LanguageVersion.CSharp12));
     }
@@ -331,8 +320,9 @@ public class PayloadAndEmitterTests
     [Fact]
     public void Older_language_version_does_not_emit_raw_strings()
     {
-        var source = new CSharpSourceEmitter().EmitAssemblyInfo(
-            new AssemblyInfoModel { Description = "第一行\n第二行" },
+        var source = SourceEmission.Emit(
+            PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel { Description = "第一行\n第二行" }),
+            SourceKind.AssemblyInfo,
             1000).Source!;
         Assert.DoesNotContain("\"\"\"", source);
         Assert.Contains("\\n", source);
@@ -342,8 +332,9 @@ public class PayloadAndEmitterTests
     [Fact]
     public void Public_visibility_uses_static_readonly_and_namespace()
     {
-        var source = new CSharpSourceEmitter().EmitAssemblyInfo(
-            new AssemblyInfoModel { Namespace = "Demo.App", Visibility = MemberVisibility.Public, Version = "9.9.9.9" },
+        var source = SourceEmission.Emit(
+            PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel { Namespace = "Demo.App", Visibility = MemberVisibility.Public, Version = "9.9.9.9" }),
+            SourceKind.AssemblyInfo,
             1200).Source!;
         Assert.Contains("namespace Demo.App", source);
         Assert.Contains("public static partial class AssemblyMeta", source);

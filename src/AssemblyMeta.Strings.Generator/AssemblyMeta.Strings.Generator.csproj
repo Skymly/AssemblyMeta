@@ -7,6 +7,7 @@
     <NoWarn>$(NoWarn);RS2008</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\AssemblyMeta.Generators\GeneratorHost.cs" Link="GeneratorHost.cs" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
     <ProjectReference Include="..\AssemblyMeta.Core\AssemblyMeta.Core.csproj" />
   </ItemGroup>

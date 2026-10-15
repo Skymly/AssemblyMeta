@@ -6,9 +6,8 @@ using System.Text;
 namespace AssemblyMeta.Core.Emit;
 
 /// <summary>把 AssemblyInfo / Constants / Project / Metadata / Git / Resources / Strings 模型写成 C#。不引用 Roslyn，便于任务程序集复用同一套模型。</summary>
-public sealed class CSharpSourceEmitter : ISourceEmitter
+internal sealed class CSharpSourceEmitter
 {
-    public SourceLanguage Language => SourceLanguage.CSharp;
 
     public EmitResult EmitAssemblyInfo(AssemblyInfoModel model, int csharpLanguageVersion)
     {

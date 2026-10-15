@@ -2,15 +2,6 @@ using System;
 
 namespace AssemblyMeta.Core;
 
-/// <summary>要生成的源语言。当前只实现 C#，VB/F# 仅保留扩展点。</summary>
-public enum SourceLanguage
-{
-    Unknown = 0,
-    CSharp = 1,
-    VisualBasic = 2,
-    FSharp = 3,
-}
-
 /// <summary>生成类型的可见性。public 时成员改为 static readonly，避免调用方把常量值烤进程序集。</summary>
 public enum MemberVisibility
 {
