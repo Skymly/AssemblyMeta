@@ -17,6 +17,7 @@ public class ChangelogTests
         Assert.Contains("AssemblyMeta.Git", text);
         Assert.Contains("AssemblyMeta.Resources", text);
         Assert.Contains("AssemblyMeta.Strings", text);
+        Assert.Contains("NuGet 上还没有这些包", text);
         Assert.DoesNotContain("nuget push", text);
         Assert.DoesNotContain("已发布", text);
     }
