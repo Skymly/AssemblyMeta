@@ -388,7 +388,7 @@ GitHub 的 `refs/pull/15/merge` 得到 `pr15`。标签引用会去掉 `refs/tags
 
 v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认值都是 `.txt|.cs|.sql|.json|.md|.resx`。同标签 README 写的默认值没有 `.resx`。包内 props 与标签一致，与 README 不一致。
 
-- 边界情形：准备资源的目标把每个 `EmbeddedResource` 的纳入标记写成 true，会盖掉项目里事先写的 false。README 没有排除开关。`.resx` 因此默认带 `Text`，会和 Strings 同时看见同一个文件。运行时按路径改成点号之后做清单名后缀匹配；resx 编译进程序集后清单名通常以 `.resources` 结尾，不一定对得上 `.resx`。这次没有为这条路径做端到端运行。
+- 边界情形：准备资源的目标把每个 `EmbeddedResource` 的纳入标记写成 true，会盖掉项目里事先写的 false。README 没有排除开关。`.resx` 因此默认带 `Text`，会和 Strings 同时看见同一个文件。运行时按路径改成点号之后做清单名后缀匹配，查找串仍保留 `.resx`。SDK 编译进程序集后清单名以 `.resources` 结尾，对不上。ThisAssembly.Resources 2.1.6、SDK 10.0.303、net10.0：根目录 `Messages.resx` 的清单名是 `程序集名.Messages.resources`，`Text` 抛出 `InvalidOperationException`，消息是找不到以 `Messages.resx` 结尾的资源。`notes/Greeting.resx` 同样找不到以 `notes.Greeting.resx` 结尾的资源。同一次运行里 `notes/about.txt` 能读到，清单名以 `.txt` 结尾。没有测自定义清单名、非 SDK 项目和带文化的卫星 resx。见 https://github.com/Skymly/AssemblyMeta/issues/25 。
 - AssemblyMeta 现状：非目标
 - 证据：`docs/使用说明.md` 与 `src/AssemblyMeta.Resources/README.md` 写了 Comment 的冲突改名，没有扩展名列表，也没有 Kind。排除用 `AssemblyMetaResource=false`，强制纳入 resx 用 `AssemblyMetaResource=true`。`.resx` 默认不进入 Resources。1.0 不增加扩展名列表和 Kind；纳入的项都有 Text。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ThisAssembly.Resources.props>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ThisAssembly.Resources.targets>
@@ -592,7 +592,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 5. （已核实，见「{0} 与具名占位符」）两个以上具名占位符的形参顺序与书写中的首次出现顺序一致。同一名字配两种格式、以及 `{b} {a} {b}` 这种重复之后再出现新名字，这次没有生成。
 6. （已核实，见「AssemblyInfo 成员」）默认 SDK 项目不会多出 `Info.Trademark`。空商标不会变成成员。非空商标会。只写在源码里的空 `AssemblyTrademark` 没有跑过。
 7. 只写在 C# 源码里的程序集特性。目标的输入是 MSBuild 特性项，不扫描源码。没有用这样的项目跑过。
-8. `.resx` 被 Resources 当成文本之后，运行时按后缀查找清单名是否找得到。规则已写，没有端到端运行。
+8. （已核实，见「文本扩展名、Kind、Comment」）`.resx` 被当成文本之后，按 `.resx` 后缀找不到以 `.resources` 结尾的清单名。`Text` 抛出找不到资源的异常。`.txt` 在同一次运行里能读到。
 9. 提交号短于 9 个字符时，Git 目标失败的具体文案。没有跑构建。
 10. CI feed `https://pkg.kzu.app/index.json` 在调查当天能否还原包。
 11. 旧包 `MSBuilder.ThisAssembly.*` 与 v2.1.6 的行为关系。
