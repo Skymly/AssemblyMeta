@@ -36,7 +36,7 @@
 | 文本扩展名、Kind、Comment | 非目标 | 1.0 不增加扩展名列表和 Kind。纳入 Resources 的项都有 Text，开关仍是 AssemblyMetaResource。 |
 | 构建中追加嵌入资源 | 部分 | 都能在资源名准备好之前追加；公开的目标名不同。 |
 | resx 字符串与分组 | 部分 | 中性 resx 和下划线分组对齐；本仓是编译期常量并认路径和点号，上游是运行时取字符串。 |
-| `{0}` 与具名占位符 | 缺失 | 上游生成带参数的方法；本仓把占位符留在字符串常量里。 |
+| `{0}` 与具名占位符 | 非目标 | 1.0 不生成带参方法。占位符留在编译期常量里，调用方自己格式化。决议见 ADR 0003。 |
 | resx 名字当另一名字的前缀 | 非目标 | 1.0 不另做「跳过较短键」的诊断。冲突继续走 AM0001。 |
 | Vsix | 非目标 | 1.0 不做 VSIX 清单包，也不改写 Pack。 |
 | Prerequisites | 缺失 | 上游另有 1.2.11 的编译器版本检查包。2.1.6 已不依赖它，它也不生成成员。 |
@@ -48,7 +48,7 @@
 | 许可 | 刻意不同 | 上游要求接受 OSMF EULA；本仓 README 差异化写明纯 MIT。 |
 | 文档 | 部分 | 上游公开文档是 README、各包 README、changelog 和 Jekyll 站。本仓有使用说明、架构和 docfx。 |
 
-共 35 行。已对齐 9，部分 16，缺失 3，刻意不同 2，非目标 5。
+共 35 行。已对齐 9，部分 16，缺失 2，刻意不同 2，非目标 6。
 
 ## 逐项详情
 
@@ -450,9 +450,9 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 
 位置参数和具名参数混在同一条值里时，这条既不算位置格式，也不算具名格式，生成结果里没有这个成员。已读的生成结果只跳过该项，没有另给诊断码。
 
-- 边界情形：`{{0}}` 里的 `{0}` 会按占位符处理，转义花括号挡不住。没有用生成器跑过这条输入，结论来自 2.1.6 的匹配规则。两个以上具名参数的形参顺序是否与书写顺序一致，未核实。README 示例把评论和格式原文同时写进摘要；2.1.6 在有评论时只写评论。位置参数和具名参数混用时不生成成员，也没有诊断。
-- AssemblyMeta 现状：缺失
-- 证据：`docs/使用说明.md` 与 `src/AssemblyMeta.Strings/README.md` 写明 `{0}` 留在字符串里。`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 把 `你好，{0}` 当成常量值执行。差异化表和 ADR 没有把这件事写成有意分叉，所以不标刻意不同。
+- 边界情形：`{{0}}` 里的 `{0}` 会按占位符处理，转义花括号挡不住。没有用生成器跑过这条输入，结论来自 2.1.6 的匹配规则。两个以上具名占位符的形参顺序与书写中的首次出现顺序一致，不是字母序；同一个名字只留一个形参，格式说明不单独占参数，也不改变该名字的位置。`{1}` 写在 `{0}` 前面时，位置参数是 arg1、arg0。这次用 ThisAssembly.Strings 2.1.6，在 SDK 10.0.303 上生成过。README 示例把评论和格式原文同时写进摘要；2.1.6 在有评论时只写评论。位置参数和具名参数混用时不生成成员，也没有诊断；混用没有放进这次构建，仍是源码结论。
+- AssemblyMeta 现状：非目标
+- 证据：`docs/adr/0003-compile-time-strings-and-static-readonly-fields.md`；README「差异化」。`docs/使用说明.md` 与 `src/AssemblyMeta.Strings/README.md` 写明 `{0}` 留在字符串里。`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 把 `你好，{0}` 当成常量值执行。形参顺序的生成结果在 [#9](https://github.com/Skymly/AssemblyMeta/issues/9)。
 - 来源：<https://www.nuget.org/packages/ThisAssembly.Strings/2.1.6>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/Model.cs>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/CSharp.sbntxt>
 
 ### resx 名字当另一名字的前缀
@@ -589,7 +589,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 2. 赞助检查的诊断码和文案。仓库属性 `FundingGrace` 为 30，changelog 写过宽限期后发警告。没有跑一次编译。
 3. 嵌入式 PDB 里的 SourceLink 文档表。它是压缩的，没有解压。snupkg 地址返回 404 之后，符号服务器上是否另有 PDB，没有再查。
 4. Visual Studio 设计时会不会在 SourceLink 把查询开关设为 true 之前，先把它写成 false。没有在 IDE 里跑。
-5. 两个以上具名占位符时，形参顺序是否与书写顺序一致。公开示例只有一个具名参数。
+5. （已核实，见「{0} 与具名占位符」）两个以上具名占位符的形参顺序与书写中的首次出现顺序一致。同一名字配两种格式、以及 `{b} {a} {b}` 这种重复之后再出现新名字，这次没有生成。
 6. 默认 SDK 项目会不会多出 `Info.Trademark`。`GenerateAssemblyInfo=false` 时商标开关会被打开；空商标会不会变成成员，没有跑构建。
 7. 只写在 C# 源码里的程序集特性。目标的输入是 MSBuild 特性项，不扫描源码。没有用这样的项目跑过。
 8. `.resx` 被 Resources 当成文本之后，运行时按后缀查找清单名是否找得到。规则已写，没有端到端运行。
