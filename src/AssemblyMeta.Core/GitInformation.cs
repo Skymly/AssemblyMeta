@@ -74,7 +74,7 @@ public sealed class GitResolution
 }
 
 /// <summary>
-/// 提交来自 SourceLink，分支优先取 CI 环境变量，拉取请求记为 pr 加编号。
+/// 提交来自 SourceLink。RepositoryBranch 为空时，分支优先取 CI 环境变量，拉取请求记为 pr 加编号。
 /// 读取 .git/HEAD 只在查询开启且用户字段、CI、SourceLink 都没有分支时发生。
 /// 查询关闭时不读文件；生成值是占位符，属性值仍是解析结果。
 /// </summary>
