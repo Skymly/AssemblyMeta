@@ -66,6 +66,26 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Constants_names_escape_keywords_and_keep_values()
+    {
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Constants,
+            Constants = new[]
+            {
+                new ConstantNameInput { Name = "class", Value = "keyword", Type = "string", Comment = "" },
+            },
+        });
+
+        Assert.Empty(result.TaskDiagnostics);
+        Assert.Empty(result.GeneratorDiagnostics);
+        var member = Assert.Single(result.Members);
+        Assert.Equal("@class", member.Name);
+        Assert.Equal("keyword", member.Value);
+        Assert.Equal("string", member.Type);
+    }
+
+    [Fact]
     public void FileConstant_uses_forward_slashes_and_link()
     {
         Assert.True(FileConstantNaming.TryCreate(
