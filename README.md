@@ -26,7 +26,7 @@ M3 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git�
 | 点 | ThisAssembly | AssemblyMeta |
 |---|---|---|
 | 许可 | MIT + OSMF 维护费（SponsorLink 检查 CI，有社区争议） | 纯 MIT |
-| 语言 | 仅 C# | C# 起步，架构预留 VB/F# |
+| 语言 | 仅 C# | 仅 C# |
 | 生成器 | Source Generator | `IIncrementalGenerator` + 严格缓存 |
 | 构建 | — | deterministic build 友好，支持 file-based apps（`#:package`） |
 
@@ -70,7 +70,7 @@ MSBuild props/targets
 
 - `buildTransitive` 而非 `build`，保证传递引用生效
 - generator 只依赖 `build_metadata.*` / `build_property.*` 输入，保证增量缓存命中率
-- 多语言预留：公共 `AssemblyMeta.Core` 收集输入，按语言分派 emitter
+- 只生成 C#。不按语言分派 emitter
 
 ## 里程碑
 
