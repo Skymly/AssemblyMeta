@@ -54,6 +54,16 @@ public class ContractSurfaceTests
         var httpClass = constants.Source.IndexOf("public static partial class Http", StringComparison.Ordinal);
         Assert.True(httpClass >= 0);
         Assert.Contains("public static readonly int Timeout = 30;", constants.Source.Substring(httpClass));
+
+        var internalConstants = SourceEmission.Emit(PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+        {
+            new ConstantRecord("Count", "1", "int", ""),
+            new ConstantRecord("When", "default", "DateTime", ""),
+        }), SourceKind.Constants, 1100);
+        Assert.NotNull(internalConstants.Source);
+        Assert.Contains("public const int Count = 1;", internalConstants.Source);
+        Assert.Contains("public static readonly DateTime When = default;", internalConstants.Source);
+        Assert.DoesNotContain("const DateTime", internalConstants.Source);
         var docsClass = constants.Source.IndexOf("public static partial class Docs", StringComparison.Ordinal);
         Assert.True(docsClass > constants.Source.IndexOf("public static partial class Content", StringComparison.Ordinal));
         Assert.Contains("public static readonly string License = \"Content/Docs/License.md\";", constants.Source.Substring(docsClass));

@@ -6,7 +6,7 @@
 - `Sha`：`RepositorySha` 已有值时原样采用，否则是 `Commit` 的前 9 位；不足 9 位时用全长
 - `Root`：仓库根目录，正斜杠，非空时以斜杠结尾
 - `Url`：仅当 `PublishRepositoryUrl=true`，或已经设置 `RepositoryUrl` 时填充
-- `Branch`：`RepositoryBranch` 已有值时原样采用，否则 CI 环境变量优先；拉取请求记为 `pr` 加编号。没有 CI 时回落到 SourceLink 分支或 `.git/HEAD`
+- `Branch`：`RepositoryBranch` 已有值时原样采用，否则 CI 环境变量优先；拉取请求记为 `pr` 加编号。没有 CI 时回落到 SourceLink。查询已打开且仍没有分支时，才读仓库根上的 `.git/HEAD`
 
 .NET 8+ SDK 已内置 SourceLink，不必再引用 `Microsoft.SourceLink.*`。
 
