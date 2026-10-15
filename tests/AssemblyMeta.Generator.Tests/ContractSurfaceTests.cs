@@ -109,7 +109,13 @@ public class ContractSurfaceTests
             Area = MemberNameArea.Resources,
             Resources = new[]
             {
-                new ResourceNameInput { Name = "Content.Docs.License", ManifestName = "Demo.Content.Docs.License.md" },
+                new ResourceNameInput
+                {
+                    RelativeDir = @"Content\Docs\",
+                    Filename = "License",
+                    Extension = ".md",
+                    ManifestName = "Demo.Content.Docs.License.md",
+                },
                 new ResourceNameInput { Name = "Resources.readme", ManifestName = "Demo.Resources.readme.txt" },
             },
         });
