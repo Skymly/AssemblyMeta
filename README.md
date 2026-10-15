@@ -29,6 +29,8 @@ M3 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git�
 | 语言 | 仅 C# | 仅 C# |
 | 生成器 | Source Generator | `IIncrementalGenerator` + 严格缓存 |
 | 构建 | — | deterministic build 友好，支持 file-based apps（`#:package`） |
+| Strings | 运行时按资源取值 | 编译期常量；占位符留在字面量里；卫星 resx 不参与 |
+| public 成员 | get-only 属性 | `static readonly` 字段 |
 
 ## 生成入口
 

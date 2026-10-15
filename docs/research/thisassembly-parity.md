@@ -16,14 +16,14 @@
 | 生成器只给直接引用的项目 | 部分 | 直接引用能生成代码；再往下传递时两边都拦，拦法的公开说法不一样。 |
 | 根类型可扩展 | 已对齐 | 根类是 partial，调用方可以再写成员。 |
 | 命名空间 | 部分 | 都能把根类放进指定命名空间，属性名不同。 |
-| 可见性 | 部分 | 默认 internal 常量。设成 public 后，上游是 get-only 的 static 属性，本仓是 static readonly 字段。属性名不同。 |
+| 可见性 | 刻意不同 | 默认 internal 常量。设成 public 后，上游是 get-only 的 static 属性，本仓是 static readonly 字段。决议见 ADR 0003。 |
 | 只生成 C# | 已对齐 | 公开说明都只生成 C#。 |
 | AssemblyInfo 成员 | 部分 | 文档中的九个名字对齐；上游还会收进其它程序集特性，本仓固定九个。 |
 | 关闭 SDK 特性生成后仍有 Info | 已对齐 | `GenerateAssemblyInfo=false` 时常量仍在。 |
 | Constant 项 | 部分 | 名字、值、类型、注释和点号嵌套对齐。关键字和「名字既是成员又是嵌套类型」的处理不同。 |
 | 多行字符串 | 已对齐 | C# 11 及以上用 raw string，否则用转义字符串。 |
 | FileConstant | 部分 | 都把项目内文件收成嵌套常量；常量值的路径分隔符不同。 |
-| 把常量挂到别的嵌套类型 | 缺失 | 上游的 Constant 可以用 Root 换根；本仓没有这项元数据。 |
+| 把常量挂到别的嵌套类型 | 非目标 | 1.0 不提供 Constant 的 Root。Info、Project、Git 仍由各自的生成器提供。 |
 | Project 选择加入 | 已对齐 | 项、分号属性、file-based app 的 `#:property` 都能收成常量。 |
 | Project 默认属性 | 已对齐 | 默认是同一组七个属性，不含目标框架短名。 |
 | AssemblyMetadata | 部分 | 都从 MSBuild 项生成常量；源码里手写的特性，本仓明确不收。 |
@@ -33,22 +33,22 @@
 | Git 的 MSBuild 属性 | 已对齐 | 下游可以依赖 `InitializeGitInformation`，读取五个 `Repository*` 属性。 |
 | SourceLink | 部分 | 都复用 SourceLink，.NET 8 起不必再手引；缺信息时的诊断码不同。 |
 | 嵌入资源的三个访问成员 | 部分 | 都有 Text、GetBytes、GetStream；上游只给文本资源生成 Text。 |
-| 文本扩展名、Kind、Comment | 部分 | 上游用扩展名和 Kind 决定文本，两边都支持 Comment；本仓没有扩展名列表和 Kind。 |
+| 文本扩展名、Kind、Comment | 非目标 | 1.0 不增加扩展名列表和 Kind。纳入 Resources 的项都有 Text，开关仍是 AssemblyMetaResource。 |
 | 构建中追加嵌入资源 | 部分 | 都能在资源名准备好之前追加；公开的目标名不同。 |
 | resx 字符串与分组 | 部分 | 中性 resx 和下划线分组对齐；本仓是编译期常量并认路径和点号，上游是运行时取字符串。 |
 | `{0}` 与具名占位符 | 缺失 | 上游生成带参数的方法；本仓把占位符留在字符串常量里。 |
-| resx 名字当另一名字的前缀 | 缺失 | 上游报 TA003 并跳过较短的那条；本仓没有这条规则。 |
-| Vsix | 缺失 | 上游有独立包；本仓没有。只对做 VSIX 的项目有对齐价值。 |
+| resx 名字当另一名字的前缀 | 非目标 | 1.0 不另做「跳过较短键」的诊断。冲突继续走 AM0001。 |
+| Vsix | 非目标 | 1.0 不做 VSIX 清单包，也不改写 Pack。 |
 | Prerequisites | 缺失 | 上游另有 1.2.11 的编译器版本检查包。2.1.6 已不依赖它，它也不生成成员。 |
 | 诊断 | 部分 | 两边都有调用方能看到的诊断，码和触发条件不同。 |
 | 增量生成 | 部分 | 两边都是增量生成器。上游 README 没写缓存契约；本仓用单条载荷加语言版本。 |
 | 最低 MSBuild / Roslyn | 缺失 | 上游仓库里有 16.5 与 4.0 的门槛；本仓没有面向调用方的最低版本。 |
-| CI 包版本 | 缺失 | README 写 `42.42.42` 前缀；2.1.6 工作流用 `42.42.{run}` 和 `42.42.0`。本仓固定 `0.1.0`。 |
+| CI 包版本 | 非目标 | 1.0 不产生可安装的预发布包。版本只有一个来源，值为 1.0.0。 |
 | 包元数据 | 部分 | 作者、readme、仓库、开发依赖都有；许可、标签、图标、符号包不同。 |
 | 许可 | 刻意不同 | 上游要求接受 OSMF EULA；本仓 README 差异化写明纯 MIT。 |
 | 文档 | 部分 | 上游公开文档是 README、各包 README、changelog 和 Jekyll 站。本仓有使用说明、架构和 docfx。 |
 
-共 35 行。已对齐 9，部分 18，缺失 7，刻意不同 1。
+共 35 行。已对齐 9，部分 16，缺失 3，刻意不同 2，非目标 5。
 
 ## 逐项详情
 
@@ -129,8 +129,8 @@
 生成物形状：`public partial class ThisAssembly` 里，`Retry` 下的 `Limit` 是 `public static int Limit => 3;`。
 
 - 边界情形：Strings 的成员本来就是属性和方法，这条开关不把它们变成 `const`。只对走常量那条路的成员生效。
-- AssemblyMeta 现状：部分
-- 证据：`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/PayloadAndEmitterTests.cs` 的 `Public_visibility_uses_static_readonly_and_namespace`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Public_strings_are_static_readonly`。属性名是 `AssemblyMetaVisibility`。
+- AssemblyMeta 现状：刻意不同
+- 证据：`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/PayloadAndEmitterTests.cs` 的 `Public_visibility_uses_static_readonly_and_namespace`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Public_strings_are_static_readonly`。属性名是 `AssemblyMetaVisibility`。public 时保持 `static readonly` 字段，见 ADR 0003。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/visibility.md>
 
 ### 只生成 C#
@@ -232,8 +232,8 @@
 - 能力：Constant 可以不挂在 `Constants` 下。
 - 可观察行为：Constant 项有 `Root` 和 `RootComment`。Git、Project、AssemblyInfo 都用 `Root="."`，于是成员落在 `ThisAssembly.Git`、`ThisAssembly.Project`、`ThisAssembly.Info`，而不是 `ThisAssembly.Constants.*`。`RootComment` 替换该嵌套类型的摘要。不写 `Root` 时，README 示例落在 `ThisAssembly.Constants`。
 - 边界情形：包 README 没有把这两个元数据写成调用方文档。changelog 2.0.3 写过自定义根摘要。
-- AssemblyMeta 现状：缺失
-- 证据：`src/AssemblyMeta.Constants/buildTransitive/AssemblyMeta.Constants.props` 只把 Value、Type、Comment、Link 交给生成器。
+- AssemblyMeta 现状：非目标
+- 证据：`src/AssemblyMeta.Constants/buildTransitive/AssemblyMeta.Constants.props` 只把 Value、Type、Comment、Link 交给生成器。1.0 不提供 Root。Info、Project、Git 仍由各自的生成器提供。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/ThisAssembly.Constants.targets>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>
 
 ### Project 选择加入
@@ -389,8 +389,8 @@ GitHub 的 `refs/pull/15/merge` 得到 `pr15`。标签引用会去掉 `refs/tags
 v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认值都是 `.txt|.cs|.sql|.json|.md|.resx`。同标签 README 写的默认值没有 `.resx`。包内 props 与标签一致，与 README 不一致。
 
 - 边界情形：准备资源的目标把每个 `EmbeddedResource` 的纳入标记写成 true，会盖掉项目里事先写的 false。README 没有排除开关。`.resx` 因此默认带 `Text`，会和 Strings 同时看见同一个文件。运行时按路径改成点号之后做清单名后缀匹配；resx 编译进程序集后清单名通常以 `.resources` 结尾，不一定对得上 `.resx`。这次没有为这条路径做端到端运行。
-- AssemblyMeta 现状：部分
-- 证据：`docs/使用说明.md` 与 `src/AssemblyMeta.Resources/README.md` 写了 Comment 的冲突改名，没有扩展名列表，也没有 Kind。排除用 `AssemblyMetaResource=false`，强制纳入 resx 用 `AssemblyMetaResource=true`。`.resx` 默认不进入 Resources。
+- AssemblyMeta 现状：非目标
+- 证据：`docs/使用说明.md` 与 `src/AssemblyMeta.Resources/README.md` 写了 Comment 的冲突改名，没有扩展名列表，也没有 Kind。排除用 `AssemblyMetaResource=false`，强制纳入 resx 用 `AssemblyMetaResource=true`。`.resx` 默认不进入 Resources。1.0 不增加扩展名列表和 Kind；纳入的项都有 Text。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ThisAssembly.Resources.props>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ThisAssembly.Resources.targets>
 
 ### 构建中追加嵌入资源
@@ -426,7 +426,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 
 - 边界情形：两个文件若有相同键，会在同一个 `Strings` 下各写一份，调用方会碰到重复成员。只有 mimetype、没有 type 的项仍会进入生成。空名字或没有 value 的项跳过。
 - AssemblyMeta 现状：部分
-- 证据：`docs/使用说明.md`；`src/AssemblyMeta.Strings/README.md`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Strings_generator_emits_constants_and_cache_hits`、`String_names_drop_strings_file_prefix_and_split_underscores`、`Resx_reader_keeps_string_values_and_skips_binary`。本仓默认是编译期常量；键里的点号也分层；文件路径会变成前缀，只有末段名为 `Strings` 时去掉这一段。带 type 或 mimetype 的非字符串项跳过并警告 `AM0007`。`type` 为 `string` 或 `System.String` 的项保留。
+- 证据：`docs/使用说明.md`；`src/AssemblyMeta.Strings/README.md`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Strings_generator_emits_constants_and_cache_hits`、`String_names_drop_strings_file_prefix_and_split_underscores`、`Resx_reader_keeps_string_values_and_skips_binary`。本仓默认是编译期常量；键里的点号也分层；文件路径会变成前缀，只有末段名为 `Strings` 时去掉这一段。带 type 或 mimetype 的非字符串项跳过并警告 `AM0007`。`type` 为 `string` 或 `System.String` 的项保留。编译期常量、占位符留在字面量、卫星 resx 不参与，已由 ADR 0003 定为有意差异。路径前缀和点号分层仍未单独立成决议，所以这一行保持部分。
 - 来源：<https://www.nuget.org/packages/ThisAssembly.Strings/2.1.6>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/ThisAssembly.Strings.targets>
 
 ### `{0}` 与具名占位符
@@ -460,8 +460,8 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：避免一个键既是成员又是嵌套类型。
 - 可观察行为：同一 resx 里，若某个键加上下划线之后是另一个键的前缀，例如同时有 `Shop` 和 `Shop_Ready`，则报错误 TA003，提示把较短的名字改成带 `_Title` 的形式，并且不为较短的那个键生成成员。changelog v2.1.5 对应重复成员问题。
 - 边界情形：跨文件的同名键不走这条诊断。
-- AssemblyMeta 现状：缺失
-- 证据：本仓无证据。重名走的是 `AM0001`，见 `docs/架构.md`，那是另一条规则。
+- AssemblyMeta 现状：非目标
+- 证据：本仓不另做「跳过较短键」的诊断。重名走的是 `AM0001`，见 `docs/架构.md`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/Model.cs>
 
 ### Vsix
@@ -482,8 +482,8 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 `Pack` 在装有 VS SDK 且 `PackageId` 非空时被改成创建 VSIX。包依赖 `ThisAssembly.Constants` 2.1.6，以及 `Microsoft.VSSDK.BuildTools`（依赖版本 18.5.40034，include 为 none）。标签比其它包多一个 `vsix`。已发布包里是 `build/netstandard2.0` 下的 props/targets，没有分析器 DLL。
 
 - 边界情形：它服务的是 Visual Studio 扩展清单，不生成普通项目用得到的成员。本仓包规划没有这块，也没有 ADR 说不做。是否对齐，取决于要不要覆盖 VSIX 项目；对「把项目和程序集事实变成常量」这条主线，它是旁路。
-- AssemblyMeta 现状：缺失
-- 证据：`README.md` 包规划没有 Vsix。
+- AssemblyMeta 现状：非目标
+- 证据：`README.md` 包规划没有 Vsix。1.0 不做 VSIX 清单包，不引用 VS SDK，不改写 Pack。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Vsix/readme.md>，<https://www.nuget.org/packages/ThisAssembly.Vsix/2.1.6>
 
 ### Prerequisites
@@ -530,8 +530,8 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：分支和 PR 产生可试用的包。
 - 可观察行为：README 的 Dogfooding 一节写 CI feed `https://pkg.kzu.app/index.json`，PR 包为 `42.42.42-pr` 加编号，分支包为 `42.42.42-` 加分支名、点、提交数。v2.1.6 的 `build.yml` 实际传入的前缀是 `42.42.` 加 GitHub run number，版本标签是当前 ref。非 main 的分支和 PR 会被改成前缀 `42.42.0`，后缀是整理后的 ref 再加 run number。标签发布时版本就是去掉 `v` 的标签，例如 2.1.6。`publish.yml` 在 GitHub Release 发布后推到 nuget.org，并拒绝文件名里带 `42.42` 的包。构建矩阵是 ubuntu-latest、macOS-latest、windows-latest。非 CI 的本地包版本是 `42.` 加自 2024-03-15 起的天数、再加当天分钟数，与 README 里的 `42.42.42` 不是同一条规则。
 - 边界情形：feed 在调查当天是否仍能按 README 或按工作流还原这些包，没有去 feed 上拉取。工作流与 README 的版本公式不一致，以工作流为准描述 2.1.6 会打出的包，以 README 为准描述公开说明书。
-- AssemblyMeta 现状：缺失
-- 证据：本仓无证据。`Directory.Build.props` 里的包版本是 `0.1.0`，没有 PR/分支版本方案，仓库里也没有 GitHub Actions 工作流。
+- AssemblyMeta 现状：非目标
+- 证据：`Directory.Build.props` 里的包版本是单一来源。1.0 不产生可安装的预发布包，CI 只构建、测试、打包。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/.github/workflows/build.yml>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/.github/workflows/publish.yml>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/.github/workflows/os-matrix.json>
 
 ### 包元数据
