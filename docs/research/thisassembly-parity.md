@@ -41,7 +41,7 @@
 | Vsix | 非目标 | 1.0 不做 VSIX 清单包，也不改写 Pack。 |
 | Prerequisites | 非目标 | 1.0 不做编译器版本检查包，也不在编译期发版本诊断。决议见 #23。 |
 | 诊断 | 超越 | 调用方看到的是 AM0001 至 AM0011。不追上游的码。决议见 #23。 |
-| 增量生成 | 已对齐 | 缓存输入是单条载荷加语言版本。Constants 的缓存测试另补，不改这个输入。决议见 #23。少数意见：守门人投超越。 |
+| 增量生成 | 已对齐 | 缓存输入是单条载荷加语言版本。七个生成器都有缓存测试。决议见 #23。少数意见：守门人投超越。 |
 | 最低 MSBuild / Roslyn | 已对齐 | 编译器 API 4.11.0。SDK 10.0.303 是验证环境。编译期不检查。决议见 #18 与 #23。 |
 | CI 包版本 | 非目标 | 1.0 不产生可安装的预发布包。版本只有一个来源，值为 1.0.0。 |
 | 包元数据 | 超越 | 作者、readme、仓库、开发依赖和本仓标签保持现状。图标和符号包沿用 #19，都不要。决议见 #23。少数意见：质疑官把图标和符号包投成非目标。 |
@@ -513,7 +513,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 可观察行为：公开 README 只说使用 Roslyn source generator，没有写缓存契约。changelog 1.1.0 起改为增量生成器。2.1.6 里 Constants、Resources、Strings 都是增量生成器，输入是附加文件、分析器能看见的属性和语言版本。Info、Project、Metadata、Git、Vsix 不另带分析器 DLL，它们把常量项交给 Constants。调用方没有开关。本仓 README 差异化把上游写成 Source Generator、把自己写成严格缓存；两边都是增量生成器，剩下的差别是缓存输入。本仓用单条载荷加语言版本，见 `docs/架构.md`。
 - 边界情形：没有用两次构建去测量上游的缓存命中。Prerequisites 把最低编译器写成 4.0，理由是增量接口，但 2.1.6 的包不再带这道检查。
 - AssemblyMeta 现状：已对齐
-- 证据：`docs/架构.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Unchanged_analyzer_options_reuse_incremental_output`；Git、Project、Metadata、Resources、Strings 的测试里都有缓存断言。
+- 证据：`docs/架构.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Unchanged_analyzer_options_reuse_incremental_output` 与 `Constants_generator_reuses_incremental_output`；Git、Project、Metadata、Resources、Strings 的测试里都有缓存断言。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/ConstantsGenerator.cs>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ResourcesGenerator.cs>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/StringsGenerator.cs>
 
 ### 最低 MSBuild / Roslyn

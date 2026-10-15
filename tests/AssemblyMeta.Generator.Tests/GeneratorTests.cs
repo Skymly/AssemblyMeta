@@ -95,6 +95,21 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void Constants_generator_reuses_incremental_output()
+    {
+        var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+        {
+            new ConstantRecord("Banner", "line1\nline2", "string", ""),
+        });
+        var changed = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+        {
+            new ConstantRecord("Banner", "other", "string", ""),
+        });
+        GeneratorTestHost.AssertCached(new ConstantsGenerator(), ConstantsGenerator.PayloadKey, payload, changed);
+        GeneratorTestHost.AssertLanguageVersionInvalidates(new ConstantsGenerator(), ConstantsGenerator.PayloadKey, payload);
+    }
+
+    [Fact]
     public void Invalid_namespace_falls_back_and_warns()
     {
         var emitted = SourceEmission.Emit(PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel

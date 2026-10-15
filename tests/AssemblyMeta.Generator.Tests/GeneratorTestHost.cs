@@ -191,6 +191,39 @@ internal static class GeneratorTestHost
         Assert.NotEqual(first, third.Results[0].GeneratedSources[0].SourceText.ToString());
     }
 
+    public static void AssertLanguageVersionInvalidates(IIncrementalGenerator generator, string payloadKey, string payload)
+    {
+        var provider = new TestAnalyzerConfigOptionsProvider(new Dictionary<string, string>
+        {
+            [payloadKey] = payload,
+        });
+        var compilation = CSharpCompilation.Create(
+            "incremental",
+            new[] { CSharpSyntaxTree.ParseText("class A {}") },
+            References,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            new[] { generator.AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: new CSharpParseOptions(LanguageVersion.CSharp10),
+            optionsProvider: provider,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
+        driver = driver.RunGenerators(compilation);
+        var first = driver.GetRunResult().Results[0].GeneratedSources[0].SourceText.ToString();
+
+        driver = driver.WithUpdatedParseOptions(new CSharpParseOptions(LanguageVersion.CSharp12));
+        driver = driver.RunGenerators(compilation);
+        var second = driver.GetRunResult();
+        var reasons = second.Results[0].TrackedSteps
+            .SelectMany(pair => pair.Value)
+            .SelectMany(step => step.Outputs)
+            .Select(output => output.Reason)
+            .ToArray();
+        Assert.Contains(IncrementalStepRunReason.Modified, reasons);
+        Assert.NotEqual(first, second.Results[0].GeneratedSources[0].SourceText.ToString());
+    }
+
     private static MetadataReference[] CreateReferences()
     {
         var directory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
