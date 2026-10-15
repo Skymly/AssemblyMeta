@@ -15,7 +15,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 
 ## 当前进度
 
-M3 已落地：元包聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings。生成器是 `IIncrementalGenerator`，数据经 Base64 载荷进入 `build_property.*`，不使用 `AdditionalFiles`。文档站用 `dotnet docfx docs/docfx.json` 构建到 `artifacts/docs`。
+1.0.0 的行为记在 [CHANGELOG.md](CHANGELOG.md)。元包聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings。生成器是 `IIncrementalGenerator`，数据经 Base64 载荷进入 `build_property.*`，不使用 `AdditionalFiles`。文档站用 `dotnet docfx docs/docfx.json` 构建到 `artifacts/docs`。
 
 - 架构说明：[docs/架构.md](docs/架构.md)
 - 使用说明：[docs/使用说明.md](docs/使用说明.md)
