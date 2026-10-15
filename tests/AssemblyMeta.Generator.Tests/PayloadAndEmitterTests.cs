@@ -186,40 +186,47 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
-    public void FileConstant_uses_forward_slashes_and_link()
+    public void File_constant_names_sanitize_awkward_segments()
     {
-        Assert.True(FileConstantNaming.TryCreate(
-            new FileConstantNaming.Input(@"Content\Docs\", "License", ".md", "", ""),
-            out var license));
-        Assert.Equal("Content.Docs.License", license.Name);
-        Assert.Equal("Content/Docs/License.md", license.Value);
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Constants,
+            FileConstants = new[]
+            {
+                new FileConstantNameInput
+                {
+                    RelativeDir = @"Content\Docs\",
+                    Filename = "12. Readme (copy)",
+                    Extension = ".txt",
+                },
+            },
+        });
 
-        Assert.True(FileConstantNaming.TryCreate(
-            new FileConstantNaming.Input(@"Content\Docs\", "12. Readme (copy)", ".txt", "", ""),
-            out var readme));
-        Assert.Equal("Content.Docs.12. Readme (copy)", readme.Name);
-
-        Assert.True(FileConstantNaming.TryCreate(
-            new FileConstantNaming.Input(@"C:\outside\", "Readme", ".txt", @"Included\Readme.txt", ""),
-            out var linked));
-        Assert.Equal("Included.Readme", linked.Name);
-        Assert.Equal("Included/Readme.txt", linked.Value);
-
-        Assert.False(FileConstantNaming.TryCreate(
-            new FileConstantNaming.Input(@"C:\outside\", "Readme", ".txt", "", ""),
-            out _));
+        var member = Assert.Single(result.Members);
+        Assert.Equal("Content.Docs._12._Readme_copy_", member.Name);
+        Assert.Equal("Content/Docs/12. Readme (copy).txt", member.Value);
+        Assert.Empty(result.GeneratorDiagnostics);
     }
 
     [Fact]
-    public void Sanitizer_collapses_invalid_characters_and_escapes_keywords()
+    public void Constant_names_collapse_invalid_characters()
     {
-        Assert.True(IdentifierSanitizer.TrySanitize(" Readme (copy)", out var name));
-        Assert.Equal("_Readme_copy_", name);
-        Assert.True(IdentifierSanitizer.TrySanitize("12", out var digits));
-        Assert.Equal("_12", digits);
-        Assert.True(IdentifierSanitizer.TrySanitize("class", out var keyword));
-        Assert.Equal("@class", keyword);
-        Assert.False(IdentifierSanitizer.TrySanitize("...", out _));
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Constants,
+            Constants = new[]
+            {
+                new ConstantNameInput { Name = " Readme (copy)", Value = "a" },
+                new ConstantNameInput { Name = "12", Value = "b" },
+                new ConstantNameInput { Name = "...", Value = "c" },
+            },
+        });
+
+        Assert.Equal("_Readme_copy_", result.Members[0].Name);
+        Assert.Equal("_12", result.Members[1].Name);
+        Assert.Equal(2, result.Members.Count);
+        var diagnostic = Assert.Single(result.GeneratorDiagnostics);
+        Assert.Equal("AM0002", diagnostic.Id);
     }
 
     [Fact]

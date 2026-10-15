@@ -7,7 +7,7 @@ namespace AssemblyMeta.Core;
 /// 把 FileConstant 项映射为常量名和相对路径。
 /// 值为相对项目的正斜杠路径；Link 优先于物理路径。项目外且没有 Link 的文件会被跳过。
 /// </summary>
-public static class FileConstantNaming
+internal static class FileConstantNaming
 {
     public readonly record struct Input(string RelativeDir, string FileName, string Extension, string Link, string Comment);
 

@@ -10,7 +10,7 @@ namespace AssemblyMeta.Core;
 /// 文件名 Strings 会从路径末尾去掉，避免生成 AssemblyMeta.Strings.Strings。
 /// 键里的点号和下划线都表示嵌套。
 /// </summary>
-public static class StringResourceNaming
+internal static class StringResourceNaming
 {
     public static bool TryCreate(string logicalPath, string key, string value, string comment, out ConstantRecord record)
     {

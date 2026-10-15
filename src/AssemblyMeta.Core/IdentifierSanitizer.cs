@@ -55,7 +55,7 @@ public static class IdentifierSanitizer
     }
 
     /// <summary>消毒单个路径片段。无法生成标识符时返回 false。</summary>
-    public static bool TrySanitize(string segment, out string identifier)
+    internal static bool TrySanitize(string segment, out string identifier)
     {
         identifier = "";
         if (segment is null)

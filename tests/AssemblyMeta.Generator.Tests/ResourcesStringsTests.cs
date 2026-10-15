@@ -58,16 +58,26 @@ public class ResourcesStringsTests
     [Fact]
     public void String_names_drop_strings_file_prefix_and_split_underscores()
     {
-        Assert.True(StringResourceNaming.TryCreate("Strings.resx", "Shopping_NoShipping", "不能把 {0} 送到 {1}。", "", out var nested));
-        Assert.Equal("Shopping.NoShipping", nested.Name);
-        Assert.True(StringResourceNaming.TryCreate("UI/Strings.resx", "Hello", "你好", "问候", out var ui));
-        Assert.Equal("UI.Hello", ui.Name);
-        Assert.Equal("问候", ui.Comment);
-        Assert.True(StringResourceNaming.TryCreate("Errors.resx", "NotFound", "找不到 {0}", "", out var errors));
-        Assert.Equal("Errors.NotFound", errors.Name);
-        Assert.True(StringResourceNaming.TryCreate("Strings/Strings.resx", "Hello", "x", "", out var doubled));
-        Assert.Equal("Hello", doubled.Name);
-        Assert.False(StringResourceNaming.TryCreate("Strings.resx", "___", "", "", out _));
+        var named = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Strings,
+            Strings = new[]
+            {
+                new StringNameInput { LogicalPath = "Strings.resx", Key = "Shopping_NoShipping", Value = "不能把 {0} 送到 {1}。" },
+                new StringNameInput { LogicalPath = "UI/Strings.resx", Key = "Hello", Value = "你好", Comment = "问候" },
+                new StringNameInput { LogicalPath = "Errors.resx", Key = "NotFound", Value = "找不到 {0}" },
+                new StringNameInput { LogicalPath = "Strings/Strings.resx", Key = "Hello", Value = "x" },
+                new StringNameInput { LogicalPath = "Strings.resx", Key = "___", Spec = "Strings.resx" },
+            },
+        });
+        Assert.Equal("Shopping.NoShipping", named.Members[0].Name);
+        Assert.Equal("不能把 {0} 送到 {1}。", named.Members[0].Value);
+        Assert.Equal("UI.Hello", named.Members[1].Name);
+        Assert.Equal("问候", named.Members[1].Comment);
+        Assert.Equal("Errors.NotFound", named.Members[2].Name);
+        Assert.Equal("Hello", named.Members[3].Name);
+        Assert.Equal(4, named.Members.Count);
+        Assert.Contains(named.TaskDiagnostics, diagnostic => diagnostic.Id == "AM0010");
         Assert.True(StringResourceNaming.IsSatellitePath("Strings.fr.resx"));
         Assert.True(StringResourceNaming.IsSatellitePath(@"UI\Strings.zh-CN.resx"));
         Assert.False(StringResourceNaming.IsSatellitePath("Strings.resx"));
