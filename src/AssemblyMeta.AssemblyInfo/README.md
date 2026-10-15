@@ -8,4 +8,6 @@ var version = AssemblyMeta.Info.Version;
 
 覆盖：`Configuration`、`Company`、`Title`、`Description`、`Product`、`Copyright`、`Version`、`InformationalVersion`、`FileVersion`。
 
-`Version` 取 `AssemblyVersion`，不是 NuGet `Version`。即使 `GenerateAssemblyInfo=false`，只要对应 MSBuild 属性有值，常量仍会生成。
+九个成员总会生成。没有值时是空字符串。公司、产品、标题留空时不会被写成程序集名。商标以及其他程序集特性不生成成员。
+
+`Version` 取 `AssemblyVersion`，不是 NuGet `Version`。即使 `GenerateAssemblyInfo=false`，这九个常量仍会生成。

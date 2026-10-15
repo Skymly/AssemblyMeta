@@ -18,7 +18,7 @@
 | 命名空间 | 部分 | 都能把根类放进指定命名空间，属性名不同。 |
 | 可见性 | 刻意不同 | 默认 internal 常量。设成 public 后，上游是 get-only 的 static 属性，本仓是 static readonly 字段。决议见 ADR 0003。 |
 | 只生成 C# | 已对齐 | 公开说明都只生成 C#。 |
-| AssemblyInfo 成员 | 部分 | 文档中的九个名字对齐；上游还会收进其它程序集特性，本仓固定九个。 |
+| AssemblyInfo 成员 | 非目标 | 1.0 固定九个成员，没有值时是空字符串。不收进这九个以外的程序集特性。决议见 #13。 |
 | 关闭 SDK 特性生成后仍有 Info | 已对齐 | `GenerateAssemblyInfo=false` 时常量仍在。 |
 | Constant 项 | 部分 | 名字、值、类型、注释和点号嵌套对齐。关键字和「名字既是成员又是嵌套类型」的处理不同。 |
 | 多行字符串 | 已对齐 | C# 11 及以上用 raw string，否则用转义字符串。 |
@@ -48,7 +48,7 @@
 | 许可 | 刻意不同 | 上游要求接受 OSMF EULA；本仓 README 差异化写明纯 MIT。 |
 | 文档 | 部分 | 上游公开文档是 README、各包 README、changelog 和 Jekyll 站。本仓有使用说明、架构和 docfx。 |
 
-共 35 行。已对齐 9，部分 16，缺失 2，刻意不同 2，非目标 6。
+共 35 行。已对齐 9，部分 15，缺失 2，刻意不同 2，非目标 7。
 
 ## 逐项详情
 
@@ -162,8 +162,8 @@
 源码核实：准备目标会把 `GetAssemblyAttributes` 里、名字以 `System.Reflection.Assembly` 开头、又不是 `AssemblyMetadata` 的特性都收进来。成员名是去掉 `Assembly` 前缀和 `Attribute` 后缀之后的部分。因此文档没写的特性，只要 SDK 把它放进特性项，也会出现，例如项目写了商标时会出现 `ThisAssembly.Info.Trademark`。
 
 - 边界情形：默认 SDK 类库不会多出 `Info.Trademark`。公司、产品和标题为空时，SDK 会填上程序集名，所以这三项仍是成员；说明和版权为空时不是成员。`GenerateAssemblyInfo=false` 且商标属性为空字符串时，商标开关是打开的，但 SDK 不把空字符串放进特性清单，也不生成 `Info.Trademark`。项目文件里写成一个空格时，MSBuild 读入后长度仍是 0，结果相同。只有求值之后还剩下内容，才会生成该成员；商标为 `Northwind Mark` 时，`Info.Trademark` 的值就是这串字。若求值结果被固定成一个 U+0020 空格，成员会出现，但生成常量是空字符串。这次用 ThisAssembly.AssemblyInfo 2.1.6，在 SDK 10.0.303 的 net10.0 上构建过，0 警告 0 错误。手写在 C# 源码里的特性不是这项的输入；只有 MSBuild 特性项会被收进来。没有用一份只在源码里写特性的项目跑过。
-- AssemblyMeta 现状：部分
-- 证据：`src/AssemblyMeta.AssemblyInfo/README.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `AssemblyInfo_generator_emits_nine_constants`。本仓固定这九个，没有值时是空字符串。
+- AssemblyMeta 现状：非目标
+- 证据：`src/AssemblyMeta.AssemblyInfo/README.md`；`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `AssemblyInfo_generator_emits_nine_constants`。九个成员仍会生成，没有值时是空字符串，不回填程序集名。非目标只指不收进这九个以外的程序集特性，例如商标。决议见 https://github.com/Skymly/AssemblyMeta/issues/13。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.AssemblyInfo/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.AssemblyInfo/ThisAssembly.AssemblyInfo.targets>
 
 ### 关闭 SDK 特性生成后仍有 Info
