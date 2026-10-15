@@ -41,24 +41,33 @@ public class ContractSurfaceTests
         var constants = SourceEmission.Emit(PayloadCodec.EncodeConstants(null, MemberVisibility.Public, new[]
         {
             new ConstantRecord("class", "keyword", "string", ""),
+            new ConstantRecord("a--b", "x", "string", ""),
+            new ConstantRecord("Content.Docs.License", "Content/Docs/License.md", "string", ""),
             new ConstantRecord("Http.Timeout", "30", "int", ""),
         }), SourceKind.Constants, 1100);
         Assert.NotNull(constants.Source);
+        Assert.Contains("public static partial class Constants", constants.Source);
         Assert.Contains("public static readonly string @class = \"keyword\";", constants.Source);
+        Assert.Contains("public static readonly string a_b = \"x\";", constants.Source);
         var httpClass = constants.Source.IndexOf("public static partial class Http", StringComparison.Ordinal);
         Assert.True(httpClass >= 0);
         Assert.Contains("public static readonly int Timeout = 30;", constants.Source.Substring(httpClass));
+        var docsClass = constants.Source.IndexOf("public static partial class Docs", StringComparison.Ordinal);
+        Assert.True(docsClass > constants.Source.IndexOf("public static partial class Content", StringComparison.Ordinal));
+        Assert.Contains("public static readonly string License = \"Content/Docs/License.md\";", constants.Source.Substring(docsClass));
 
         var project = SourceEmission.Emit(PayloadCodec.EncodeProject(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("TargetFrameworkIdentifier", ".NETCoreApp", "string", ""),
         }), SourceKind.Project, 1100);
+        Assert.Contains("public static partial class Project", project.Source);
         Assert.Contains("public const string TargetFrameworkIdentifier = \".NETCoreApp\";", project.Source);
 
         var metadata = SourceEmission.Emit(PayloadCodec.EncodeMetadata(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("Channel", "stable", "string", ""),
         }), SourceKind.Metadata, 1100);
+        Assert.Contains("public static partial class Metadata", metadata.Source);
         Assert.Contains("public const string Channel = \"stable\";", metadata.Source);
         Assert.DoesNotContain("AssemblyMetadataAttribute", metadata.Source);
 
@@ -95,8 +104,14 @@ public class ContractSurfaceTests
         var resources = SourceEmission.Emit(PayloadCodec.EncodeResources(null, MemberVisibility.Internal, new[]
         {
             new ResourceRecord("Content.Docs.License", "Demo.Content.Docs.License.md", ""),
+            new ResourceRecord("Resources_.readme", "Demo.Resources.readme.txt", ""),
         }), SourceKind.Resources, 1100);
-        Assert.Contains("public static string Text", resources.Source);
+        Assert.NotNull(resources.Source);
+        Assert.Contains("public static partial class Resources", resources.Source);
+        Assert.Contains("public static partial class Resources_", resources.Source);
+        var resourceDocs = resources.Source.IndexOf("public static partial class Docs", StringComparison.Ordinal);
+        Assert.True(resourceDocs > resources.Source.IndexOf("public static partial class Content", StringComparison.Ordinal));
+        Assert.Contains("public static string Text\n", resources.Source.Replace("\r\n", "\n").Substring(resourceDocs));
         Assert.Contains("public static byte[] GetBytes()", resources.Source);
         Assert.Contains("public static System.IO.Stream GetStream()", resources.Source);
         Assert.Contains("Demo.Content.Docs.License.md", resources.Source);
@@ -106,6 +121,7 @@ public class ContractSurfaceTests
             new ConstantRecord("Shop.Closed", "Closed today {0}", "string", ""),
         }), SourceKind.Strings, 1100);
         Assert.NotNull(strings.Source);
+        Assert.Contains("public static partial class Strings", strings.Source);
         var shopClass = strings.Source.IndexOf("public static partial class Shop", StringComparison.Ordinal);
         Assert.True(shopClass >= 0);
         Assert.Contains("public const string Closed = \"Closed today {0}\";", strings.Source.Substring(shopClass));
