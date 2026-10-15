@@ -135,9 +135,9 @@ public class ContractSurfaceTests
         var resourceText = resources.Source.Replace("\r\n", "\n");
         Assert.Contains("public static partial class Resources\n", resourceText);
         Assert.Contains("public static partial class Resources_\n", resourceText);
-        var resourceDocs = resources.Source.IndexOf("public static partial class Docs", StringComparison.Ordinal);
-        Assert.True(resourceDocs > resources.Source.IndexOf("public static partial class Content", StringComparison.Ordinal));
-        Assert.Contains("public static string Text\n", resources.Source.Replace("\r\n", "\n").Substring(resourceDocs));
+        var resourceDocs = resourceText.IndexOf("public static partial class Docs", StringComparison.Ordinal);
+        Assert.True(resourceDocs > resourceText.IndexOf("public static partial class Content", StringComparison.Ordinal));
+        Assert.Contains("public static string Text\n", resourceText.Substring(resourceDocs));
         Assert.Contains("public static byte[] GetBytes()", resources.Source);
         Assert.Contains("public static System.IO.Stream GetStream()", resources.Source);
         Assert.Contains("Demo.Content.Docs.License.md", resources.Source);
