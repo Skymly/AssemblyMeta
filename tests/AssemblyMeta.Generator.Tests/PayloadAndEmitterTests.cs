@@ -352,6 +352,26 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Source_emission_decodes_constants_and_rejects_a_bad_payload()
+    {
+        var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+        {
+            new ConstantRecord("Answer", "42", "int", ""),
+        });
+        var emitted = SourceEmission.Emit(payload, SourceKind.Constants, 1100);
+        Assert.NotNull(emitted.Source);
+        Assert.Contains("const int Answer = 42;", emitted.Source);
+        Assert.DoesNotContain(emitted.Diagnostics, diagnostic => diagnostic.Id == "AM0004");
+
+        var rejected = SourceEmission.Emit("not-base64", SourceKind.Constants, 1100);
+        Assert.Null(rejected.Source);
+        var diagnostic = Assert.Single(rejected.Diagnostics);
+        Assert.Equal("AM0004", diagnostic.Id);
+        Assert.Equal("AssemblyMeta 载荷无效", diagnostic.Title);
+        Assert.Equal("无法解析 Constants 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
+    }
+
+    [Fact]
     public void Oversized_diagnostic_count_is_rejected()
     {
         var payload = CraftConstantsPayload("2147483647");
