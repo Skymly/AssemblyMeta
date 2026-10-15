@@ -71,7 +71,7 @@ MSBuild props/targets
 要点：
 
 - `buildTransitive` 把 props 和 targets 交给写下 `PackageReference` 的项目。分析器停在这一层，不出现在再引用该项目的下一个项目里
-- generator 只依赖 `build_metadata.*` / `build_property.*` 输入，保证增量缓存命中率
+- 每个生成器的增量输入只有一条载荷字符串和 C# 语言版本
 - 只生成 C#。不按语言分派 emitter
 
 ## 里程碑

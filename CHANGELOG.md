@@ -19,7 +19,7 @@
 - `Constant` 与 `FileConstant` 挂在 `AssemblyMeta.Constants`。点号变成嵌套类型。
 - 项目属性挂在 `AssemblyMeta.Project`。默认含目标框架标识的标识符、Moniker 和版本。目标框架短名要另外点名 `TargetFramework`。
 - `AssemblyMetadata` 项挂在 `AssemblyMeta.Metadata`。
-- `AssemblyMeta.Git` 有 `Commit`、`Sha`、`Root`、`Url`、`Branch`。查询关闭时，五个生成值是 `[pending build]`，不写回 `Repository*`。
+- `AssemblyMeta.Git` 有 `Commit`、`Sha`、`Root`、`Url`、`Branch`。查询关闭时，五个生成值是 `[pending build]`。写回 `RepositoryCommit`、`RepositorySha`、`RepositoryRoot`、`RepositoryUrl`、`RepositoryBranch` 的仍是解析结果，不把占位符写进去。
 - 嵌入资源挂在 `AssemblyMeta.Resources`，提供 `Text`、`GetBytes`、`GetStream`。
 - 中性 resx 挂在 `AssemblyMeta.Strings`，是编译期常量。占位符留在字面量里。卫星 resx 不参与。
 
