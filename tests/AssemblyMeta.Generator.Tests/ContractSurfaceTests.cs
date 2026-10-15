@@ -124,8 +124,9 @@ public class ContractSurfaceTests
             1100);
         Assert.NotNull(resources.Source);
         Assert.Contains(resources.Diagnostics, diagnostic => diagnostic.Id == "AM0008");
-        Assert.Contains("public static partial class Resources", resources.Source);
-        Assert.Contains("public static partial class Resources_", resources.Source);
+        var resourceText = resources.Source.Replace("\r\n", "\n");
+        Assert.Contains("public static partial class Resources\n", resourceText);
+        Assert.Contains("public static partial class Resources_\n", resourceText);
         var resourceDocs = resources.Source.IndexOf("public static partial class Docs", StringComparison.Ordinal);
         Assert.True(resourceDocs > resources.Source.IndexOf("public static partial class Content", StringComparison.Ordinal));
         Assert.Contains("public static string Text\n", resources.Source.Replace("\r\n", "\n").Substring(resourceDocs));
