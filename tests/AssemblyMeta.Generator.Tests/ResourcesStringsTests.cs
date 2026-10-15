@@ -1,7 +1,11 @@
+using System.Collections;
 using System.Text;
 using AssemblyMeta.Core;
 using AssemblyMeta.Resources;
 using AssemblyMeta.Strings;
+using AssemblyMeta.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.CodeAnalysis;
 
 namespace AssemblyMeta.Generator.Tests;
@@ -52,6 +56,49 @@ public class ResourcesStringsTests
         Assert.Equal("文本", entries[2].Value);
         Assert.Equal("限定", entries[3].Value);
         Assert.False(ResxReader.TryRead("<root>", out _, out _, out _));
+    }
+
+    [Fact]
+    public void Encode_strings_reports_AM0007_and_AM0011()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "am-resx-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var resxPath = Path.Combine(directory, "Messages.resx");
+            File.WriteAllText(resxPath, """
+                <root>
+                  <data name="Hello" xml:space="preserve"><value>hi</value></data>
+                  <data name="Icon" type="System.Drawing.Icon, System.Drawing"><value>AAAA</value></data>
+                </root>
+                """);
+            var engine = new RecordingBuildEngine();
+            var task = new EncodeStrings
+            {
+                BuildEngine = engine,
+                ProjectDirectory = directory,
+                Items = new ITaskItem[]
+                {
+                    ResxItem("Messages.resx"),
+                    ResxItem("Missing.resx"),
+                },
+            };
+
+            Assert.False(task.Execute());
+            Assert.Contains("AM0007", engine.Codes);
+            Assert.Contains("AM0011", engine.Codes);
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
+    private static TaskItem ResxItem(string spec)
+    {
+        var item = new TaskItem(spec);
+        item.SetMetadata("WithCulture", "false");
+        return item;
     }
 
     [Fact]
@@ -220,4 +267,31 @@ public class ResourcesStringsTests
         Assert.DoesNotContain("namespace ", source.Source);
         Assert.Contains("Note.txt", source.Source);
     }
+}
+
+file sealed class RecordingBuildEngine : IBuildEngine
+{
+    public List<string> Codes { get; } = new();
+
+    public void LogErrorEvent(BuildErrorEventArgs e) => Codes.Add(e.Code);
+
+    public void LogWarningEvent(BuildWarningEventArgs e) => Codes.Add(e.Code);
+
+    public void LogMessageEvent(BuildMessageEventArgs e)
+    {
+    }
+
+    public void LogCustomEvent(CustomBuildEventArgs e)
+    {
+    }
+
+    public bool ContinueOnError => true;
+
+    public int LineNumberOfTaskNode => 0;
+
+    public int ColumnNumberOfTaskNode => 0;
+
+    public string ProjectFileOfTaskNode => "";
+
+    public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties, IDictionary targetOutputs) => true;
 }
