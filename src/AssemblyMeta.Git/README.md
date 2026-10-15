@@ -2,7 +2,7 @@
 
 把当前仓库的 Git 信息生成为 `AssemblyMeta.Git` 常量。
 
-- `Commit`：完整提交哈希，来自 SourceLink 的 `SourceRevisionId`
+- `Commit`：`RepositoryCommit` 已有值时原样采用，否则是 SourceLink 的 `SourceRevisionId`
 - `Sha`：`RepositorySha` 已有值时原样采用，否则是 `Commit` 的前 9 位；不足 9 位时用全长
 - `Root`：仓库根目录，正斜杠，非空时以斜杠结尾
 - `Url`：仅当 `PublishRepositoryUrl=true`，或已经设置 `RepositoryUrl` 时填充
