@@ -20,7 +20,7 @@ public class PackageLayoutTests
     [Fact]
     public void Eight_packages_have_the_recorded_layout()
     {
-        var root = FindRepoRoot();
+        var root = RepoRoot.Find();
         var output = Path.Combine(Path.GetTempPath(), "am-pack-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(output);
         try
@@ -77,22 +77,6 @@ public class PackageLayoutTests
                 Directory.Delete(output, true);
             }
         }
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "AssemblyMeta.slnx")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("找不到 AssemblyMeta.slnx。");
     }
 
     private static (int ExitCode, string Text) Pack(string root, string output)

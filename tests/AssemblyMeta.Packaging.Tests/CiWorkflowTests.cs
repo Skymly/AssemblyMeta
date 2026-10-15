@@ -5,7 +5,7 @@ public class CiWorkflowTests
     [Fact]
     public void Workflow_builds_tests_and_packs_without_publishing()
     {
-        var root = FindRepoRoot();
+        var root = RepoRoot.Find();
         var dir = Path.Combine(root, ".github", "workflows");
         Assert.True(Directory.Exists(dir));
         var files = Directory.GetFiles(dir, "*.yml")
@@ -32,21 +32,5 @@ public class CiWorkflowTests
         Assert.DoesNotContain("tags:", text);
         Assert.DoesNotContain("release:", text);
         Assert.DoesNotContain("write", text);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "AssemblyMeta.slnx")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("找不到 AssemblyMeta.slnx。");
     }
 }

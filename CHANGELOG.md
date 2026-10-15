@@ -17,7 +17,7 @@
 - 只生成 C#。
 - `AssemblyMeta.Info` 固定九个字符串：`Configuration`、`Company`、`Title`、`Description`、`Product`、`Copyright`、`Version`、`InformationalVersion`、`FileVersion`。生成器不把空字符串改成程序集名。不生成商标。`GenerateAssemblyInfo=false` 时这九个成员仍会生成。
 - `Constant` 与 `FileConstant` 挂在 `AssemblyMeta.Constants`。点号变成嵌套类型。
-- 项目属性挂在 `AssemblyMeta.Project`。默认含目标框架标识的标识符、Moniker 和版本。短名要另外点名 `TargetFramework`。
+- 项目属性挂在 `AssemblyMeta.Project`。默认含目标框架标识的标识符、Moniker 和版本。目标框架短名要另外点名 `TargetFramework`。
 - `AssemblyMetadata` 项挂在 `AssemblyMeta.Metadata`。
 - `AssemblyMeta.Git` 有 `Commit`、`Sha`、`Root`、`Url`、`Branch`。查询关闭时，五个生成值是 `[pending build]`，不写回 `Repository*`。
 - 嵌入资源挂在 `AssemblyMeta.Resources`，提供 `Text`、`GetBytes`、`GetStream`。
