@@ -300,7 +300,7 @@
 
 生成物：`ThisAssembly.Git.Commit` 为完整提交号，`ThisAssembly.Git.Sha` 为 `012345678`。
 
-- 边界情形：提交号短于 9 个字符时，目标仍按固定 9 位去截。MSBuild 在长度不够时会让这个目标失败。没有另造短哈希仓库去跑，所以失败文案未记录。`Root` 只保证把反斜杠换成正斜杠，不另行补结尾斜杠；结尾斜杠取决于 SourceLink 给出的源根。
+- 边界情形：提交号短于 9 个字符时，目标仍按固定 9 位去截。ThisAssembly.Git 2.1.6：把 8 个字符 `a1b2c3d4` 放在 `SourceRevisionId` 上后构建失败，没有警告。错误是 MSB4184，无法计算 `"a1b2c3d4".Substring(0, 9)`，length 超出字符串。见 https://github.com/Skymly/AssemblyMeta/issues/26 。`Root` 只保证把反斜杠换成正斜杠，不另行补结尾斜杠；结尾斜杠取决于 SourceLink 给出的源根。
 - AssemblyMeta 现状：已对齐
 - 证据：`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/ProjectMetadataGitTests.cs` 的 `Git_generator_emits_members_pending_placeholder_and_cache_hits`。短哈希和结尾斜杠的差异记在下一行。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/ThisAssembly.Git.targets>
@@ -585,7 +585,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 
 下面这些没有足够的结果，不能当成已核对的行为。
 
-1. issue #467（changelog v2.1.3）所修的 AOT / 单文件问题，修复后调用方能看到的变化。只看到「已修」。调试生成里仍有读取程序集位置的一行；会不会在 AOT 下报警，没有跑发布。
+1. （已核实）changelog 把 issue #467 记在 v2.1.3 的已修缺陷里，但该 issue 于 2026-05-01 以 not_planned 关闭，没有关联的拉取请求，v2.1.2 到 v2.1.3 也没有生成器或可见性改动。报告里的输入用了 `ThisAssembly.Git.Commit` 和 `ThisAssembly.Git.IsDirty`；v2.1.6 的 Git 成员仍只有 Branch、Commit、Sha、Root、Url。报告人说普通编译可以通过。按单文件加 ReadyToRun 发布时，截图里的错误是 `ThisAssembly` 因保护级别不可访问。issue 正文的版本写成 3.5.0，而 ThisAssembly 的发布标签是 1.x 和 2.x。没有按该配置在 2.1.6 上实际发布，所以不知道同一句错误是否仍在。见 https://github.com/Skymly/AssemblyMeta/issues/24 。
 2. 赞助检查的诊断码和文案。仓库属性 `FundingGrace` 为 30，changelog 写过宽限期后发警告。没有跑一次编译。
 3. 嵌入式 PDB 里的 SourceLink 文档表。它是压缩的，没有解压。snupkg 地址返回 404 之后，符号服务器上是否另有 PDB，没有再查。
 4. Visual Studio 设计时会不会在 SourceLink 把查询开关设为 true 之前，先把它写成 false。没有在 IDE 里跑。
@@ -593,6 +593,6 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 6. （已核实，见「AssemblyInfo 成员」）默认 SDK 项目不会多出 `Info.Trademark`。空商标不会变成成员。非空商标会。只写在源码里的空 `AssemblyTrademark` 没有跑过。
 7. 只写在 C# 源码里的程序集特性。目标的输入是 MSBuild 特性项，不扫描源码。没有用这样的项目跑过。
 8. （已核实，见「文本扩展名、Kind、Comment」）`.resx` 被当成文本之后，按 `.resx` 后缀找不到以 `.resources` 结尾的清单名。`Text` 抛出找不到资源的异常。`.txt` 在同一次运行里能读到。
-9. 提交号短于 9 个字符时，Git 目标失败的具体文案。没有跑构建。
+9. （已核实，见「Git 五个成员」）提交号为 8 个字符 `a1b2c3d4` 时，构建失败且没有警告。错误是 MSB4184，`Substring(0, 9)` 的 length 超出字符串。
 10. CI feed `https://pkg.kzu.app/index.json` 在调查当天能否还原包。
 11. 旧包 `MSBuilder.ThisAssembly.*` 与 v2.1.6 的行为关系。
