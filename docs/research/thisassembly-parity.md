@@ -426,7 +426,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 
 - 边界情形：两个文件若有相同键，会在同一个 `Strings` 下各写一份，调用方会碰到重复成员。只有 mimetype、没有 type 的项仍会进入生成。空名字或没有 value 的项跳过。
 - AssemblyMeta 现状：超越
-- 证据：`docs/使用说明.md`；`src/AssemblyMeta.Strings/README.md`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Strings_generator_emits_constants_and_cache_hits`、`String_names_drop_strings_file_prefix_and_split_underscores`、`Resx_reader_keeps_string_values_and_skips_binary`。本仓默认是编译期常量；键里的点号也分层；文件路径会变成前缀，只有末段名为 `Strings` 时去掉这一段。带 type 或 mimetype 的非字符串项跳过并警告 `AM0007`。`type` 为 `string` 或 `System.String` 的项保留。编译期常量、占位符留在字面量、卫星 resx 不参与，已由 ADR 0003 定为有意差异。路径前缀和点号分层仍未单独立成决议，所以这一行保持部分。
+- 证据：`docs/使用说明.md`；`src/AssemblyMeta.Strings/README.md`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Strings_generator_emits_constants_and_cache_hits`、`String_names_drop_strings_file_prefix_and_split_underscores`、`Resx_reader_keeps_string_values_and_skips_binary`。本仓默认是编译期常量；键里的点号也分层；文件路径会变成前缀，只有末段名为 `Strings` 时去掉这一段。带 type 或 mimetype 的非字符串项跳过并警告 `AM0007`。`type` 为 `string` 或 `System.String` 的项保留。编译期常量、占位符留在字面量、卫星 resx 不参与，已由 ADR 0003 定为有意差异。路径前缀和点号分层已由 #23 定为超越，使用说明里的规则就是 1.0 契约。
 - 来源：<https://www.nuget.org/packages/ThisAssembly.Strings/2.1.6>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/ThisAssembly.Strings.targets>
 
 ### `{0}` 与具名占位符
