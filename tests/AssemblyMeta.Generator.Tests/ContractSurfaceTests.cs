@@ -79,6 +79,7 @@ public class ContractSurfaceTests
             Url = "",
             Branch = "main",
         }), SourceKind.Git, 1100);
+        Assert.Contains("public static partial class Git", git.Source);
         foreach (var name in new[] { "Commit", "Sha", "Root", "Url", "Branch" })
         {
             Assert.Contains($"public const string {name} =", git.Source);
@@ -101,12 +102,28 @@ public class ContractSurfaceTests
             Assert.Contains($"public const string {name} = \"[pending build]\";", pending.Source);
         }
 
-        var resources = SourceEmission.Emit(PayloadCodec.EncodeResources(null, MemberVisibility.Internal, new[]
+        var namedResources = MemberNames.Name(new MemberNameRequest
         {
-            new ResourceRecord("Content.Docs.License", "Demo.Content.Docs.License.md", ""),
-            new ResourceRecord("Resources_.readme", "Demo.Resources.readme.txt", ""),
-        }), SourceKind.Resources, 1100);
+            Area = MemberNameArea.Resources,
+            Resources = new[]
+            {
+                new ResourceNameInput { Name = "Content.Docs.License", ManifestName = "Demo.Content.Docs.License.md" },
+                new ResourceNameInput { Name = "Resources.readme", ManifestName = "Demo.Resources.readme.txt" },
+            },
+        });
+        var resourceRecords = new ResourceRecord[namedResources.Members.Count];
+        for (var i = 0; i < resourceRecords.Length; i++)
+        {
+            var member = namedResources.Members[i];
+            resourceRecords[i] = new ResourceRecord(member.Name, member.ManifestName ?? "", member.Comment);
+        }
+
+        var resources = SourceEmission.Emit(
+            PayloadCodec.EncodeResources(null, MemberVisibility.Internal, resourceRecords, namedResources.GeneratorDiagnostics),
+            SourceKind.Resources,
+            1100);
         Assert.NotNull(resources.Source);
+        Assert.Contains(resources.Diagnostics, diagnostic => diagnostic.Id == "AM0008");
         Assert.Contains("public static partial class Resources", resources.Source);
         Assert.Contains("public static partial class Resources_", resources.Source);
         var resourceDocs = resources.Source.IndexOf("public static partial class Docs", StringComparison.Ordinal);
@@ -120,6 +137,7 @@ public class ContractSurfaceTests
         {
             new ConstantRecord("Shop.Closed", "Closed today {0}", "string", ""),
             new ConstantRecord("Errors.NotFound", "missing", "string", ""),
+            new ConstantRecord("Hello", "Hello {who}", "string", ""),
         }), SourceKind.Strings, 1100);
         Assert.NotNull(strings.Source);
         Assert.Contains("public static partial class Strings", strings.Source);
@@ -129,6 +147,8 @@ public class ContractSurfaceTests
         var errorsClass = strings.Source.IndexOf("public static partial class Errors", StringComparison.Ordinal);
         Assert.True(errorsClass >= 0);
         Assert.Contains("public const string NotFound = \"missing\";", strings.Source.Substring(errorsClass));
+        Assert.Contains("public const string Hello = \"Hello {who}\";", strings.Source);
+        Assert.DoesNotContain("Hello(", strings.Source);
         Assert.DoesNotContain("Closed(", strings.Source);
     }
 }
