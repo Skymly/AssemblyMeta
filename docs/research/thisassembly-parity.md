@@ -161,7 +161,7 @@
 
 源码核实：准备目标会把 `GetAssemblyAttributes` 里、名字以 `System.Reflection.Assembly` 开头、又不是 `AssemblyMetadata` 的特性都收进来。成员名是去掉 `Assembly` 前缀和 `Attribute` 后缀之后的部分。因此文档没写的特性，只要 SDK 把它放进特性项，也会出现，例如项目写了商标时会出现 `ThisAssembly.Info.Trademark`。
 
-- 边界情形：默认 SDK 项目是否总会多出 Trademark，取决于特性项里有没有它。`GenerateAssemblyInfo=false` 时商标开关会被打开，空商标会不会变成成员，没有跑构建。手写在 C# 源码里的特性不是这项的输入；只有 MSBuild 特性项会被收进来。未用一份只在源码里写特性的项目跑过。
+- 边界情形：默认 SDK 类库不会多出 `Info.Trademark`。公司、产品和标题为空时，SDK 会填上程序集名，所以这三项仍是成员；说明和版权为空时不是成员。`GenerateAssemblyInfo=false` 且商标属性为空字符串时，商标开关是打开的，但 SDK 不把空字符串放进特性清单，也不生成 `Info.Trademark`。项目文件里写成一个空格时，MSBuild 读入后长度仍是 0，结果相同。只有求值之后还剩下内容，才会生成该成员；商标为 `Northwind Mark` 时，`Info.Trademark` 的值就是这串字。若求值结果被固定成一个 U+0020 空格，成员会出现，但生成常量是空字符串。这次用 ThisAssembly.AssemblyInfo 2.1.6，在 SDK 10.0.303 的 net10.0 上构建过，0 警告 0 错误。手写在 C# 源码里的特性不是这项的输入；只有 MSBuild 特性项会被收进来。没有用一份只在源码里写特性的项目跑过。
 - AssemblyMeta 现状：部分
 - 证据：`src/AssemblyMeta.AssemblyInfo/README.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `AssemblyInfo_generator_emits_nine_constants`。本仓固定这九个，没有值时是空字符串。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.AssemblyInfo/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.AssemblyInfo/ThisAssembly.AssemblyInfo.targets>
@@ -590,7 +590,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 3. 嵌入式 PDB 里的 SourceLink 文档表。它是压缩的，没有解压。snupkg 地址返回 404 之后，符号服务器上是否另有 PDB，没有再查。
 4. Visual Studio 设计时会不会在 SourceLink 把查询开关设为 true 之前，先把它写成 false。没有在 IDE 里跑。
 5. （已核实，见「{0} 与具名占位符」）两个以上具名占位符的形参顺序与书写中的首次出现顺序一致。同一名字配两种格式、以及 `{b} {a} {b}` 这种重复之后再出现新名字，这次没有生成。
-6. 默认 SDK 项目会不会多出 `Info.Trademark`。`GenerateAssemblyInfo=false` 时商标开关会被打开；空商标会不会变成成员，没有跑构建。
+6. （已核实，见「AssemblyInfo 成员」）默认 SDK 项目不会多出 `Info.Trademark`。空商标不会变成成员。非空商标会。只写在源码里的空 `AssemblyTrademark` 没有跑过。
 7. 只写在 C# 源码里的程序集特性。目标的输入是 MSBuild 特性项，不扫描源码。没有用这样的项目跑过。
 8. `.resx` 被 Resources 当成文本之后，运行时按后缀查找清单名是否找得到。规则已写，没有端到端运行。
 9. 提交号短于 9 个字符时，Git 目标失败的具体文案。没有跑构建。
