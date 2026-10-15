@@ -200,7 +200,7 @@ public class ResourcesStringsTests
     [Theory]
     [InlineData("Resources")]
     [InlineData("Strings")]
-    public void Missing_or_corrupt_payload_is_ignored_or_reported(string area)
+    public void Missing_payload_emits_nothing_for_resources_and_strings(string area)
     {
         IIncrementalGenerator generator = area == "Resources" ? new ResourcesGenerator() : new StringsGenerator();
         var key = area == "Resources" ? ResourcesGenerator.PayloadKey : StringsGenerator.PayloadKey;

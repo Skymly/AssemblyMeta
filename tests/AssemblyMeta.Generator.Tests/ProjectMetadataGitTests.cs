@@ -175,7 +175,7 @@ public class ProjectMetadataGitTests
     [InlineData("Project")]
     [InlineData("Metadata")]
     [InlineData("Git")]
-    public void Missing_or_corrupt_payload_is_ignored_or_reported(string area)
+    public void Missing_payload_emits_nothing_for_project_metadata_and_git(string area)
     {
         IIncrementalGenerator generator = area switch
         {

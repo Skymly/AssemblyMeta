@@ -343,7 +343,7 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
-    public void Source_emission_decodes_constants_and_rejects_a_bad_payload()
+    public void Source_emission_decodes_a_constants_payload()
     {
         var payload = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
         {
@@ -353,13 +353,6 @@ public class PayloadAndEmitterTests
         Assert.NotNull(emitted.Source);
         Assert.Contains("const int Answer = 42;", emitted.Source);
         Assert.DoesNotContain(emitted.Diagnostics, diagnostic => diagnostic.Id == "AM0004");
-
-        var rejected = SourceEmission.Emit("not-base64", SourceKind.Constants, 1100);
-        Assert.Null(rejected.Source);
-        var diagnostic = Assert.Single(rejected.Diagnostics);
-        Assert.Equal("AM0004", diagnostic.Id);
-        Assert.Equal("AssemblyMeta 载荷无效", diagnostic.Title);
-        Assert.Equal("无法解析 Constants 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
     }
 
     [Fact]
@@ -375,6 +368,10 @@ public class PayloadAndEmitterTests
             Assert.Equal("AssemblyMeta 载荷无效", diagnostic.Title);
             Assert.Equal("无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
 
+            var empty = SourceEmission.Emit("", kind, 1100);
+            Assert.Null(empty.Source);
+            Assert.Equal("无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", Assert.Single(empty.Diagnostics).Message);
+
             if (kind == SourceKind.AssemblyInfo)
             {
                 continue;
@@ -387,16 +384,10 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
-    public void Source_emission_rejects_null_payload_and_an_unknown_kind()
+    public void Source_emission_throws_when_payload_is_null_or_kind_is_unknown()
     {
         Assert.Throws<ArgumentNullException>(() => SourceEmission.Emit(null!, SourceKind.Constants, 1100));
         Assert.Throws<ArgumentOutOfRangeException>(() => SourceEmission.Emit("", (SourceKind)99, 1100));
-
-        var rejected = SourceEmission.Emit("", SourceKind.Git, 1100);
-        Assert.Null(rejected.Source);
-        var diagnostic = Assert.Single(rejected.Diagnostics);
-        Assert.Equal("AM0004", diagnostic.Id);
-        Assert.Equal("无法解析 Git 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
     }
 
     [Fact]

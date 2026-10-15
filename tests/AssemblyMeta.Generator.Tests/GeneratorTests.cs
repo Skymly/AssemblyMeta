@@ -9,7 +9,7 @@ namespace AssemblyMeta.Generator.Tests;
 public class GeneratorTests
 {
     [Fact]
-    public void AssemblyInfo_generator_emits_nine_constants()
+    public void AssemblyInfo_emission_lists_nine_constants()
     {
         var payload = PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel
         {

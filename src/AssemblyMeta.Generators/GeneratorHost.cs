@@ -8,6 +8,10 @@ namespace AssemblyMeta.Generators;
 
 internal static class GeneratorHost
 {
+    /// <summary>
+    /// 增量输入只有分析器全局选项里的载荷字符串，以及解析选项上的 C# 语言版本。
+    /// 缺载荷或语言版本小于 0 时不调用发射入口。
+    /// </summary>
     public static void Register(
         IncrementalGeneratorInitializationContext context,
         string payloadKey,
