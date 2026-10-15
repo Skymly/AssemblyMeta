@@ -6,49 +6,49 @@
 
 本文件只写调用方看得到的输入和生成物，用自己的例子。不含上游代码，不摘录上游源文件。
 
-现状只取四档：已对齐、部分、缺失、刻意不同。刻意不同只用于本仓 README「差异化」或 ADR 已经写明的选择。
+现状取已对齐、超越、非目标、部分、缺失、刻意不同。Gate 1 只接受前三档。刻意不同只用于尚未归类、且 README「差异化」或 ADR 已经写明的选择。
 
 ## 总表
 
 | 能力 | 现状 | 一句话 |
 |---|---|---|
 | 元包聚合 | 已对齐 | 两边都把七个子包收进元包，Vsix 不在其中。 |
-| 生成器只给直接引用的项目 | 部分 | 直接引用能生成代码；再往下传递时两边都拦，拦法的公开说法不一样。 |
+| 生成器只给直接引用的项目 | 已对齐 | 生成只发生在写下 PackageReference 的项目。决议见 #23。 |
 | 根类型可扩展 | 已对齐 | 根类是 partial，调用方可以再写成员。 |
-| 命名空间 | 部分 | 都能把根类放进指定命名空间，属性名不同。 |
-| 可见性 | 刻意不同 | 默认 internal 常量。设成 public 后，上游是 get-only 的 static 属性，本仓是 static readonly 字段。决议见 ADR 0003。 |
+| 命名空间 | 已对齐 | 属性名是 AssemblyMetaNamespace。非法命名空间报 AM0005 并回退。决议见 #23。 |
+| 可见性 | 超越 | public 时是 static readonly 字段，不是 get-only 属性。决议见 ADR 0003 与 #23。 |
 | 只生成 C# | 已对齐 | 公开说明都只生成 C#。 |
 | AssemblyInfo 成员 | 非目标 | 1.0 固定九个成员，没有值时是空字符串。不收进这九个以外的程序集特性。决议见 #13。 |
 | 关闭 SDK 特性生成后仍有 Info | 已对齐 | `GenerateAssemblyInfo=false` 时常量仍在。 |
-| Constant 项 | 部分 | 名字、值、类型、注释和点号嵌套对齐。关键字和「名字既是成员又是嵌套类型」的处理不同。 |
+| Constant 项 | 超越 | 名字、值、类型、注释和点号嵌套对齐。关键字加 @，重名报 AM0001。决议见 #23。 |
 | 多行字符串 | 已对齐 | C# 11 及以上用 raw string，否则用转义字符串。 |
-| FileConstant | 部分 | 都把项目内文件收成嵌套常量；常量值的路径分隔符不同。 |
+| FileConstant | 超越 | 项目内文件收成嵌套常量，常量值用正斜杠。决议见 #23。 |
 | 把常量挂到别的嵌套类型 | 非目标 | 1.0 不提供 Constant 的 Root。Info、Project、Git 仍由各自的生成器提供。 |
 | Project 选择加入 | 已对齐 | 项、分号属性、file-based app 的 `#:property` 都能收成常量。 |
 | Project 默认属性 | 已对齐 | 默认是同一组七个属性，不含目标框架短名。 |
-| AssemblyMetadata | 部分 | 都从 MSBuild 项生成常量；源码里手写的特性，本仓明确不收。 |
+| AssemblyMetadata | 已对齐 | 只从 MSBuild 项生成常量。源码里手写的特性不是输入。决议见 #23。 |
 | Git 五个成员 | 已对齐 | 只有 Commit、Sha、Root、Url、Branch。 |
-| Git 设计时占位 | 部分 | 未打开查询时，五个常量都是 `[pending build]`。本仓在设计时把空开关写成 false；上游目标不写，SourceLink 默认是 true。 |
-| Git 分支与短哈希 | 部分 | CI 名单和 `pr` 编号大体一致；本仓多认两种 PR 变量，短哈希也不按固定长度硬截。 |
+| Git 设计时占位 | 超越 | 未打开查询时五个常量是 `[pending build]`。设计时把空开关写成 false。决议见 #23。占位符不写回 Repository*，见 ADR 0001。 |
+| Git 分支与短哈希 | 超越 | 拉取请求记为 pr 加编号，并多认 Azure DevOps 的 PR 号和 Jenkins 的 CHANGE_ID。短于 9 位的提交号原样当作 Sha。决议见 #23。 |
 | Git 的 MSBuild 属性 | 已对齐 | 下游可以依赖 `InitializeGitInformation`，读取五个 `Repository*` 属性。 |
-| SourceLink | 部分 | 都复用 SourceLink，.NET 8 起不必再手引；缺信息时的诊断码不同。 |
-| 嵌入资源的三个访问成员 | 部分 | 都有 Text、GetBytes、GetStream；上游只给文本资源生成 Text。 |
+| SourceLink | 已对齐 | 复用 SourceLink。.NET 8 起不必再手引。查询已打开且没有提交号时警告 AM0006。决议见 #23。 |
+| 嵌入资源的三个访问成员 | 超越 | 每个纳入的资源都有 Text、GetBytes、GetStream。Text 按 UTF-8 读，清单名精确打开。决议见 #23。 |
 | 文本扩展名、Kind、Comment | 非目标 | 1.0 不增加扩展名列表和 Kind。纳入 Resources 的项都有 Text，开关仍是 AssemblyMetaResource。 |
-| 构建中追加嵌入资源 | 部分 | 都能在资源名准备好之前追加；公开的目标名不同。 |
-| resx 字符串与分组 | 部分 | 中性 resx 和下划线分组对齐；本仓是编译期常量并认路径和点号，上游是运行时取字符串。 |
+| 构建中追加嵌入资源 | 已对齐 | 在 PrepareResourceNames 之前把文件加进 EmbeddedResource。决议见 #23。 |
+| resx 字符串与分组 | 超越 | 编译期常量沿用 ADR 0003。键里的下划线和点号分层，路径会变成前缀。决议见 #23。 |
 | `{0}` 与具名占位符 | 非目标 | 1.0 不生成带参方法。占位符留在编译期常量里，调用方自己格式化。决议见 ADR 0003。 |
 | resx 名字当另一名字的前缀 | 非目标 | 1.0 不另做「跳过较短键」的诊断。冲突继续走 AM0001。 |
 | Vsix | 非目标 | 1.0 不做 VSIX 清单包，也不改写 Pack。 |
-| Prerequisites | 缺失 | 上游另有 1.2.11 的编译器版本检查包。2.1.6 已不依赖它，它也不生成成员。 |
-| 诊断 | 部分 | 两边都有调用方能看到的诊断，码和触发条件不同。 |
-| 增量生成 | 部分 | 两边都是增量生成器。上游 README 没写缓存契约；本仓用单条载荷加语言版本。 |
-| 最低 MSBuild / Roslyn | 缺失 | 上游仓库里有 16.5 与 4.0 的门槛；本仓没有面向调用方的最低版本。 |
+| Prerequisites | 非目标 | 1.0 不做编译器版本检查包，也不在编译期发版本诊断。决议见 #23。 |
+| 诊断 | 超越 | 调用方看到的是 AM0001 至 AM0011。不追上游的码。决议见 #23。 |
+| 增量生成 | 已对齐 | 缓存输入是单条载荷加语言版本。Constants 的缓存测试另补，不改这个输入。决议见 #23。少数意见：守门人投超越。 |
+| 最低 MSBuild / Roslyn | 已对齐 | 编译器 API 4.11.0。SDK 10.0.303 是验证环境。编译期不检查。决议见 #18 与 #23。 |
 | CI 包版本 | 非目标 | 1.0 不产生可安装的预发布包。版本只有一个来源，值为 1.0.0。 |
-| 包元数据 | 部分 | 作者、readme、仓库、开发依赖都有；许可、标签、图标、符号包不同。 |
-| 许可 | 刻意不同 | 上游要求接受 OSMF EULA；本仓 README 差异化写明纯 MIT。 |
-| 文档 | 部分 | 上游公开文档是 README、各包 README、changelog 和 Jekyll 站。本仓有使用说明、架构和 docfx。 |
+| 包元数据 | 超越 | 作者、readme、仓库、开发依赖和本仓标签保持现状。图标和符号包沿用 #19，都不要。决议见 #23。少数意见：质疑官把图标和符号包投成非目标。 |
+| 许可 | 超越 | 纯 MIT，无维护费，安装时不要求接受另一份许可。决议见 README 差异化与 #23。 |
+| 文档 | 超越 | 使用说明、架构和 docfx，只维护简体中文。决议见 #20 与 #23。少数意见：质疑官把 Jekyll 和英文文档投成非目标。 |
 
-共 35 行。已对齐 9，部分 15，缺失 2，刻意不同 2，非目标 7。
+共 35 行。已对齐 16，部分 0，缺失 0，刻意不同 0，非目标 8，超越 11。
 
 ## 逐项详情
 
@@ -66,7 +66,7 @@
 - 能力：分析器不要流到依赖这个项目的下一个项目。
 - 可观察行为：2.1.6 各子包 nuspec 都标了开发依赖。子包目标把对本包的 `PackageReference` 收成只在当前项目私有，并且不随 pack 传递。v2.1.6 发布说明写的是让元包对引用它的项目保持私有。直接引用的项目仍能看到生成成员。
 - 边界情形：库项目再被别人引用时，生成器不应继续出现在那个消费者里。发布说明没有给出调用方要写的属性。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：已对齐
 - 证据：`docs/架构.md` 打包一节写明元包把子包放给直接消费者，子包 props 再把直接引用收成私有；`src/AssemblyMeta.Constants/buildTransitive/AssemblyMeta.Constants.props` 对 `AssemblyMeta.Constants` 和 `AssemblyMeta` 都做了这件事。
 - 来源：<https://github.com/devlooped/ThisAssembly/releases/tag/v2.1.6>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/ThisAssembly.Constants.targets>
 
@@ -106,7 +106,7 @@
 生成物：`namespace Acme.Build;` 下面的 `partial class ThisAssembly`。
 
 - 边界情形：设置了非空命名空间、且语言版本低于 C# 10 时，报错误 TA002，文案写成「需要 C# 8.0 或更高」，这条常量不生成。判断用的是 C# 10，文案写的是 8.0。命名空间字符串本身不合法时，公开文档没有写。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：已对齐
 - 证据：`docs/使用说明.md` 的 `AssemblyMetaNamespace`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Invalid_namespace_falls_back_and_warns` 对非法命名空间报告 `AM0005`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/visibility.md>
 
@@ -129,7 +129,7 @@
 生成物形状：`public partial class ThisAssembly` 里，`Retry` 下的 `Limit` 是 `public static int Limit => 3;`。
 
 - 边界情形：Strings 的成员本来就是属性和方法，这条开关不把它们变成 `const`。只对走常量那条路的成员生效。
-- AssemblyMeta 现状：刻意不同
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/PayloadAndEmitterTests.cs` 的 `Public_visibility_uses_static_readonly_and_namespace`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Public_strings_are_static_readonly`。属性名是 `AssemblyMetaVisibility`。public 时保持 `static readonly` 字段，见 ADR 0003。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/visibility.md>
 
@@ -194,7 +194,7 @@
 生成物：`ThisAssembly.Constants.Retry.Limit` 的类型是 `int`，值是 `3`。
 
 - 边界情形：可以写 `bool`、`long`、`double` 等。注释放进 XML 文档时按 XML 文本转义。非法标识符字符收成下划线，连续下划线折叠成一个，开头不能做标识符时前面再加下划线；C# 关键字不加 `@`，`class` 这类名字会原样留下。同一个名字既要当常量、又要当下一层类型时，生成直接失败，没有诊断码。`ItemType` 是 MSBuild 项类型名，用来只接收 `Constant` 项；调用方指定生成类型时写的是 `Type`。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Constants_generator_emits_nested_typed_members_and_duplicate_diagnostic`。同名冲突本仓报 `AM0001` 并跳过。关键字加 `@` 见 `tests/AssemblyMeta.Generator.Tests/PayloadAndEmitterTests.cs` 的 `Sanitizer_collapses_invalid_characters_and_escapes_keywords`。差异化表和 ADR 没有把关键字或重名诊断写成有意分叉。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>
 
@@ -223,7 +223,7 @@
 生成物：`ThisAssembly.Constants.notes.about`，值是带扩展名的相对路径 `notes/about.txt`（分隔符见边界）。
 
 - 边界情形：同一路径去掉扩展名后若撞车，公开文档没有说明，两个文件会争同一个成员名。相对路径按 `RelativeDir` 原样拼接，目标不把反斜杠收成正斜杠。没有另在 Windows 上用发布包跑一次构建；分隔符结论来自 v2.1.6 目标本身。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`src/AssemblyMeta.Constants/README.md`；`tests/AssemblyMeta.Generator.Tests/PayloadAndEmitterTests.cs` 的 `FileConstant_uses_forward_slashes_and_link`。本仓把常量值收成正斜杠。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/ThisAssembly.Constants.targets>
 
@@ -287,7 +287,7 @@
 生成物：`ThisAssembly.Metadata.Channel` 为 `stable`。点号同样嵌套，因为这条路复用常量。
 
 - 边界情形：README 没有写 Comment。常量那条路能带 Comment，Metadata 是否把项上的 Comment 收进文档，包 README 没示例。源码手写的特性是否出现在 `ThisAssembly.Metadata`，README 没分开说。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：已对齐
 - 证据：`docs/使用说明.md` 写明只读该项，源码手写特性不会出现；`tests/AssemblyMeta.Generator.Tests/ProjectMetadataGitTests.cs` 的 `Metadata_generator_emits_constants_and_cache_hits`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Metadata/readme.md>
 
@@ -310,7 +310,7 @@
 - 能力：设计时构建不查源码管理。
 - 可观察行为：`EnableSourceControlManagerQueries` 不是 `true` 时，上述五个常量的值都是字面量 `[pending build]`。设为 `true` 后，常量改用解析到的 `Repository*` 值。这个属性来自 SourceLink。README 仍写「在 IDE 里看起来总是空的」；v2.1.6 目标写进去的是占位符，不是空字符串。
 - 边界情形：占位只写在五个常量上，不写回 `Repository*`。调查当天的 SourceLink 公共 props 在该属性为空时把它设为 true；设计时关掉的是是否生成 SourceLink，不是这个查询开关。上游 Git 目标自己也不在设计时把查询开关写成 false。因此 README 的「设计时默认不查」并不由这套目标保证。属性若留空，SourceLink 会把它设成 true，常量会填真实值。Visual Studio 会不会在导入 SourceLink 之前先写成 false，本次没有在 IDE 里跑，仍未核实。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`docs/adr/0001-git-placeholder-not-written-to-repository-properties.md`；`src/AssemblyMeta.Git/buildTransitive/AssemblyMeta.Git.props` 在设计时或 Live Unit Testing 且属性为空时写成 false；`tests/AssemblyMeta.Generator.Tests/GitInformationTests.cs` 的 `User_branch_wins_over_ci_and_head_is_not_read_when_queries_disabled`。差异化表没有单独写这一行，ADR 0001 只约束占位符不写回 `Repository*`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/ThisAssembly.Git.targets>，<https://github.com/dotnet/sourcelink/blob/main/src/SourceLink.Common/build/Microsoft.SourceLink.Common.props>（2026-10-15 的 main，未与 2.1.6 锁定同一提交）
 
@@ -322,7 +322,7 @@
 GitHub 的 `refs/pull/15/merge` 得到 `pr15`。标签引用会去掉 `refs/tags/` 前缀，得到标签名。
 
 - 边界情形：v2.1.6 目标里，Azure DevOps 只改写 `BUILD_SOURCEBRANCH`，没有读取 `SYSTEM_PULLREQUEST_PULLREQUESTID`。Jenkins 只读 `GIT_LOCAL_BRANCH`，没有 `CHANGE_ID`。因此「只要 CI 给了 PR 号就写成 pr」这句话，对这两个系统没有落在已读的目标里。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`tests/AssemblyMeta.Generator.Tests/GitInformationTests.cs` 的 `Ci_pull_requests_become_pr_numbers`、`Sha_is_first_nine_or_full_when_shorter`、`Head_and_worktree_gitdir_supply_branch_when_ci_is_empty`、`Nested_source_root_is_ignored`。本仓还会把 Azure DevOps 的 PR 号和 Jenkins 的 `CHANGE_ID` 收成 `pr` 加编号；提交号短于 9 位时原样当作 Sha。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/ThisAssembly.Git.targets>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>
 
@@ -340,7 +340,7 @@ GitHub 的 `refs/pull/15/merge` 得到 `pr15`。标签引用会去掉 `refs/tags
 - 能力：Git 信息来自 SourceLink，而不是包自己再实现一套源码管理。
 - 可观察行为：包说明要求按托管站点引用 `Microsoft.SourceLink.*`。README 写明从 .NET 8 SDK 起 SourceLink 已内置，不必再加包引用。
 - 边界情形：内置之后若仓库种类没有对应提供者，TA001 仍会出现，常量在打开查询后可能是空字符串。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：已对齐
 - 证据：`docs/使用说明.md`；`docs/架构.md`。缺提交号且查询已打开时，本仓警告 `AM0006`，见 `tests/AssemblyMeta.Generator.Tests/ProjectMetadataGitTests.cs`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/readme.md>
 
@@ -364,7 +364,7 @@ GitHub 的 `refs/pull/15/merge` 得到 `pr15`。标签引用会去掉 `refs/tags
 同一去掉扩展名的路径若有多个文件，叶子名改用扩展名去掉点之后的部分，避免两个成员同名。
 
 - 边界情形：README 没有写编码。源码核实文本读取没有单独指定编码。流若没有长度，`GetBytes` 的读法会失败；公开文档没写。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`src/AssemblyMeta.Resources/README.md`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Resources_generator_reads_manifest_and_renames_conflicts`。本仓对每个纳入的资源都生成 `Text`，用清单资源名精确打开，`Text` 按 UTF-8 读取并缓存，`GetBytes` 复制整段流。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ResourcesGenerator.cs>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/CSharp.sbntxt>
 
@@ -411,7 +411,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 生成物：Debug 构建出现 `ThisAssembly.Resources.notes.Debug`。
 
 - 边界情形：加得太晚，清单名或纳入标记已经错过，该项不会出现。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：已对齐
 - 证据：`docs/使用说明.md` 要求在 `PrepareResourceNames` 之前加入 `EmbeddedResource`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>
 
@@ -425,7 +425,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 生成物：`ThisAssembly.Strings.Shop.Closed`，文档摘要是「打烊」。
 
 - 边界情形：两个文件若有相同键，会在同一个 `Strings` 下各写一份，调用方会碰到重复成员。只有 mimetype、没有 type 的项仍会进入生成。空名字或没有 value 的项跳过。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`；`src/AssemblyMeta.Strings/README.md`；`tests/AssemblyMeta.Generator.Tests/ResourcesStringsTests.cs` 的 `Strings_generator_emits_constants_and_cache_hits`、`String_names_drop_strings_file_prefix_and_split_underscores`、`Resx_reader_keeps_string_values_and_skips_binary`。本仓默认是编译期常量；键里的点号也分层；文件路径会变成前缀，只有末段名为 `Strings` 时去掉这一段。带 type 或 mimetype 的非字符串项跳过并警告 `AM0007`。`type` 为 `string` 或 `System.String` 的项保留。编译期常量、占位符留在字面量、卫星 resx 不参与，已由 ADR 0003 定为有意差异。路径前缀和点号分层仍未单独立成决议，所以这一行保持部分。
 - 来源：<https://www.nuget.org/packages/ThisAssembly.Strings/2.1.6>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/ThisAssembly.Strings.targets>
 
@@ -494,7 +494,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 已打开的 1.2.11 nupkg 含 `build/netstandard2.0` 下的 props 与 targets、图标和占位程序集，没有 readme，也没有 OSMF 许可文件。检查规则与 v2.1.6 标签上的同名目标相同：MSBuild 低于 16.5 则构建错误；C# 或 VB 的编译器 API 低于 4.0 则警告 THIS001。4.0 这个数来自增量生成器接口在 Roslyn 4.0.1 出现。F# 不参与这道警告。2026-10-15 拆开的 2.1.6 各 nupkg 都不含这段目标，nuspec 也不依赖该包。changelog 在 1.2.12 记过移除这层依赖。它不生成 `ThisAssembly` 成员。
 
 - 边界情形：当前 SDK 已高于 MSBuild 16.5 和 Roslyn 4.0。对齐这个包不会补上任何生成成员。要不要另做一条最低版本警告，矩阵不代决定。
-- AssemblyMeta 现状：缺失
+- AssemblyMeta 现状：非目标
 - 证据：本仓无证据。`Directory.Build.props` 的 `LangVersion` 是本仓自己的编译设置，不是给调用方的门槛。
 - 来源：<https://www.nuget.org/packages/ThisAssembly.Prerequisites/1.2.11>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Prerequisites.targets>
 
@@ -503,7 +503,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：输入不合法时给出调用方能看到的诊断。
 - 可观察行为：TA001，警告，Git 没有可用的 SourceLink 地址，随 `ThisAssembly.Git` 2.1.6 的目标发出。TA002，错误，设置了命名空间且语言版本低于 C# 10，文案却写成需要 C# 8.0。TA003，错误，resx 键名被用作另一个键的下划线前缀。THIS001 只在 `ThisAssembly.Prerequisites` 1.2.11 里，2.1.6 已发布包的文件列表里没有它。混合的 `{0}` 与 `{name}` 不生成成员，也没有诊断码。仓库属性 `FundingGrace` 为 30，changelog 写过宽限期之后生成代码时发警告；这次没有跑一次编译，赞助诊断码未核实。
 - 边界情形：常量名字冲突和短提交号不会变成诊断，前者让生成失败，后者让 Git 目标失败。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/架构.md` 列出 `AM0001` 至 `AM0011`。测试覆盖见 `tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs`、`ProjectMetadataGitTests.cs`、`ResourcesStringsTests.cs`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Git/ThisAssembly.Git.targets>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Prerequisites.targets>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>
 
@@ -512,7 +512,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：生成器按增量接口运行，输入不变时不重复出结果。
 - 可观察行为：公开 README 只说使用 Roslyn source generator，没有写缓存契约。changelog 1.1.0 起改为增量生成器。2.1.6 里 Constants、Resources、Strings 都是增量生成器，输入是附加文件、分析器能看见的属性和语言版本。Info、Project、Metadata、Git、Vsix 不另带分析器 DLL，它们把常量项交给 Constants。调用方没有开关。本仓 README 差异化把上游写成 Source Generator、把自己写成严格缓存；两边都是增量生成器，剩下的差别是缓存输入。本仓用单条载荷加语言版本，见 `docs/架构.md`。
 - 边界情形：没有用两次构建去测量上游的缓存命中。Prerequisites 把最低编译器写成 4.0，理由是增量接口，但 2.1.6 的包不再带这道检查。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：已对齐
 - 证据：`docs/架构.md`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Unchanged_analyzer_options_reuse_incremental_output`；Git、Project、Metadata、Resources、Strings 的测试里都有缓存断言。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/changelog.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Constants/ConstantsGenerator.cs>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Resources/ResourcesGenerator.cs>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Strings/StringsGenerator.cs>
 
@@ -521,7 +521,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：公开的最低工具版本。
 - 可观察行为：README 没有写最低 SDK。与版本有关的公开句子只有：.NET 8 SDK 起不必再手引 SourceLink；Project 的 file-based app 写法指向现行 SDK 文档。包的依赖组目标框架是 .NET Standard 2.0，这是包本身的 TFM，不是调用方项目的最低 TFM。仓库目标文件里的门槛见 Prerequisites 一节。
 - 边界情形：2.1.6 已发布包的文件列表里没有 THIS001。最低版本只存在于已停更的 Prerequisites 1.2.11。
-- AssemblyMeta 现状：缺失
+- AssemblyMeta 现状：已对齐
 - 证据：本仓无证据。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/ThisAssembly.Prerequisites.targets>
 
@@ -559,7 +559,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 包布局：生成器在 `analyzers/dotnet/roslyn4.0/cs/`，Constants、Strings 各一个 DLL，Resources 的文件名是 `ThisAssembly.Resource.dll`。Info、Project、Metadata、Git、Vsix 和元包没有自己的分析器 DLL。props/targets 在 `build/netstandard2.0/`，不是 `buildTransitive`。`lib/netstandard2.0/_._` 是占位。包上有 NuGet 仓库签名。
 
 - 边界情形：符号服务器上是否另有一份 PDB，未再查。旧包 `MSBuilder.ThisAssembly.Vsix`、`MSBuilder.ThisAssembly.Project`、`MSBuilder.ThisAssembly.Metadata` 的作者是 Mobile Essentials，不在 v2.1.6 源目录里，与这十个包的行为关系未核实。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`src/AssemblyMeta.Packaging.targets` 与 `src/AssemblyMeta/AssemblyMeta.csproj`：作者 Skymly，许可表达式 MIT，仓库 `https://github.com/Skymly/AssemblyMeta`，有 readme，`IncludeSymbols` 为 false，没有 PackageIcon，也没有打开 SourceLink。标签是 `roslyn;source-generator;constants;msbuild` 以及各子包 csproj 上的附加标签。开发依赖为 true。分析器放在 `analyzers/dotnet/cs`，props/targets 放在 `buildTransitive`，见 `docs/架构.md`。
 - 来源：各包 nuspec，页面入口 <https://www.nuget.org/packages/ThisAssembly/2.1.6> 与同版本子包页面。
 
@@ -568,7 +568,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：调用方安装包时看到的许可条件。
 - 可观察行为：2.1.6 各包的许可文件是 OSMF EULA，安装时要求接受许可。README 写明产生收入的使用者要支付开源维护费，源码另有许可证。仓库徽章同时指向 EULA 和 OSS 许可证。Prerequisites 1.2.11 仍是 MIT，且不要求接受许可。
 - 边界情形：赞助检查会不会在编译时再发一条诊断，见未核实清单。
-- AssemblyMeta 现状：刻意不同
+- AssemblyMeta 现状：超越
 - 证据：README「差异化」写明本仓纯 MIT，无维护费。`src/AssemblyMeta.Packaging.targets` 的许可表达式是 MIT。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/osmfeula.txt>，<https://www.nuget.org/packages/ThisAssembly/2.1.6>
 
@@ -577,7 +577,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 能力：调用方能读到的说明。
 - 可观察行为：v2.1.6 没有 `docs/` 目录。说明在根 README（含各包摘录、可见性、Dogfooding）、各包 README、changelog 和 GitHub Release。`pages.yml` 用 Jekyll 渲染仓库，主题是 jekyll-theme-slate，项目页写的是 `https://clarius.org/ThisAssembly`。2.1.6 的 nupkg 除 Prerequisites 外都带 `readme.md`。
 - 边界情形：本次没有打开 clarius.org 确认站点是否仍在更新。AssemblyInfo 的包描述短于它的 README。
-- AssemblyMeta 现状：部分
+- AssemblyMeta 现状：超越
 - 证据：`docs/使用说明.md`、`docs/架构.md`、`docs/index.md`。根 README 写文档站用 `dotnet docfx docs/docfx.json`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/_config.yml>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/.github/workflows/pages.yml>
 
