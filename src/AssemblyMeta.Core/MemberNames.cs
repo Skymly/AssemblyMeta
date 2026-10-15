@@ -177,8 +177,8 @@ public static class MemberNames
         foreach (var item in request.Resources)
         {
             var spec = item.Spec ?? "";
-            var manifest = item.ManifestName ?? "";
-            if (string.IsNullOrWhiteSpace(manifest))
+            var manifest = (item.ManifestName ?? "").Trim();
+            if (manifest.Length == 0)
             {
                 taskDiagnostics.Add(Warning("AM0009", "嵌入资源已跳过", "嵌入资源“" + spec + "”没有清单名，已跳过。"));
                 continue;
@@ -207,6 +207,7 @@ public static class MemberNames
                 }
 
                 raw = record.Name;
+                manifest = record.ManifestName;
             }
 
             Accept(root, members, generatorDiagnostics, raw, manifest, "string", item.Comment ?? "", manifest, AreaKind.Resources, "资源");

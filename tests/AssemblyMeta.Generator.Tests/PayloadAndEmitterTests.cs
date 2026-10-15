@@ -230,6 +230,50 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Final_constant_names_are_not_diagnosed_again_by_the_emitter()
+    {
+        var payload = PayloadCodec.EncodeConstants(
+            null,
+            MemberVisibility.Internal,
+            new[]
+            {
+                new ConstantRecord("Foo", "1", "int", ""),
+                new ConstantRecord("Foo", "2", "int", ""),
+                new ConstantRecord("...", "3", "int", ""),
+            },
+            Array.Empty<DiagnosticReport>());
+        Assert.True(PayloadCodec.TryDecodeConstants(payload, out var model));
+        var result = new CSharpSourceEmitter().EmitConstants(model, 1100);
+        Assert.DoesNotContain(result.Diagnostics, diagnostic => diagnostic.Id == "AM0001" || diagnostic.Id == "AM0002");
+        Assert.Contains("const int Foo = 1;", result.Source);
+        Assert.DoesNotContain("= 2;", result.Source);
+    }
+
+    [Fact]
+    public void Resource_manifest_names_are_trimmed()
+    {
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Resources,
+            Resources = new[]
+            {
+                new ResourceNameInput
+                {
+                    RelativeDir = @"Content\",
+                    Filename = "License",
+                    Extension = ".md",
+                    ManifestName = "  Host.License.md  ",
+                },
+            },
+        });
+
+        var member = Assert.Single(result.Members);
+        Assert.Equal("Host.License.md", member.ManifestName);
+        Assert.Equal("Host.License.md", member.Value);
+        Assert.Empty(result.TaskDiagnostics);
+    }
+
+    [Fact]
     public void Multiline_string_uses_raw_literal_and_roundtrips()
     {
         var model = new AssemblyInfoModel

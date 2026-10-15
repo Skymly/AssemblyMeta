@@ -234,7 +234,11 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         var name = constant.Name ?? "";
         if (string.IsNullOrWhiteSpace(name))
         {
-            diagnostics.Add(Error("AM0002", "常量名无效", "存在空的常量名，已忽略。"));
+            if (!namesAreFinal)
+            {
+                diagnostics.Add(Error("AM0002", "常量名无效", "存在空的常量名，已忽略。"));
+            }
+
             return;
         }
 
@@ -246,7 +250,6 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
             {
                 if (!IdentifierSanitizer.IsValidIdentifier(segments[i]))
                 {
-                    diagnostics.Add(Error("AM0002", "常量名无效", "常量“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
                     return;
                 }
 
@@ -286,7 +289,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
             }
 
             var isLeaf = i == identifiers.Length - 1;
-            var child = node.TryDescend(identifier, isLeaf, name, "常量", diagnostics);
+            var child = node.TryDescend(identifier, isLeaf, name, "常量", diagnostics, reportDuplicate: !namesAreFinal);
             if (child is null)
             {
                 return;
@@ -424,7 +427,11 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
         var manifest = resource.ManifestName ?? "";
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(manifest))
         {
-            diagnostics.Add(Error("AM0002", "资源名无效", "存在空的资源名或清单名，已忽略。"));
+            if (!namesAreFinal)
+            {
+                diagnostics.Add(Error("AM0002", "资源名无效", "存在空的资源名或清单名，已忽略。"));
+            }
+
             return;
         }
 
@@ -436,7 +443,6 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
             {
                 if (!IdentifierSanitizer.IsValidIdentifier(segments[i]))
                 {
-                    diagnostics.Add(Error("AM0002", "资源名无效", "资源“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
                     return;
                 }
 
@@ -461,7 +467,7 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
             var identifier = namesAreFinal
                 ? identifiers[i]
                 : DisambiguateResource(identifiers[i], parent, i == 0, isLeaf, name, diagnostics);
-            var child = node.TryDescend(identifier, isLeaf, name, "资源", diagnostics);
+            var child = node.TryDescend(identifier, isLeaf, name, "资源", diagnostics, reportDuplicate: !namesAreFinal);
             if (child is null)
             {
                 return;
@@ -632,13 +638,17 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
 
         public List<string> ChildOrder { get; } = new();
 
-        public NameNode<TLeaf>? TryDescend(string identifier, bool isLeaf, string path, string kind, List<DiagnosticReport> diagnostics)
+        public NameNode<TLeaf>? TryDescend(string identifier, bool isLeaf, string path, string kind, List<DiagnosticReport> diagnostics, bool reportDuplicate = true)
         {
             if (!Children.TryGetValue(identifier, out var existing))
             {
                 if (Leaf is not null)
                 {
-                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
+                    if (reportDuplicate)
+                    {
+                        diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
+                    }
+
                     return null;
                 }
 
@@ -650,13 +660,21 @@ public sealed class CSharpSourceEmitter : ISourceEmitter
 
             if (isLeaf && (existing.Leaf is not null || existing.Children.Count > 0))
             {
-                diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员冲突，已忽略。"));
+                if (reportDuplicate)
+                {
+                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员冲突，已忽略。"));
+                }
+
                 return null;
             }
 
             if (!isLeaf && existing.Leaf is not null)
             {
-                diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
+                if (reportDuplicate)
+                {
+                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
+                }
+
                 return null;
             }
 
