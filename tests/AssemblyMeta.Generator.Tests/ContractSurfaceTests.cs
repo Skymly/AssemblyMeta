@@ -21,13 +21,16 @@ public class ContractSurfaceTests
         }), SourceKind.AssemblyInfo, 1100);
         Assert.NotNull(info.Source);
         Assert.Contains("internal static partial class AssemblyMeta", info.Source);
+        var infoClass = info.Source.IndexOf("public static partial class Info", StringComparison.Ordinal);
+        Assert.True(infoClass > info.Source.IndexOf("internal static partial class AssemblyMeta", StringComparison.Ordinal));
+        var infoBody = info.Source.Substring(infoClass);
         foreach (var name in new[]
         {
             "Configuration", "Company", "Title", "Description", "Product",
             "Copyright", "Version", "InformationalVersion", "FileVersion",
         })
         {
-            Assert.Contains($"public const string {name} =", info.Source);
+            Assert.Contains($"public const string {name} =", infoBody);
         }
 
         Assert.DoesNotContain("Trademark", info.Source);
@@ -37,8 +40,11 @@ public class ContractSurfaceTests
             new ConstantRecord("class", "keyword", "string", ""),
             new ConstantRecord("Http.Timeout", "30", "int", ""),
         }), SourceKind.Constants, 1100);
+        Assert.NotNull(constants.Source);
         Assert.Contains("public static readonly string @class = \"keyword\";", constants.Source);
-        Assert.Contains("public static readonly int Timeout = 30;", constants.Source);
+        var httpClass = constants.Source.IndexOf("public static partial class Http", StringComparison.Ordinal);
+        Assert.True(httpClass >= 0);
+        Assert.Contains("public static readonly int Timeout = 30;", constants.Source.Substring(httpClass));
 
         var project = SourceEmission.Emit(PayloadCodec.EncodeProject(null, MemberVisibility.Internal, new[]
         {
@@ -73,15 +79,18 @@ public class ContractSurfaceTests
             new ResourceRecord("Content.Docs.License", "Demo.Content.Docs.License.md", ""),
         }), SourceKind.Resources, 1100);
         Assert.Contains("public static string Text", resources.Source);
-        Assert.Contains("GetBytes()", resources.Source);
-        Assert.Contains("GetStream()", resources.Source);
+        Assert.Contains("public static byte[] GetBytes()", resources.Source);
+        Assert.Contains("public static System.IO.Stream GetStream()", resources.Source);
         Assert.Contains("Demo.Content.Docs.License.md", resources.Source);
 
         var strings = SourceEmission.Emit(PayloadCodec.EncodeStrings(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("Shop.Closed", "Closed today {0}", "string", ""),
         }), SourceKind.Strings, 1100);
-        Assert.Contains("public const string Closed = \"Closed today {0}\";", strings.Source);
+        Assert.NotNull(strings.Source);
+        var shopClass = strings.Source.IndexOf("public static partial class Shop", StringComparison.Ordinal);
+        Assert.True(shopClass >= 0);
+        Assert.Contains("public const string Closed = \"Closed today {0}\";", strings.Source.Substring(shopClass));
         Assert.DoesNotContain("Closed(", strings.Source);
     }
 }
