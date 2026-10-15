@@ -363,6 +363,30 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void Invalid_payloads_report_one_AM0004_for_every_kind()
+    {
+        var wrongMagic = PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel { Version = "1.0.0.0" });
+        foreach (var kind in Enum.GetValues<SourceKind>())
+        {
+            var rejected = SourceEmission.Emit("not-base64", kind, 1100);
+            Assert.Null(rejected.Source);
+            var diagnostic = Assert.Single(rejected.Diagnostics);
+            Assert.Equal("AM0004", diagnostic.Id);
+            Assert.Equal("AssemblyMeta 载荷无效", diagnostic.Title);
+            Assert.Equal("无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
+
+            if (kind == SourceKind.AssemblyInfo)
+            {
+                continue;
+            }
+
+            var mismatched = SourceEmission.Emit(wrongMagic, kind, 1100);
+            Assert.Null(mismatched.Source);
+            Assert.Equal("AM0004", Assert.Single(mismatched.Diagnostics).Id);
+        }
+    }
+
+    [Fact]
     public void Source_emission_rejects_null_payload_and_an_unknown_kind()
     {
         Assert.Throws<ArgumentNullException>(() => SourceEmission.Emit(null!, SourceKind.Constants, 1100));

@@ -24,20 +24,20 @@ public class GeneratorTests
             FileVersion = "1.2.3.4",
         });
 
-        var (diagnostics, source) = GeneratorTestHost.Run(new AssemblyInfoGenerator(), AssemblyInfoGenerator.PayloadKey, payload);
-        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
-        Assert.NotNull(source);
+        var emitted = SourceEmission.Emit(payload, SourceKind.AssemblyInfo, 1100);
+        Assert.DoesNotContain(emitted.Diagnostics, diagnostic => diagnostic.Id == "AM0004");
+        Assert.NotNull(emitted.Source);
         foreach (var name in new[]
         {
             "Configuration", "Company", "Title", "Description", "Product", "Copyright",
             "Version", "InformationalVersion", "FileVersion",
         })
         {
-            Assert.Contains("string " + name, source);
+            Assert.Contains("string " + name, emitted.Source);
         }
 
-        Assert.Equal("1.2.3.0", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Info", "Version"));
-        Assert.Equal("带 # 和 ; 的描述", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Info", "Description"));
+        Assert.Equal("1.2.3.0", GeneratorTestHost.ExecuteConstant(emitted.Source, "AssemblyMeta+Info", "Version"));
+        Assert.Equal("带 # 和 ; 的描述", GeneratorTestHost.ExecuteConstant(emitted.Source, "AssemblyMeta+Info", "Description"));
     }
 
     [Fact]
@@ -97,15 +97,14 @@ public class GeneratorTests
     [Fact]
     public void Invalid_namespace_falls_back_and_warns()
     {
-        var payload = PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel
+        var emitted = SourceEmission.Emit(PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel
         {
             Namespace = "1Bad",
             Version = "1.0.0.0",
-        });
-        var (diagnostics, source) = GeneratorTestHost.Run(new AssemblyInfoGenerator(), AssemblyInfoGenerator.PayloadKey, payload);
-        Assert.Contains(diagnostics, d => d.Id == "AM0005");
-        Assert.DoesNotContain("namespace ", source);
-        Assert.Equal("1.0.0.0", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Info", "Version"));
+        }), SourceKind.AssemblyInfo, 1100);
+        Assert.Contains(emitted.Diagnostics, diagnostic => diagnostic.Id == "AM0005");
+        Assert.DoesNotContain("namespace ", emitted.Source);
+        Assert.Equal("1.0.0.0", GeneratorTestHost.ExecuteConstant(emitted.Source!, "AssemblyMeta+Info", "Version"));
     }
 
     [Fact]

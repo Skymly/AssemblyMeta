@@ -135,12 +135,14 @@ public class ResourcesStringsTests
     [Fact]
     public void Empty_resources_emit_the_class_without_the_reader()
     {
-        var payload = PayloadCodec.EncodeResources(null, MemberVisibility.Public, Array.Empty<ResourceRecord>());
-        var (diagnostics, source) = GeneratorTestHost.Run(new ResourcesGenerator(), ResourcesGenerator.PayloadKey, payload);
-        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
-        Assert.Contains("public static partial class AssemblyMeta", source);
-        Assert.Contains("public static partial class Resources", source);
-        Assert.DoesNotContain("class Manifest", source);
+        var emitted = SourceEmission.Emit(
+            PayloadCodec.EncodeResources(null, MemberVisibility.Public, Array.Empty<ResourceRecord>()),
+            SourceKind.Resources,
+            1100);
+        Assert.DoesNotContain(emitted.Diagnostics, diagnostic => diagnostic.Id == "AM0004");
+        Assert.Contains("public static partial class AssemblyMeta", emitted.Source);
+        Assert.Contains("public static partial class Resources", emitted.Source);
+        Assert.DoesNotContain("class Manifest", emitted.Source);
     }
 
     [Fact]
@@ -187,13 +189,12 @@ public class ResourcesStringsTests
     [Fact]
     public void Public_strings_are_static_readonly()
     {
-        var payload = PayloadCodec.EncodeStrings(null, MemberVisibility.Public, new[]
+        var emitted = SourceEmission.Emit(PayloadCodec.EncodeStrings(null, MemberVisibility.Public, new[]
         {
             new ConstantRecord("Hello", "你好", "", ""),
-        });
-        var (_, source) = GeneratorTestHost.Run(new StringsGenerator(), StringsGenerator.PayloadKey, payload);
-        Assert.Contains("public static readonly string Hello = \"你好\";", source);
-        Assert.DoesNotContain("const string Hello", source);
+        }), SourceKind.Strings, 1100);
+        Assert.Contains("public static readonly string Hello = \"你好\";", emitted.Source);
+        Assert.DoesNotContain("const string Hello", emitted.Source);
     }
 
     [Theory]
@@ -206,10 +207,6 @@ public class ResourcesStringsTests
         var (missingDiagnostics, missing) = GeneratorTestHost.Run(generator, key, null);
         Assert.Null(missing);
         Assert.DoesNotContain(missingDiagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
-
-        var (corrupt, source) = GeneratorTestHost.Run(generator, key, "not-base64");
-        Assert.Contains(corrupt, diagnostic => diagnostic.Id == "AM0004");
-        Assert.Null(source);
     }
 
     [Fact]

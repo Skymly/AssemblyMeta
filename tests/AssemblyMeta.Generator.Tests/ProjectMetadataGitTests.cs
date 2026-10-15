@@ -87,20 +87,13 @@ public class ProjectMetadataGitTests
     }
 
     [Fact]
-    public void Metadata_generator_emits_constants_and_cache_hits()
+    public void Metadata_generator_reuses_incremental_output()
     {
         var payload = PayloadCodec.EncodeMetadata(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("DemoKey", "a;b#c", "", ""),
             new ConstantRecord("Area.Name", "nested", "", "区域"),
         });
-        var (diagnostics, source) = GeneratorTestHost.Run(new MetadataGenerator(), MetadataGenerator.PayloadKey, payload);
-        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
-        Assert.Contains("public static partial class Metadata", source);
-        Assert.DoesNotContain("AssemblyMetadataAttribute", source);
-        Assert.Equal("a;b#c", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Metadata", "DemoKey"));
-        Assert.Equal("nested", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Metadata+Area", "Name"));
-
         var changed = PayloadCodec.EncodeMetadata(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("DemoKey", "other", "", ""),
@@ -109,7 +102,22 @@ public class ProjectMetadataGitTests
     }
 
     [Fact]
-    public void Git_generator_emits_members_pending_placeholder_and_cache_hits()
+    public void Metadata_emission_keeps_nested_constants()
+    {
+        var emitted = SourceEmission.Emit(PayloadCodec.EncodeMetadata(null, MemberVisibility.Internal, new[]
+        {
+            new ConstantRecord("DemoKey", "a;b#c", "", ""),
+            new ConstantRecord("Area.Name", "nested", "", "区域"),
+        }), SourceKind.Metadata, 1100);
+        Assert.DoesNotContain(emitted.Diagnostics, diagnostic => diagnostic.Id == "AM0004");
+        Assert.Contains("public static partial class Metadata", emitted.Source);
+        Assert.DoesNotContain("AssemblyMetadataAttribute", emitted.Source);
+        Assert.Equal("a;b#c", GeneratorTestHost.ExecuteConstant(emitted.Source!, "AssemblyMeta+Metadata", "DemoKey"));
+        Assert.Equal("nested", GeneratorTestHost.ExecuteConstant(emitted.Source!, "AssemblyMeta+Metadata+Area", "Name"));
+    }
+
+    [Fact]
+    public void Git_generator_reuses_incremental_output()
     {
         var payload = PayloadCodec.EncodeGit(new GitModel
         {
@@ -119,12 +127,6 @@ public class ProjectMetadataGitTests
             Url = "https://github.com/Skymly/AssemblyMeta.git",
             Branch = "main",
         });
-        var (diagnostics, source) = GeneratorTestHost.Run(new GitGenerator(), GitGenerator.PayloadKey, payload);
-        Assert.DoesNotContain(diagnostics, d => d.Id == "AM0006");
-        Assert.Equal("e3be6392f9afe3c1dc3947123f384df570ed9686", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Git", "Commit"));
-        Assert.Equal("e3be6392f", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Git", "Sha"));
-        Assert.Equal("main", GeneratorTestHost.ExecuteConstant(source!, "AssemblyMeta+Git", "Branch"));
-
         var pending = PayloadCodec.EncodeGit(new GitModel
         {
             Commit = GitInformation.PendingValue,
@@ -133,16 +135,40 @@ public class ProjectMetadataGitTests
             Url = GitInformation.PendingValue,
             Branch = GitInformation.PendingValue,
         });
-        var (pendingDiagnostics, pendingSource) = GeneratorTestHost.Run(new GitGenerator(), GitGenerator.PayloadKey, pending);
-        Assert.DoesNotContain(pendingDiagnostics, d => d.Id == "AM0006");
-        Assert.Equal(GitInformation.PendingValue, GeneratorTestHost.ExecuteConstant(pendingSource!, "AssemblyMeta+Git", "Root"));
-
-        var unavailable = PayloadCodec.EncodeGit(new GitModel { Unavailable = true });
-        var (unavailableDiagnostics, unavailableSource) = GeneratorTestHost.Run(new GitGenerator(), GitGenerator.PayloadKey, unavailable);
-        Assert.Contains(unavailableDiagnostics, d => d.Id == "AM0006" && d.Severity == DiagnosticSeverity.Warning);
-        Assert.NotNull(unavailableSource);
-
         GeneratorTestHost.AssertCached(new GitGenerator(), GitGenerator.PayloadKey, payload, pending);
+    }
+
+    [Fact]
+    public void Git_emission_reports_AM0006_only_when_unavailable()
+    {
+        var available = SourceEmission.Emit(PayloadCodec.EncodeGit(new GitModel
+        {
+            Commit = "e3be6392f9afe3c1dc3947123f384df570ed9686",
+            Sha = "e3be6392f",
+            Root = "C:/Code/Skymly/AssemblyMeta/",
+            Url = "https://github.com/Skymly/AssemblyMeta.git",
+            Branch = "main",
+        }), SourceKind.Git, 1100);
+        Assert.DoesNotContain(available.Diagnostics, diagnostic => diagnostic.Id == "AM0006");
+        Assert.Equal("e3be6392f9afe3c1dc3947123f384df570ed9686", GeneratorTestHost.ExecuteConstant(available.Source!, "AssemblyMeta+Git", "Commit"));
+        Assert.Equal("e3be6392f", GeneratorTestHost.ExecuteConstant(available.Source!, "AssemblyMeta+Git", "Sha"));
+        Assert.Equal("main", GeneratorTestHost.ExecuteConstant(available.Source!, "AssemblyMeta+Git", "Branch"));
+
+        var pending = SourceEmission.Emit(PayloadCodec.EncodeGit(new GitModel
+        {
+            Commit = GitInformation.PendingValue,
+            Sha = GitInformation.PendingValue,
+            Root = GitInformation.PendingValue,
+            Url = GitInformation.PendingValue,
+            Branch = GitInformation.PendingValue,
+        }), SourceKind.Git, 1100);
+        Assert.DoesNotContain(pending.Diagnostics, diagnostic => diagnostic.Id == "AM0006");
+        Assert.Equal(GitInformation.PendingValue, GeneratorTestHost.ExecuteConstant(pending.Source!, "AssemblyMeta+Git", "Root"));
+
+        var unavailable = SourceEmission.Emit(PayloadCodec.EncodeGit(new GitModel { Unavailable = true }), SourceKind.Git, 1100);
+        var diagnostic = Assert.Single(unavailable.Diagnostics, item => item.Id == "AM0006");
+        Assert.Equal(DiagnosticSeverityKind.Warning, diagnostic.Severity);
+        Assert.NotNull(unavailable.Source);
     }
 
     [Theory]
@@ -166,10 +192,6 @@ public class ProjectMetadataGitTests
         var (missingDiagnostics, missing) = GeneratorTestHost.Run(generator, key, null);
         Assert.Null(missing);
         Assert.DoesNotContain(missingDiagnostics, d => d.Severity == DiagnosticSeverity.Error);
-
-        var (corrupt, source) = GeneratorTestHost.Run(generator, key, "not-base64");
-        Assert.Contains(corrupt, d => d.Id == "AM0004");
-        Assert.Null(source);
     }
 
     [Fact]
