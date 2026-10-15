@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using AssemblyMeta.Core;
 using Microsoft.Build.Framework;
 
@@ -34,8 +33,6 @@ public sealed class ResolveGitInformation : Microsoft.Build.Utilities.Task
 
     public ITaskItem[] SourceRoots { get; set; } = Array.Empty<ITaskItem>();
 
-    public ITaskItem[] Ci { get; set; } = Array.Empty<ITaskItem>();
-
     [Output]
     public string Commit { get; set; } = "";
 
@@ -50,6 +47,24 @@ public sealed class ResolveGitInformation : Microsoft.Build.Utilities.Task
 
     [Output]
     public string Branch { get; set; } = "";
+
+    [Output]
+    public string GeneratedCommit { get; set; } = "";
+
+    [Output]
+    public string GeneratedSha { get; set; } = "";
+
+    [Output]
+    public string GeneratedRoot { get; set; } = "";
+
+    [Output]
+    public string GeneratedUrl { get; set; } = "";
+
+    [Output]
+    public string GeneratedBranch { get; set; } = "";
+
+    [Output]
+    public string Unavailable { get; set; } = "";
 
     public override bool Execute()
     {
@@ -66,15 +81,9 @@ public sealed class ResolveGitInformation : Microsoft.Build.Utilities.Task
             }
 
             var ci = new Dictionary<string, string?>(StringComparer.Ordinal);
-            foreach (var item in Ci ?? Array.Empty<ITaskItem>())
+            foreach (var key in GitInformation.CiKeys)
             {
-                var key = item.ItemSpec ?? "";
-                if (key.Length == 0)
-                {
-                    continue;
-                }
-
-                ci[key] = item.GetMetadata("Value");
+                ci[key] = Environment.GetEnvironmentVariable(key);
             }
 
             var result = GitInformation.Resolve(new GitResolveRequest
@@ -91,14 +100,18 @@ public sealed class ResolveGitInformation : Microsoft.Build.Utilities.Task
                 SourceBranchName = SourceBranchName,
                 SourceRoots = roots,
                 Ci = ci,
-                FileExists = File.Exists,
-                ReadFile = path => File.ReadAllText(path),
             });
-            Commit = result.Commit;
-            Sha = result.Sha;
-            Root = result.Root;
-            Url = result.Url;
-            Branch = result.Branch;
+            Commit = result.Properties.Commit;
+            Sha = result.Properties.Sha;
+            Root = result.Properties.Root;
+            Url = result.Properties.Url;
+            Branch = result.Properties.Branch;
+            GeneratedCommit = result.Generated.Commit;
+            GeneratedSha = result.Generated.Sha;
+            GeneratedRoot = result.Generated.Root;
+            GeneratedUrl = result.Generated.Url;
+            GeneratedBranch = result.Generated.Branch;
+            Unavailable = result.Generated.Unavailable ? "true" : "false";
             return !Log.HasLoggedErrors;
         }
         catch (Exception ex)

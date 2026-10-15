@@ -57,10 +57,22 @@ dotnet run --project .\samples\Git\Git.csproj -c Release --no-build -- real
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host '== Git 拉取请求分支 =='
-dotnet build .\samples\Git\Git.csproj -c Release -p:GITHUB_REF=refs/pull/15/merge
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-dotnet run --project .\samples\Git\Git.csproj -c Release --no-build -- pr
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$previousGitHubRef = $env:GITHUB_REF
+$env:GITHUB_REF = 'refs/pull/15/merge'
+try {
+    dotnet build .\samples\Git\Git.csproj -c Release
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    dotnet run --project .\samples\Git\Git.csproj -c Release --no-build -- pr
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+finally {
+    if ($null -eq $previousGitHubRef) {
+        Remove-Item Env:GITHUB_REF -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:GITHUB_REF = $previousGitHubRef
+    }
+}
 
 Write-Host '== Git 不发布仓库地址 =='
 dotnet build .\samples\Git\Git.csproj -c Release -p:PublishRepositoryUrl=false

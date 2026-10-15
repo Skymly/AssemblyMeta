@@ -569,7 +569,7 @@ v2.1.6 标签和已发布 `ThisAssembly.Resources` 2.1.6 包内 props 的默认�
 - 可观察行为：2.1.6 各包的许可文件是 OSMF EULA，安装时要求接受许可。README 写明产生收入的使用者要支付开源维护费，源码另有许可证。仓库徽章同时指向 EULA 和 OSS 许可证。Prerequisites 1.2.11 仍是 MIT，且不要求接受许可。
 - 边界情形：赞助检查会不会在编译时再发一条诊断，见未核实清单。
 - AssemblyMeta 现状：刻意不同
-- 证据：[README「差异化」](../../README.md) 写明本仓纯 MIT，无维护费。`src/AssemblyMeta.Packaging.targets` 的许可表达式是 MIT。
+- 证据：README「差异化」写明本仓纯 MIT，无维护费。`src/AssemblyMeta.Packaging.targets` 的许可表达式是 MIT。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/readme.md>，<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/osmfeula.txt>，<https://www.nuget.org/packages/ThisAssembly/2.1.6>
 
 ### 文档

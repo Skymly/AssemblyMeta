@@ -4,14 +4,12 @@ using Microsoft.Build.Framework;
 
 namespace AssemblyMeta.Tasks;
 
-/// <summary>把已解析的 Git 属性编码为生成器可读的 Base64 属性。查询关闭时写入占位符。</summary>
+/// <summary>把已经分好的生成值编码为生成器可读的 Base64 属性。不制造占位符，也不读 Repository*。</summary>
 public sealed class EncodeGit : Microsoft.Build.Utilities.Task
 {
     public string? Namespace { get; set; }
 
     public string? Visibility { get; set; }
-
-    public string? QueriesEnabled { get; set; }
 
     public string? Commit { get; set; }
 
@@ -23,6 +21,8 @@ public sealed class EncodeGit : Microsoft.Build.Utilities.Task
 
     public string? Branch { get; set; }
 
+    public string? Unavailable { get; set; }
+
     [Output]
     public string Payload { get; set; } = "";
 
@@ -31,30 +31,17 @@ public sealed class EncodeGit : Microsoft.Build.Utilities.Task
         try
         {
             var visibility = TaskSupport.ParseVisibility(this, Visibility);
-            var queries = TaskSupport.IsTrue(QueriesEnabled);
-            var model = queries
-                ? new GitModel
-                {
-                    Namespace = Namespace,
-                    Visibility = visibility,
-                    Commit = Commit ?? "",
-                    Sha = Sha ?? "",
-                    Root = Root ?? "",
-                    Url = Url ?? "",
-                    Branch = Branch ?? "",
-                    Unavailable = string.IsNullOrWhiteSpace(Commit),
-                }
-                : new GitModel
-                {
-                    Namespace = Namespace,
-                    Visibility = visibility,
-                    Commit = GitInformation.PendingValue,
-                    Sha = GitInformation.PendingValue,
-                    Root = GitInformation.PendingValue,
-                    Url = GitInformation.PendingValue,
-                    Branch = GitInformation.PendingValue,
-                    Unavailable = false,
-                };
+            var model = new GitModel
+            {
+                Namespace = Namespace,
+                Visibility = visibility,
+                Commit = Commit ?? "",
+                Sha = Sha ?? "",
+                Root = Root ?? "",
+                Url = Url ?? "",
+                Branch = Branch ?? "",
+                Unavailable = TaskSupport.IsTrue(Unavailable),
+            };
             Payload = PayloadCodec.EncodeGit(model);
             return !Log.HasLoggedErrors;
         }

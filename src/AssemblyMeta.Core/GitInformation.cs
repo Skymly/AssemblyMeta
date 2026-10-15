@@ -7,7 +7,7 @@ namespace AssemblyMeta.Core;
 /// <summary>一个 SourceRoot。NestedRoot 非空表示子模块，不作为仓库根。</summary>
 public readonly record struct GitSourceRoot(string Path, string SourceControl, string NestedRoot, string BranchName);
 
-/// <summary>解析 Git 信息的输入。文件读取由调用方注入，便于测试，也避免设计时查询。</summary>
+/// <summary>解析 Git 信息的输入。文件读取留在 module 内。</summary>
 public sealed class GitResolveRequest
 {
     public bool QueriesEnabled { get; init; }
@@ -33,14 +33,24 @@ public sealed class GitResolveRequest
     public IReadOnlyList<GitSourceRoot> SourceRoots { get; init; } = Array.Empty<GitSourceRoot>();
 
     public IReadOnlyDictionary<string, string?>? Ci { get; init; }
-
-    public Func<string, bool>? FileExists { get; init; }
-
-    public Func<string, string>? ReadFile { get; init; }
 }
 
-/// <summary>给下游 targets 和生成器共用的 Git 信息。</summary>
-public sealed class GitResolveResult
+/// <summary>写回 Repository* 的五个字符串。没有不可用标志。</summary>
+public sealed class GitValues
+{
+    public string Commit { get; init; } = "";
+
+    public string Sha { get; init; } = "";
+
+    public string Root { get; init; } = "";
+
+    public string Url { get; init; } = "";
+
+    public string Branch { get; init; } = "";
+}
+
+/// <summary>写进生成物的五个字符串，外加不可用标志。空字符串是 ""。</summary>
+public sealed class GitGenerated
 {
     public string Commit { get; init; } = "";
 
@@ -55,22 +65,93 @@ public sealed class GitResolveResult
     public bool Unavailable { get; init; }
 }
 
+/// <summary>一次解析的两组结果。</summary>
+public sealed class GitResolution
+{
+    public GitValues Properties { get; init; } = new();
+
+    public GitGenerated Generated { get; init; } = new();
+}
+
 /// <summary>
-/// 对齐 ThisAssembly.Git：提交来自 SourceLink，分支优先取 CI 环境变量，拉取请求记为 pr 加编号。
-/// 读取 .git/HEAD 只在查询开启且 CI / SourceLink 都没有分支时发生。
+/// 提交来自 SourceLink，分支优先取 CI 环境变量，拉取请求记为 pr 加编号。
+/// 读取 .git/HEAD 只在查询开启且用户字段、CI、SourceLink 都没有分支时发生。
+/// 查询关闭时不读文件；生成值是占位符，属性值仍是解析结果。
 /// </summary>
 public static class GitInformation
 {
     public const string PendingValue = "[pending build]";
-    public const int ShaLength = 9;
+    private const int ShaLength = 9;
 
-    public static GitResolveResult Resolve(GitResolveRequest request)
+    public static IReadOnlyList<string> CiKeys { get; } = new[]
+    {
+        "GITHUB_REF",
+        "BUILD_SOURCEBRANCH",
+        "SYSTEM_PULLREQUEST_PULLREQUESTID",
+        "APPVEYOR_PULL_REQUEST_NUMBER",
+        "APPVEYOR_REPO_TAG_NAME",
+        "APPVEYOR_REPO_BRANCH",
+        "TEAMCITY_BUILD_BRANCH",
+        "TRAVIS_PULL_REQUEST",
+        "TRAVIS_BRANCH",
+        "CIRCLE_PR_NUMBER",
+        "CIRCLE_TAG",
+        "CIRCLE_BRANCH",
+        "CI_COMMIT_TAG",
+        "CI_MERGE_REQUEST_IID",
+        "CI_EXTERNAL_PULL_REQUEST_IID",
+        "CI_COMMIT_BRANCH",
+        "BUDDY_EXECUTION_PULL_REQUEST_NO",
+        "BUDDY_EXECUTION_TAG",
+        "BUDDY_EXECUTION_BRANCH",
+        "CHANGE_ID",
+        "GIT_LOCAL_BRANCH",
+    };
+
+    private static readonly HashSet<string> CiKeySet = new(CiKeys, StringComparer.Ordinal);
+
+    public static GitResolution Resolve(GitResolveRequest request)
     {
         if (request is null)
         {
             throw new ArgumentNullException(nameof(request));
         }
 
+        var properties = ResolveProperties(request);
+        if (!request.QueriesEnabled)
+        {
+            return new GitResolution
+            {
+                Properties = properties,
+                Generated = new GitGenerated
+                {
+                    Commit = PendingValue,
+                    Sha = PendingValue,
+                    Root = PendingValue,
+                    Url = PendingValue,
+                    Branch = PendingValue,
+                    Unavailable = false,
+                },
+            };
+        }
+
+        return new GitResolution
+        {
+            Properties = properties,
+            Generated = new GitGenerated
+            {
+                Commit = properties.Commit,
+                Sha = properties.Sha,
+                Root = properties.Root,
+                Url = properties.Url,
+                Branch = properties.Branch,
+                Unavailable = properties.Commit.Length == 0,
+            },
+        };
+    }
+
+    private static GitValues ResolveProperties(GitResolveRequest request)
+    {
         var commit = First(request.RepositoryCommit, request.SourceRevisionId);
         var sha = First(request.RepositorySha, ToSha(commit));
         var root = First(NormalizeRoot(request.RepositoryRoot), FirstGitRoot(request.SourceRoots));
@@ -96,23 +177,22 @@ public static class GitInformation
             branch = NormalizeBranch(FirstRootBranch(request.SourceRoots));
         }
 
-        if (branch.Length == 0 && request.QueriesEnabled && root.Length > 0 && request.FileExists is not null && request.ReadFile is not null)
+        if (branch.Length == 0 && request.QueriesEnabled && root.Length > 0)
         {
-            branch = TryReadBranch(root, request.FileExists, request.ReadFile) ?? "";
+            branch = TryReadBranch(root);
         }
 
-        return new GitResolveResult
+        return new GitValues
         {
             Commit = commit,
             Sha = sha,
             Root = root,
             Url = url,
             Branch = branch,
-            Unavailable = request.QueriesEnabled && commit.Length == 0,
         };
     }
 
-    public static string ToSha(string? commit)
+    private static string ToSha(string? commit)
     {
         var value = (commit ?? "").Trim();
         if (value.Length == 0)
@@ -123,7 +203,7 @@ public static class GitInformation
         return value.Length <= ShaLength ? value : value.Substring(0, ShaLength);
     }
 
-    public static string NormalizeRoot(string? path)
+    private static string NormalizeRoot(string? path)
     {
         var value = (path ?? "").Trim().Replace('\\', '/');
         if (value.Length == 0)
@@ -134,7 +214,7 @@ public static class GitInformation
         return value.EndsWith("/", StringComparison.Ordinal) ? value : value + "/";
     }
 
-    public static string NormalizeBranch(string? value)
+    private static string NormalizeBranch(string? value)
     {
         var text = (value ?? "").Trim();
         if (text.Length == 0)
@@ -162,7 +242,7 @@ public static class GitInformation
         return text.Trim();
     }
 
-    public static string BranchFromCi(IReadOnlyDictionary<string, string?>? values)
+    private static string BranchFromCi(IReadOnlyDictionary<string, string?>? values)
     {
         if (values is null)
         {
@@ -171,6 +251,11 @@ public static class GitInformation
 
         string? Get(string key)
         {
+            if (!CiKeySet.Contains(key))
+            {
+                return null;
+            }
+
             return values.TryGetValue(key, out var value) ? value : null;
         }
 
@@ -298,36 +383,31 @@ public static class GitInformation
         return "";
     }
 
-    public static string? TryReadBranch(string root, Func<string, bool> exists, Func<string, string> read)
+    private static string TryReadBranch(string root)
     {
-        if (string.IsNullOrEmpty(root) || exists is null || read is null)
-        {
-            return null;
-        }
-
         var head = root + ".git/HEAD";
-        if (exists(head))
+        if (File.Exists(head))
         {
-            return NormalizeBranch(read(head));
+            return NormalizeBranch(File.ReadAllText(head));
         }
 
         var gitFile = root.TrimEnd('/') + "/.git";
-        if (!exists(gitFile))
+        if (!File.Exists(gitFile))
         {
-            return null;
+            return "";
         }
 
-        var text = (read(gitFile) ?? "").Trim();
+        var text = File.ReadAllText(gitFile).Trim();
         const string prefix = "gitdir:";
         if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
-            return null;
+            return "";
         }
 
         var gitDir = text.Substring(prefix.Length).Trim();
         if (gitDir.Length == 0)
         {
-            return null;
+            return "";
         }
 
         if (!Path.IsPathRooted(gitDir))
@@ -337,15 +417,15 @@ public static class GitInformation
         }
 
         var worktreeHead = Path.Combine(gitDir, "HEAD");
-        if (!exists(worktreeHead))
+        if (!File.Exists(worktreeHead))
         {
-            return null;
+            return "";
         }
 
-        return NormalizeBranch(read(worktreeHead));
+        return NormalizeBranch(File.ReadAllText(worktreeHead));
     }
 
-    public static bool TryPullRequestNumber(string? reference, out string number)
+    private static bool TryPullRequestNumber(string? reference, out string number)
     {
         number = "";
         var text = (reference ?? "").Trim().Replace('\\', '/');
