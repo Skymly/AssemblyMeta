@@ -21,11 +21,26 @@ public sealed class ConstantNameInput
     public string? Comment { get; init; }
 }
 
+public sealed class FileConstantNameInput
+{
+    public string? RelativeDir { get; init; }
+
+    public string? Filename { get; init; }
+
+    public string? Extension { get; init; }
+
+    public string? Link { get; init; }
+
+    public string? Comment { get; init; }
+}
+
 public sealed class MemberNameRequest
 {
     public MemberNameArea Area { get; init; }
 
     public IReadOnlyList<ConstantNameInput> Constants { get; init; } = Array.Empty<ConstantNameInput>();
+
+    public IReadOnlyList<FileConstantNameInput> FileConstants { get; init; } = Array.Empty<FileConstantNameInput>();
 }
 
 public sealed class NamedMember
@@ -83,6 +98,40 @@ public static class MemberNames
                 Value = item.Value ?? "",
                 Type = type,
                 Comment = item.Comment ?? "",
+            });
+        }
+
+        foreach (var item in request.FileConstants)
+        {
+            var created = FileConstantNaming.TryCreate(
+                new FileConstantNaming.Input(
+                    item.RelativeDir ?? "",
+                    item.Filename ?? "",
+                    item.Extension ?? "",
+                    item.Link ?? "",
+                    item.Comment ?? ""),
+                out var record);
+            if (!created)
+            {
+                continue;
+            }
+
+            if (!TryDots(record.Name, out var name, out var invalidSegment))
+            {
+                generatorDiagnostics.Add(new DiagnosticReport(
+                    "AM0002",
+                    "常量名无效",
+                    "常量“" + record.Name + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。",
+                    DiagnosticSeverityKind.Error));
+                continue;
+            }
+
+            members.Add(new NamedMember
+            {
+                Name = name,
+                Value = record.Value,
+                Type = "string",
+                Comment = record.Comment,
             });
         }
 

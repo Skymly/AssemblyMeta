@@ -86,6 +86,35 @@ public class PayloadAndEmitterTests
     }
 
     [Fact]
+    public void File_constants_keep_forward_slashes_and_skip_outside_files()
+    {
+        var result = MemberNames.Name(new MemberNameRequest
+        {
+            Area = MemberNameArea.Constants,
+            FileConstants = new[]
+            {
+                new FileConstantNameInput { RelativeDir = @"Content\Docs\", Filename = "License", Extension = ".md" },
+                new FileConstantNameInput { RelativeDir = @"C:\outside\", Filename = "Readme", Extension = ".txt" },
+                new FileConstantNameInput
+                {
+                    RelativeDir = @"C:\outside\",
+                    Filename = "Readme",
+                    Extension = ".txt",
+                    Link = @"Included\Readme.txt",
+                },
+            },
+        });
+
+        Assert.Empty(result.TaskDiagnostics);
+        Assert.Empty(result.GeneratorDiagnostics);
+        Assert.Equal(2, result.Members.Count);
+        Assert.Equal("Content.Docs.License", result.Members[0].Name);
+        Assert.Equal("Content/Docs/License.md", result.Members[0].Value);
+        Assert.Equal("Included.Readme", result.Members[1].Name);
+        Assert.Equal("Included/Readme.txt", result.Members[1].Value);
+    }
+
+    [Fact]
     public void FileConstant_uses_forward_slashes_and_link()
     {
         Assert.True(FileConstantNaming.TryCreate(
