@@ -1,0 +1,27 @@
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 留在分支上
+        shell: pwsh
+        run: git switch -C "${{ github.ref_name }}"
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: 构建、测试并打包
+        shell: pwsh
+        run: |
+          Remove-Item Env:GITHUB_REF -ErrorAction SilentlyContinue
+          ./eng/verify.ps1
