@@ -118,7 +118,7 @@ internal sealed class CSharpSourceEmitter
             indent++;
             WriteStringMember(builder, indent, model.Visibility, "Commit", model.Commit, "当前提交的完整哈希。", csharpLanguageVersion);
             WriteStringMember(builder, indent, model.Visibility, "Sha", model.Sha, "RepositorySha 已有值时原样采用。否则是 Commit 的前 9 位；不足 9 位时用全长。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Root", model.Root, "仓库根目录，使用正斜杠，并以斜杠结尾。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Root", model.Root, "仓库根目录，使用正斜杠，非空时以斜杠结尾。", csharpLanguageVersion);
             WriteStringMember(builder, indent, model.Visibility, "Url", model.Url, "仓库地址。仅当 PublishRepositoryUrl=true，或已经设置 RepositoryUrl 时填充。", csharpLanguageVersion);
             WriteStringMember(builder, indent, model.Visibility, "Branch", model.Branch, "当前分支。拉取请求场景为 pr 加编号。", csharpLanguageVersion);
             indent--;

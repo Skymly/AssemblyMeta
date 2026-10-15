@@ -88,6 +88,7 @@ public class ContractSurfaceTests
         }
 
         Assert.Contains("public const string Root = \"C:/repo/\";", git.Source);
+        Assert.Contains("仓库根目录，使用正斜杠，非空时以斜杠结尾。", git.Source);
         Assert.Contains("public const string Url = \"\";", git.Source);
         Assert.Equal("abcdef", GeneratorTestHost.ExecuteConstant(git.Source!, "AssemblyMeta+Git", "Sha"));
         Assert.Contains("RepositorySha 已有值时原样采用。否则是 Commit 的前 9 位；不足 9 位时用全长。", git.Source);

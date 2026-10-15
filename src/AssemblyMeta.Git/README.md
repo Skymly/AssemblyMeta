@@ -4,7 +4,7 @@
 
 - `Commit`：完整提交哈希，来自 SourceLink 的 `SourceRevisionId`
 - `Sha`：`RepositorySha` 已有值时原样采用，否则是 `Commit` 的前 9 位；不足 9 位时用全长
-- `Root`：仓库根目录，正斜杠，并以斜杠结尾
+- `Root`：仓库根目录，正斜杠，非空时以斜杠结尾
 - `Url`：仅当 `PublishRepositoryUrl=true`，或已经设置 `RepositoryUrl` 时填充
 - `Branch`：CI 环境变量优先；拉取请求记为 `pr` 加编号。没有 CI 时回落到 SourceLink 分支或 `.git/HEAD`
 
