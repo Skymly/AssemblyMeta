@@ -47,7 +47,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 | `AssemblyMeta.Constants` | `<Constant>` MSBuild 项 → 强类型常量（含 `FileConstant` 文件常量） | P0 |
 | `AssemblyMeta.Project` | `<ProjectProperty>` opt-in 项目属性常量 | M2 |
 | `AssemblyMeta.Metadata` | `<AssemblyMetadata>` 项常量 | M2 |
-| `AssemblyMeta.Git` | Commit/Sha/Branch/Url（依赖 SourceLink） | M2 |
+| `AssemblyMeta.Git` | Commit/Sha/Root/Url/Branch（依赖 SourceLink） | M2 |
 | `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） | M3 |
 | `AssemblyMeta.Strings` | resx 资源常量 | M3 |
 
