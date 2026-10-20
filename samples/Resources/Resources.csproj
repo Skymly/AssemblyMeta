@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Resources</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AssemblyMeta.Resources" Version="1.0.0" />

@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Strings</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AssemblyMeta.Strings" Version="1.0.0" />

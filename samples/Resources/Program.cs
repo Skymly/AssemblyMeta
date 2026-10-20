@@ -1,4 +1,12 @@
+using Resources;
+
 const string marker = "仅 Resources 包。\n";
+if ((typeof(AssemblyMeta).Namespace ?? "") != "Resources")
+{
+    Console.Error.WriteLine("Namespace: " + typeof(AssemblyMeta).Namespace);
+    return 1;
+}
+
 var text = AssemblyMeta.Resources.Content.Note.Text;
 if (!string.Equals(text, marker, StringComparison.Ordinal))
 {

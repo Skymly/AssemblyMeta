@@ -12,7 +12,7 @@
 
 ### 生成物
 
-- 默认生成全局命名空间里的 `internal static partial class AssemblyMeta`。`AssemblyMetaNamespace` 可改命名空间，`AssemblyMetaVisibility` 可改为 `public`。
+- 未设置 `AssemblyMetaNamespace` 时，根类放在 `$(RootNamespace)`。显式设成空白时仍在全局命名空间。`AssemblyMetaVisibility` 可改为 `public`。默认可见性是 `internal`。
 - `internal` 时，合格类型是 `const`，其它类型是 `static readonly`。`public` 时这些成员改为 `static readonly` 字段。
 - 只生成 C#。
 - `AssemblyMeta.Info` 固定九个字符串：`Configuration`、`Company`、`Title`、`Description`、`Product`、`Copyright`、`Version`、`InformationalVersion`、`FileVersion`。生成器不把空字符串改成程序集名。不生成商标。`GenerateAssemblyInfo=false` 时这九个成员仍会生成。

@@ -1,0 +1,13 @@
+<Project>
+  <!--
+    在用户项目正文之前导入。
+    未设置时写成哨兵，随后的空字符串会盖掉哨兵，编码时保持全局命名空间。
+    命令行 /p:AssemblyMetaNamespace= 是全局属性，这里盖不掉，保持空白。
+    Directory.Build.props 早于本文件，写在那里的空值无法和未设置区分。
+  -->
+  <PropertyGroup>
+    <_AssemblyMetaNamespacePropsImported>true</_AssemblyMetaNamespacePropsImported>
+    <_AssemblyMetaNamespaceUnset Condition="'$(_AssemblyMetaNamespaceUnset)' == ''">*|AssemblyMetaNamespaceUnset|*</_AssemblyMetaNamespaceUnset>
+    <AssemblyMetaNamespace Condition="'$(AssemblyMetaNamespace)' == ''">$(_AssemblyMetaNamespaceUnset)</AssemblyMetaNamespace>
+  </PropertyGroup>
+</Project>

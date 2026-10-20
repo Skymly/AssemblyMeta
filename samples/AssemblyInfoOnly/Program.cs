@@ -1,3 +1,5 @@
+using AssemblyInfoOnly;
+
 var failures = new List<string>();
 
 void Check(string name, string actual, string expected)
@@ -8,6 +10,7 @@ void Check(string name, string actual, string expected)
     }
 }
 
+Check("Namespace", typeof(AssemblyMeta).Namespace ?? "", "AssemblyInfoOnly");
 Check(nameof(AssemblyMeta.Info.Title), AssemblyMeta.Info.Title, "AssemblyInfoOnly");
 Check(nameof(AssemblyMeta.Info.Product), AssemblyMeta.Info.Product, "AssemblyInfoOnly");
 Check(nameof(AssemblyMeta.Info.Company), AssemblyMeta.Info.Company, "AssemblyInfoOnly");

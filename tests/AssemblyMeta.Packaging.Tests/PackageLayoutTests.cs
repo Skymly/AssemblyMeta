@@ -55,6 +55,8 @@ public class PackageLayoutTests
                 Assert.Contains(package.Entries, entry => entry.StartsWith("analyzers/dotnet/cs/", StringComparison.Ordinal));
                 Assert.Contains(package.Entries, entry => entry.StartsWith("tasks/netstandard2.0/", StringComparison.Ordinal));
                 Assert.Contains(package.Entries, entry => entry.StartsWith("buildTransitive/", StringComparison.Ordinal));
+                Assert.Contains("buildTransitive/AssemblyMeta.Namespace.props", package.Entries, StringComparer.Ordinal);
+                Assert.Contains("buildTransitive/AssemblyMeta.Namespace.targets", package.Entries, StringComparer.Ordinal);
             }
 
             foreach (var package in byId.Values)

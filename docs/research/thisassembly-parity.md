@@ -15,7 +15,7 @@
 | 元包聚合 | 已对齐 | 两边都把七个子包收进元包，Vsix 不在其中。 |
 | 生成器只给直接引用的项目 | 已对齐 | 生成只发生在写下 PackageReference 的项目。决议见 #23。 |
 | 根类型可扩展 | 已对齐 | 根类是 partial，调用方可以再写成员。 |
-| 命名空间 | 已对齐 | 属性名是 AssemblyMetaNamespace。非法命名空间报 AM0005 并回退。决议见 #23。 |
+| 命名空间 | 刻意不同 | 未设置时用 RootNamespace。显式空白仍是全局。非法值报 AM0005。 |
 | 可见性 | 超越 | public 时是 static readonly 字段，不是 get-only 属性。决议见 ADR 0003 与 #23。 |
 | 只生成 C# | 已对齐 | 公开说明都只生成 C#。 |
 | AssemblyInfo 成员 | 非目标 | 1.0 固定九个成员，没有值时是空字符串。不收进这九个以外的程序集特性。决议见 #13。 |
@@ -106,8 +106,8 @@
 生成物：`namespace Acme.Build;` 下面的 `partial class ThisAssembly`。
 
 - 边界情形：设置了非空命名空间、且语言版本低于 C# 10 时，报错误 TA002，文案写成「需要 C# 8.0 或更高」，这条常量不生成。判断用的是 C# 10，文案写的是 8.0。命名空间字符串本身不合法时，公开文档没有写。
-- AssemblyMeta 现状：已对齐
-- 证据：`docs/使用说明.md` 的 `AssemblyMetaNamespace`；`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Invalid_namespace_falls_back_and_warns` 对非法命名空间报告 `AM0005`。
+- AssemblyMeta 现状：刻意不同
+- 证据：`docs/使用说明.md` 的 `AssemblyMetaNamespace`；`tests/AssemblyMeta.Packaging.Tests/NamespaceResolutionTests.cs`。未设置时用 `RootNamespace`。显式空白、纯空白和命令行空值仍是全局命名空间。`tests/AssemblyMeta.Generator.Tests/GeneratorTests.cs` 的 `Invalid_namespace_falls_back_and_warns` 对非法命名空间报告 `AM0005`。
 - 来源：<https://github.com/devlooped/ThisAssembly/blob/v2.1.6/src/visibility.md>
 
 ### 可见性

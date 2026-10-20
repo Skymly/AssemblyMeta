@@ -4,6 +4,7 @@
 
 ```csharp
 // 代替 Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyVersionAttribute>()...
+// 类默认在 RootNamespace。顶层语句先 using 那个命名空间。
 var version = AssemblyMeta.Info.Version;
 var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
@@ -31,11 +32,12 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 | 构建 | — | deterministic build 友好，支持 file-based apps（`#:package`） |
 | Strings | 运行时按资源取值 | 编译期常量；占位符留在字面量里；卫星 resx 不参与 |
 | public 成员 | get-only 属性 | `static readonly` 字段 |
+| 命名空间 | 未设置和空白都是全局 | 未设置用 `RootNamespace`；显式空白才是全局 |
 
 ## 生成入口
 
-- `static partial class AssemblyMeta`，默认全局命名空间
-- 命名空间可用 MSBuild 属性覆盖：`$(AssemblyMetaNamespace)`
+- `static partial class AssemblyMeta`。未设置 `AssemblyMetaNamespace` 时用项目的 `RootNamespace`；显式设成空白时在全局命名空间
+- 顶层语句需要 `using` 那个命名空间，才能直接写 `AssemblyMeta.名字`
 - 各子包向该 partial 类挂嵌套类型（`Info`、`Constants`、`Git`、`Project`、`Metadata`、`Resources`、`Strings`）
 
 ## 包规划

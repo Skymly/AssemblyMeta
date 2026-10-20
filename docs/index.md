@@ -1,6 +1,6 @@
 # AssemblyMeta
 
-把项目和程序集元信息在编译期生成为强类型常量。入口是全局命名空间里的 `static partial class AssemblyMeta`。
+把项目和程序集元信息在编译期生成为强类型常量。入口是 `static partial class AssemblyMeta`。未设置命名空间时放在项目的 `RootNamespace` 里；显式设成空白时在全局命名空间。
 
 | 包 | 生成结果 |
 |---|---|

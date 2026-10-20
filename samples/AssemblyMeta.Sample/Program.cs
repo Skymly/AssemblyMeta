@@ -1,4 +1,5 @@
 using System.Reflection;
+using SampleApp;
 
 [assembly: AssemblyMetadata("Banner", AssemblyMeta.Constants.Banner)]
 [assembly: AssemblyMetadata("StringHello", AssemblyMeta.Strings.Hello)]
@@ -13,6 +14,7 @@ void Check(string name, string actual, string expected)
     }
 }
 
+Check("Namespace", typeof(AssemblyMeta).Namespace ?? "", "SampleApp");
 Check(nameof(AssemblyMeta.Info.Configuration), AssemblyMeta.Info.Configuration, AssemblyMeta.Constants.ExpectedConfiguration);
 Check(nameof(AssemblyMeta.Info.Company), AssemblyMeta.Info.Company, "Skymly");
 Check(nameof(AssemblyMeta.Info.Title), AssemblyMeta.Info.Title, "AssemblyMeta 示例标题");

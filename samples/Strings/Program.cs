@@ -1,4 +1,5 @@
 using System.Reflection;
+using Strings;
 
 [assembly: AssemblyMetadata("Hello", AssemblyMeta.Strings.Hello)]
 
@@ -12,6 +13,7 @@ void Check(string name, string actual, string expected)
     }
 }
 
+Check("Namespace", typeof(AssemblyMeta).Namespace ?? "", "Strings");
 Check(nameof(AssemblyMeta.Strings.Hello), AssemblyMeta.Strings.Hello, "仅 Strings 包");
 Check(nameof(AssemblyMeta.Strings.Area.Name), AssemblyMeta.Strings.Area.Name, "区域");
 var hello = typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(attribute => attribute.Key == "Hello");

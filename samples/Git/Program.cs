@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Git;
 
 var mode = args.Length > 0 ? args[0] : "real";
 var failures = new List<string>();
@@ -10,6 +11,8 @@ void Check(string name, string actual, string expected)
         failures.Add($"{name}: 期望 '{expected}'，实际 '{actual}'");
     }
 }
+
+Check("Namespace", typeof(AssemblyMeta).Namespace ?? "", "Git");
 
 if (mode == "pending")
 {

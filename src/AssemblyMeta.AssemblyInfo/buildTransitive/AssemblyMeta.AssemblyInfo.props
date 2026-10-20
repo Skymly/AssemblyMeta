@@ -1,4 +1,6 @@
 <Project>
+  <!-- 未设置的命名空间先记成哨兵，项目文件里的空字符串会盖掉它。 -->
+  <Import Project="$(MSBuildThisFileDirectory)AssemblyMeta.Namespace.props" Condition="'$(_AssemblyMetaNamespacePropsImported)' != 'true'" />
   <ItemGroup>
     <CompilerVisibleProperty Include="AssemblyMeta_AssemblyInfoPayload" />
     <CompilerVisibleItemMetadata Include="AssemblyAttribute" MetadataName="_Parameter1" />

@@ -40,6 +40,8 @@
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="\" />
     <None Include="$(AssemblyMetaBuildTransitiveDir)buildTransitive\*.props" Pack="true" PackagePath="buildTransitive" />
     <None Include="$(AssemblyMetaBuildTransitiveDir)buildTransitive\*.targets" Pack="true" PackagePath="buildTransitive" />
+    <None Include="$(MSBuildThisFileDirectory)build\AssemblyMeta.Namespace.props" Pack="true" PackagePath="buildTransitive" />
+    <None Include="$(MSBuildThisFileDirectory)build\AssemblyMeta.Namespace.targets" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
 
   <Target Name="_AssemblyMetaAddPackageFiles" DependsOnTargets="Build">

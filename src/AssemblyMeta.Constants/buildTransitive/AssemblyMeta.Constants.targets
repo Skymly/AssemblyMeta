@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)AssemblyMeta.Namespace.targets" Condition="'$(_AssemblyMetaNamespaceTargetsImported)' != 'true'" />
   <PropertyGroup>
     <_AssemblyMetaConstantsTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaConstantsTasksAssembly>
   </PropertyGroup>
@@ -13,6 +14,7 @@
   -->
   <Target Name="AssemblyMetaPrepareConstants"
           BeforeTargets="GenerateMSBuildEditorConfigFileCore"
+          DependsOnTargets="AssemblyMetaResolveNamespace"
           Condition="Exists('$(_AssemblyMetaConstantsTasksAssembly)')">
     <EncodeConstants
       Namespace="$(AssemblyMetaNamespace)"

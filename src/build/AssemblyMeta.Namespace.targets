@@ -1,0 +1,19 @@
+<Project>
+  <!--
+    在目标执行时解析。Directory.Build.targets 晚于包 targets 导入，导入时写死会丢掉那里的赋值。
+    哨兵换成 $(RootNamespace)，再去掉首尾空白。纯空白视为显式空白，生成全局命名空间。
+  -->
+  <PropertyGroup>
+    <_AssemblyMetaNamespaceTargetsImported>true</_AssemblyMetaNamespaceTargetsImported>
+    <_AssemblyMetaNamespaceUnset Condition="'$(_AssemblyMetaNamespaceUnset)' == ''">*|AssemblyMetaNamespaceUnset|*</_AssemblyMetaNamespaceUnset>
+  </PropertyGroup>
+
+  <Target Name="AssemblyMetaResolveNamespace"
+          BeforeTargets="PrepareForBuild;GenerateMSBuildEditorConfigFileCore">
+    <PropertyGroup>
+      <AssemblyMetaNamespace Condition="'$(AssemblyMetaNamespace)' == '$(_AssemblyMetaNamespaceUnset)'">$(RootNamespace)</AssemblyMetaNamespace>
+      <AssemblyMetaNamespace>$(AssemblyMetaNamespace.Trim())</AssemblyMetaNamespace>
+    </PropertyGroup>
+    <Message Importance="Low" Text="AssemblyMetaNamespace=$(AssemblyMetaNamespace)" />
+  </Target>
+</Project>

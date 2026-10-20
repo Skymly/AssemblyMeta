@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <RootNamespace>AssemblyInfoOnly</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AssemblyMeta.AssemblyInfo" Version="1.0.0" />

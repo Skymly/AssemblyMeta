@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)AssemblyMeta.Namespace.targets" Condition="'$(_AssemblyMetaNamespaceTargetsImported)' != 'true'" />
   <PropertyGroup>
     <_AssemblyMetaGitTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaGitTasksAssembly>
     <AssemblyMetaGitInitializeDependsOn Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">InitializeSourceControlInformation</AssemblyMetaGitInitializeDependsOn>
@@ -50,7 +51,7 @@
 
   <Target Name="AssemblyMetaPrepareGit"
           BeforeTargets="GenerateMSBuildEditorConfigFileCore"
-          DependsOnTargets="InitializeGitInformation"
+          DependsOnTargets="InitializeGitInformation;AssemblyMetaResolveNamespace"
           Condition="Exists('$(_AssemblyMetaGitTasksAssembly)')">
     <EncodeGit
       Namespace="$(AssemblyMetaNamespace)"
