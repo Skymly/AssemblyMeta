@@ -1,0 +1,5 @@
+# 样例把嵌入文本的换行写进断言。钉死工作区字节，避免 core.autocrlf 在检出时改写。
+samples/Resources/Content/Note.txt text eol=lf
+samples/AssemblyMeta.Sample/Content/Docs/*.txt text eol=crlf
+samples/AssemblyMeta.Sample/Content/Docs/*.md text eol=crlf
+samples/linked/Readme.txt text eol=crlf
