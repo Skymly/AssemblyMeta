@@ -11,7 +11,7 @@ Get-ChildItem -LiteralPath .\artifacts\packages -File -ErrorAction SilentlyConti
 dotnet pack .\AssemblyMeta.slnx -c Release -o .\artifacts\packages
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host '== 清理本地包缓存，避免 1.0.0 命中旧包 =='
+Write-Host '== 清理本地包缓存，避免旧版本命中 =='
 $nugetRoot = Join-Path $env:USERPROFILE '.nuget\packages'
 foreach ($id in @(
     'assemblymeta',

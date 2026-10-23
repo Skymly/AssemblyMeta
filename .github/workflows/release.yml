@@ -1,0 +1,161 @@
+name: release
+
+# nuget.org 策略 Github-Action-Publish-AssemblyMeta 只信任这个文件名。
+# 仓库 Skymly/AssemblyMeta，工作流文件名 release.yml，没有 GitHub Environment。
+# 不要给 job 加 environment，否则 OIDC 对不上策略。
+# user 是 nuget.org 资料名 Skym，不是 GitHub 登录名 Skymly。
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuget-trusted-publishing
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      # 同时认 actor 和 triggering_actor。代理代推标签时 actor 可能是 bot，
+      # triggering_actor 仍是本人。不要用 job 级 if，条件为假会静默跳过。
+      - name: 核对推送者
+        shell: pwsh
+        env:
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $allowed = @('Skymly', 'wys0610')
+          $actor = $env:GITHUB_ACTOR
+          $triggering = $env:TRIGGERING_ACTOR
+          Write-Host "actor=$actor triggering_actor=$triggering"
+          if ($allowed -contains $actor -or ($triggering -and $allowed -contains $triggering)) {
+            Write-Host '推送者已核对。'
+            exit 0
+          }
+          Write-Host "::error::拒绝发布：github.actor ($actor) 和 github.triggering_actor ($triggering) 都不是维护者（Skymly|wys0610）。请由本人推送 v* 标签，或由本人重新运行。"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - name: 留在标签对应的分支上
+        shell: pwsh
+        run: git switch -C "${{ github.ref_name }}"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: 核对标签与包版本
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [xml]$props = Get-Content -LiteralPath .\Directory.Build.props
+          $version = [string]$props.Project.PropertyGroup.AssemblyMetaPackageVersion
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw 'Directory.Build.props 没有 AssemblyMetaPackageVersion。'
+          }
+          $expected = "v$version"
+          if ($env:GITHUB_REF_NAME -ne $expected) {
+            throw "标签 '$env:GITHUB_REF_NAME' 与包版本 '$version' 不一致。应推送 '$expected'。"
+          }
+          Add-Content -Path $env:GITHUB_ENV -Value "ASSEMBLYMETA_VERSION=$version" -Encoding utf8
+
+      - name: 构建、测试并打包
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Remove-Item Env:GITHUB_REF -ErrorAction SilentlyContinue
+          ./eng/verify.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: 准备发行说明
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = $env:ASSEMBLYMETA_VERSION
+          $lines = @(Get-Content -LiteralPath .\CHANGELOG.md)
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -eq "## $version") {
+              $start = $i
+              break
+            }
+          }
+          if ($start -lt 0) {
+            throw "CHANGELOG.md 没有 ## $version。"
+          }
+          $end = $lines.Count
+          for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match '^## ') {
+              $end = $i
+              break
+            }
+          }
+          $notes = (($lines[$start..($end - 1)] -join "`n").Trim() + "`n")
+          $notesPath = Join-Path (Get-Location) 'artifacts\release\notes.md'
+          New-Item -ItemType Directory -Force -Path (Split-Path -Parent $notesPath) | Out-Null
+          [System.IO.File]::WriteAllText($notesPath, $notes, [System.Text.UTF8Encoding]::new($false))
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: Skym
+
+      - name: 推送 NuGet 包
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) {
+            throw '没有拿到短期 NuGet API key。'
+          }
+          Write-Host "::add-mask::$env:NUGET_API_KEY"
+          $version = $env:ASSEMBLYMETA_VERSION
+          $source = 'https://api.nuget.org/v3/index.json'
+          # 元包依赖七个子包。先推子包，最后推 AssemblyMeta。
+          $ids = @(
+            'AssemblyMeta.AssemblyInfo',
+            'AssemblyMeta.Constants',
+            'AssemblyMeta.Project',
+            'AssemblyMeta.Metadata',
+            'AssemblyMeta.Git',
+            'AssemblyMeta.Resources',
+            'AssemblyMeta.Strings',
+            'AssemblyMeta'
+          )
+          foreach ($id in $ids) {
+            $path = Join-Path .\artifacts\packages "$id.$version.nupkg"
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "找不到要发布的包：$path"
+            }
+            Write-Host "推送 $id $version"
+            dotnet nuget push $path --api-key $env:NUGET_API_KEY --source $source --skip-duplicate
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: 创建 GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
+          $tag = $env:GITHUB_REF_NAME
+          $notes = Join-Path .\artifacts 'release\notes.md'
+          gh release view $tag --repo $env:GITHUB_REPOSITORY | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "GitHub Release $tag 已存在，跳过创建。"
+            exit 0
+          }
+          gh release create $tag --repo $env:GITHUB_REPOSITORY --title $tag --notes-file $notes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -10,7 +10,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
 
 - License：MIT（纯免费，无维护费模式）
-- NuGet：`AssemblyMeta`（未注册，空闲）
+- NuGet：`AssemblyMeta`（Trusted Publishing，标签触发发布）
 - 仓库：`Skymly/AssemblyMeta`（空闲）
 
 
@@ -21,6 +21,14 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 - 架构说明：[docs/架构.md](docs/架构.md)
 - 使用说明：[docs/使用说明.md](docs/使用说明.md)
 - 端到端验证：`./eng/verify.ps1`
+
+## 发布
+
+包版本只有 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送标签 `v` 加这个版本。当前版本是 `1.0.0-preview`，推 `v1.0.0-preview`。
+
+`.github/workflows/release.yml` 在该标签上跑 `./eng/verify.ps1`，再用 NuGet Trusted Publishing 发到 `https://api.nuget.org/v3/index.json`。先推七个子包，再推元包，然后用 `CHANGELOG.md` 对应一节建 GitHub Release。不使用长期 API key，仓库里也不放 NuGet 密钥。只有 `Skymly` 或 `wys0610` 推送的标签会发布；代理代推时认 `github.triggering_actor`。其他人推标签会让这次发布失败，而不是静默跳过。
+
+nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `release.yml`、包主 `Skym`、包名 `AssemblyMeta*`。这个 job 不能加 GitHub Environment，策略里没填。策略创建后 7 天内要有一次成功发布，才会永久生效。
 
 ## 差异化（vs ThisAssembly）
 

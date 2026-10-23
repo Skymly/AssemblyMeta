@@ -7,6 +7,6 @@
     <Deterministic>true</Deterministic>
     <IsPackable>false</IsPackable>
     <NuGetAudit>false</NuGetAudit>
-    <AssemblyMetaPackageVersion>1.0.0</AssemblyMetaPackageVersion>
+    <AssemblyMetaPackageVersion>1.0.0-preview</AssemblyMetaPackageVersion>
   </PropertyGroup>
 </Project>

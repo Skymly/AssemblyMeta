@@ -10,7 +10,7 @@
     <RootNamespace>Git</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta.Git" Version="1.0.0" />
+    <PackageReference Include="AssemblyMeta.Git" Version="1.0.0-preview" />
   </ItemGroup>
 
   <!-- 证明 InitializeGitInformation 把属性交给下游，而不只是生成常量。 -->

@@ -1,4 +1,4 @@
-#:package AssemblyMeta.Project@1.0.0
+#:package AssemblyMeta.Project@1.0.0-preview
 #:property BannerTitle=from-file
 #:property ProjectProperty=BannerTitle
 #:property EnableSourceControlManagerQueries=false

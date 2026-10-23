@@ -9,6 +9,7 @@ public class ChangelogTests
         var path = Path.Combine(root, "CHANGELOG.md");
         Assert.True(File.Exists(path));
         var text = File.ReadAllText(path).Replace("\r\n", "\n");
+        Assert.Contains("## 1.0.0-preview", text);
         Assert.Contains("## 1.0.0", text);
         Assert.Contains("AssemblyMeta.AssemblyInfo", text);
         Assert.Contains("AssemblyMeta.Constants", text);

@@ -1,8 +1,8 @@
 # 变更记录
 
-## 1.0.0
+## 1.0.0-preview
 
-包版本是 `1.0.0`，来源只有 `Directory.Build.props` 里的 `AssemblyMetaPackageVersion`。NuGet 上还没有这些包。
+预发布，不是稳定版。包版本是 `1.0.0-preview`，来源只有 `Directory.Build.props` 里的 `AssemblyMetaPackageVersion`。稳定版 `1.0.0` 还没有推送。NuGet 上还没有这些包。
 
 ### 包
 
@@ -30,3 +30,7 @@
 ### 编译器
 
 调用方需要能提供增量生成器的编译器。本仓库写下的编译器 API 下限是 4.11.0。SDK 10.0.303 是验证环境。编译期不另做版本检查。
+
+## 1.0.0
+
+稳定版尚未推送。NuGet 上还没有这些包。包是 `AssemblyMeta`、`AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata`、`AssemblyMeta.Git`、`AssemblyMeta.Resources`、`AssemblyMeta.Strings`。

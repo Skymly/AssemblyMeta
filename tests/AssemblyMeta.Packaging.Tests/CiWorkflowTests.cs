@@ -3,16 +3,9 @@ namespace AssemblyMeta.Packaging.Tests;
 public class CiWorkflowTests
 {
     [Fact]
-    public void Workflow_builds_tests_and_packs_without_publishing()
+    public void Verify_workflow_builds_tests_and_packs_without_publishing()
     {
-        var root = RepoRoot.Find();
-        var dir = Path.Combine(root, ".github", "workflows");
-        Assert.True(Directory.Exists(dir));
-        var files = Directory.GetFiles(dir, "*.yml")
-            .Concat(Directory.GetFiles(dir, "*.yaml"))
-            .ToArray();
-        var path = Assert.Single(files);
-        var text = File.ReadAllText(path).Replace("\r\n", "\n");
+        var text = Read("verify.yml");
 
         Assert.Contains("pull_request:", text);
         Assert.Contains("push:", text);
@@ -30,7 +23,35 @@ public class CiWorkflowTests
         Assert.DoesNotContain("gh release", text);
         Assert.DoesNotContain("upload-artifact", text);
         Assert.DoesNotContain("tags:", text);
-        Assert.DoesNotContain("release:", text);
-        Assert.DoesNotContain("write", text);
+        Assert.DoesNotContain("id-token:", text);
+        Assert.DoesNotContain("NuGet/login", text);
+    }
+
+    [Fact]
+    public void Release_workflow_publishes_from_a_maintainer_tag()
+    {
+        var text = Read("release.yml");
+
+        Assert.Contains("tags:", text);
+        Assert.Contains("- \"v*\"", text);
+        Assert.Contains("id-token: write", text);
+        Assert.Contains("NuGet/login@v1", text);
+        Assert.Contains("user: Skym", text);
+        Assert.Contains("github.triggering_actor", text);
+        Assert.Contains("Skymly", text);
+        Assert.Contains("wys0610", text);
+        Assert.Contains("dotnet nuget push", text);
+        Assert.Contains("https://api.nuget.org/v3/index.json", text);
+        Assert.DoesNotContain("environment:", text);
+        Assert.DoesNotContain("secrets.", text);
+        Assert.DoesNotContain("workflow_dispatch", text);
+    }
+
+    private static string Read(string name)
+    {
+        var root = RepoRoot.Find();
+        var path = Path.Combine(root, ".github", "workflows", name);
+        Assert.True(File.Exists(path));
+        return File.ReadAllText(path).Replace("\r\n", "\n");
     }
 }

@@ -8,6 +8,6 @@
     <RootNamespace>AssemblyInfoOnly</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta.AssemblyInfo" Version="1.0.0" />
+    <PackageReference Include="AssemblyMeta.AssemblyInfo" Version="1.0.0-preview" />
   </ItemGroup>
 </Project>
