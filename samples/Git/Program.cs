@@ -85,12 +85,15 @@ static string FindGit()
     var path = Environment.GetEnvironmentVariable("PATH") ?? "";
     foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
     {
-        var candidate = Path.Combine(dir.Trim(), "git.exe");
-        if (File.Exists(candidate))
+        foreach (var name in new[] { "git", "git.exe" })
         {
-            return candidate;
+            var candidate = Path.Combine(dir.Trim(), name);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
         }
     }
 
-    throw new InvalidOperationException("PATH 中找不到 git.exe。");
+    throw new InvalidOperationException("PATH 中找不到 git。");
 }

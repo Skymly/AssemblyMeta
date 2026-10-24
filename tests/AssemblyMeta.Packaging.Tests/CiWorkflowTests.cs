@@ -12,6 +12,9 @@ public class CiWorkflowTests
         Assert.Contains("- main", text);
         Assert.Contains("contents: read", text);
         Assert.Contains("windows-latest", text);
+        Assert.Contains("ubuntu-latest", text);
+        Assert.Contains("macos-latest", text);
+        Assert.Contains("matrix.os", text);
         Assert.Contains("global-json-file: global.json", text);
         Assert.Contains("git switch -C", text);
         Assert.Contains("Remove-Item Env:GITHUB_REF", text);

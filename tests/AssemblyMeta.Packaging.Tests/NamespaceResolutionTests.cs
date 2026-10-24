@@ -225,10 +225,10 @@ public class NamespaceResolutionTests
             + "  <Import Project=\"" + Xml(targets) + "\" Condition=\"'$(_AssemblyMetaNamespaceTargetsImported)' != 'true'\" />\n"
             + "  <Import Project=\"" + Xml(targets) + "\" Condition=\"'$(_AssemblyMetaNamespaceTargetsImported)' != 'true'\" />\n"
             + "  <Target Name=\"WriteNamespace\" DependsOnTargets=\"AssemblyMetaResolveNamespace\">\n"
-            + "    <WriteLinesToFile File=\"$(MSBuildProjectDirectory)\\resolved.txt\" Lines=\"NS=$(AssemblyMetaNamespace)END\" Overwrite=\"true\" />\n"
+            + "    <WriteLinesToFile File=\"$(MSBuildProjectDirectory)/resolved.txt\" Lines=\"NS=$(AssemblyMetaNamespace)END\" Overwrite=\"true\" />\n"
             + "  </Target>\n"
             + "  <Target Name=\"WriteAfterPrepare\" DependsOnTargets=\"PrepareForBuild\">\n"
-            + "    <WriteLinesToFile File=\"$(MSBuildProjectDirectory)\\resolved.txt\" Lines=\"NS=$(AssemblyMetaNamespace)END\" Overwrite=\"true\" />\n"
+            + "    <WriteLinesToFile File=\"$(MSBuildProjectDirectory)/resolved.txt\" Lines=\"NS=$(AssemblyMetaNamespace)END\" Overwrite=\"true\" />\n"
             + "  </Target>\n"
             + "</Project>\n";
     }
