@@ -6,7 +6,7 @@
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Metadata</PackageId>
-    <Description>把 AssemblyMetadata 项生成为 AssemblyMeta.Metadata 编译期常量，不重复生成程序集特性。</Description>
+    <Description>Generates AssemblyMetadata items as AssemblyMeta.Metadata compile-time constants without re-emitting assembly attributes. / 把 AssemblyMetadata 项生成为 AssemblyMeta.Metadata 编译期常量，不重复生成程序集特性。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;metadata;constants;msbuild</PackageTags>
   </PropertyGroup>

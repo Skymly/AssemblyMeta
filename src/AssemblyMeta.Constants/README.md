@@ -1,6 +1,6 @@
 # AssemblyMeta.Constants
 
-把 MSBuild 项生成为 `AssemblyMeta.Constants` 强类型常量。
+Generates MSBuild items as strongly-typed `AssemblyMeta.Constants`.
 
 ```xml
 <ItemGroup>
@@ -9,6 +9,14 @@
   <FileConstant Include="@(Content)" />
 </ItemGroup>
 ```
+
+- `Type` defaults to `string`. Newlines inside strings use raw string literals on C# 11+.
+- For non-`string` types, `Value` is emitted verbatim as a C# expression.
+- `FileConstant` values are project-relative forward-slash paths; `Link` wins when present. Files outside the project without a `Link` are skipped.
+
+---
+
+把 MSBuild 项生成为 `AssemblyMeta.Constants` 强类型常量。
 
 - `Type` 缺省为 `string`。字符串里的换行在 C# 11+ 使用 raw string literal。
 - 非 `string` 类型把 `Value` 当作 C# 表达式原样输出。

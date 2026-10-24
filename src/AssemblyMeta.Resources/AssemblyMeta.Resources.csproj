@@ -6,7 +6,7 @@
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Resources</PackageId>
-    <Description>把 EmbeddedResource 生成为 AssemblyMeta.Resources，提供 Text、GetBytes 与 GetStream。</Description>
+    <Description>Generates EmbeddedResource items as AssemblyMeta.Resources with Text, GetBytes and GetStream accessors. / 把 EmbeddedResource 生成为 AssemblyMeta.Resources，提供 Text、GetBytes 与 GetStream。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;resources;embedded;msbuild</PackageTags>
   </PropertyGroup>

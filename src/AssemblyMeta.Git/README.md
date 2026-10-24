@@ -1,5 +1,23 @@
 # AssemblyMeta.Git
 
+Generates the current repository's git information as `AssemblyMeta.Git` constants.
+
+- `Commit`: taken verbatim from `RepositoryCommit` when set, otherwise SourceLink's `SourceRevisionId`
+- `Sha`: taken verbatim from `RepositorySha` when set, otherwise the first 9 characters of `Commit`, or the full length when shorter
+- `Root`: repository root with forward slashes, ending in a slash when non-empty
+- `Url`: only filled when `PublishRepositoryUrl=true` or `RepositoryUrl` is already set
+- `Branch`: taken verbatim from `RepositoryBranch` when set, otherwise CI environment variables win; pull requests are recorded as `pr` plus the number. Falls back to SourceLink without CI. Only when queries are on and there is still no branch does it read `.git/HEAD` under the repository root
+
+.NET 8+ SDK ships SourceLink built in — no `Microsoft.SourceLink.*` reference needed.
+
+Design-time builds do not query by default (`EnableSourceControlManagerQueries` is written as `false` when unset) and all five constants are `[pending build]`. Set the property explicitly to `true` to fill them during design-time builds too.
+
+Downstream targets can depend on `InitializeGitInformation` and read the same-named MSBuild properties: `RepositoryCommit`, `RepositorySha`, `RepositoryRoot`, `RepositoryUrl`, `RepositoryBranch`.
+
+Branch sources: GitHub Actions, Azure DevOps, GitLab, AppVeyor, TeamCity, Travis CI, CircleCI, Jenkins and Buddy.
+
+---
+
 把当前仓库的 Git 信息生成为 `AssemblyMeta.Git` 常量。
 
 - `Commit`：`RepositoryCommit` 已有值时原样采用，否则是 SourceLink 的 `SourceRevisionId`

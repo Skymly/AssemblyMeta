@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>AssemblyMeta.Core</RootNamespace>
-    <Description>AssemblyMeta 的模型、载荷编码与 C# emitter。只生成 C#。</Description>
+    <Description>Models, payload encoding and the C# emitter for AssemblyMeta. Emits C# only. / AssemblyMeta 的模型、载荷编码与 C# emitter。只生成 C#。</Description>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="AssemblyMeta.Tasks" />

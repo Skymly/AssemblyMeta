@@ -6,7 +6,7 @@
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Strings</PackageId>
-    <Description>把中性 resx 生成为 AssemblyMeta.Strings 编译期字符串常量。</Description>
+    <Description>Generates neutral .resx entries as AssemblyMeta.Strings compile-time string constants. / 把中性 resx 生成为 AssemblyMeta.Strings 编译期字符串常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;resx;strings;constants;msbuild</PackageTags>
   </PropertyGroup>

@@ -25,17 +25,17 @@ internal sealed class CSharpSourceEmitter
             var indent = scope.Indent;
             WriteRoot(builder, indent, model.Visibility);
             indent++;
-            WriteNestedClassOpen(builder, indent, "Info", "SDK 默认生成的程序集特性常量。");
+            WriteNestedClassOpen(builder, indent, "Info", "Constants projected from the SDK-generated assembly attributes. / SDK 默认生成的程序集特性常量。");
             indent++;
-            WriteStringMember(builder, indent, model.Visibility, "Configuration", model.Configuration, "对应 AssemblyConfigurationAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Company", model.Company, "对应 AssemblyCompanyAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Title", model.Title, "对应 AssemblyTitleAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Description", model.Description, "对应 AssemblyDescriptionAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Product", model.Product, "对应 AssemblyProductAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Copyright", model.Copyright, "对应 AssemblyCopyrightAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Version", model.Version, "对应 AssemblyVersionAttribute。取 AssemblyVersion，不是 NuGet Version。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "InformationalVersion", model.InformationalVersion, "对应 AssemblyInformationalVersionAttribute。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "FileVersion", model.FileVersion, "对应 AssemblyFileVersionAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Configuration", model.Configuration, "Maps AssemblyConfigurationAttribute. / 对应 AssemblyConfigurationAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Company", model.Company, "Maps AssemblyCompanyAttribute. / 对应 AssemblyCompanyAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Title", model.Title, "Maps AssemblyTitleAttribute. / 对应 AssemblyTitleAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Description", model.Description, "Maps AssemblyDescriptionAttribute. / 对应 AssemblyDescriptionAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Product", model.Product, "Maps AssemblyProductAttribute. / 对应 AssemblyProductAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Copyright", model.Copyright, "Maps AssemblyCopyrightAttribute. / 对应 AssemblyCopyrightAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Version", model.Version, "Maps AssemblyVersionAttribute. Uses AssemblyVersion, not the NuGet Version. / 对应 AssemblyVersionAttribute。取 AssemblyVersion，不是 NuGet Version。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "InformationalVersion", model.InformationalVersion, "Maps AssemblyInformationalVersionAttribute. / 对应 AssemblyInformationalVersionAttribute。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "FileVersion", model.FileVersion, "Maps AssemblyFileVersionAttribute. / 对应 AssemblyFileVersionAttribute。", csharpLanguageVersion);
             indent--;
             WriteClose(builder, indent);
             indent--;
@@ -75,7 +75,7 @@ internal sealed class CSharpSourceEmitter
             var indent = scope.Indent;
             WriteRoot(builder, indent, model.Visibility);
             indent++;
-            WriteNestedClassOpen(builder, indent, "Constants", "由 Constant / FileConstant MSBuild 项生成的编译期常量。");
+            WriteNestedClassOpen(builder, indent, "Constants", "Compile-time constants generated from Constant / FileConstant MSBuild items. / 由 Constant / FileConstant MSBuild 项生成的编译期常量。");
             indent++;
             EmitChildren(builder, root, indent, model.Visibility);
             indent--;
@@ -88,10 +88,10 @@ internal sealed class CSharpSourceEmitter
     }
 
     public EmitResult EmitProject(ConstantsModel model, int csharpLanguageVersion)
-        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Project", "Project", "由 ProjectProperty 项生成的项目属性常量。", "项目属性");
+        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Project", "Project", "Compile-time constants generated from ProjectProperty items. / 由 ProjectProperty 项生成的项目属性常量。", "Project property {0}. / 项目属性 {0}。");
 
     public EmitResult EmitMetadata(ConstantsModel model, int csharpLanguageVersion)
-        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Metadata", "Metadata", "由 AssemblyMetadata 项生成的程序集元数据常量。", "程序集元数据");
+        => EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Metadata", "Metadata", "Compile-time constants generated from AssemblyMetadata items. / 由 AssemblyMetadata 项生成的程序集元数据常量。", "Assembly metadata {0}. / 程序集元数据 {0}。");
 
     public EmitResult EmitGit(GitModel model, int csharpLanguageVersion)
     {
@@ -103,7 +103,7 @@ internal sealed class CSharpSourceEmitter
         var diagnostics = new List<DiagnosticReport>();
         if (model.Unavailable)
         {
-            diagnostics.Add(Warning("AM0006", "Git 信息不可用", "未能取得 Git 提交号。确认项目位于 Git 仓库内，且 EnableSourceControlManagerQueries 为 true。"));
+            diagnostics.Add(Warning("AM0006", "Git information unavailable / Git 信息不可用", "Could not obtain the git commit hash. Check the project is inside a git repository and EnableSourceControlManagerQueries is true. / 未能取得 Git 提交号。确认项目位于 Git 仓库内，且 EnableSourceControlManagerQueries 为 true。"));
         }
 
         var ns = ResolveNamespace(model.Namespace, diagnostics);
@@ -114,13 +114,13 @@ internal sealed class CSharpSourceEmitter
             var indent = scope.Indent;
             WriteRoot(builder, indent, model.Visibility);
             indent++;
-            WriteNestedClassOpen(builder, indent, "Git", "编译期 Git 信息。设计时构建默认不查询，值为 [pending build]。");
+            WriteNestedClassOpen(builder, indent, "Git", "Compile-time git information. Design-time builds do not query and produce [pending build]. / 编译期 Git 信息。设计时构建默认不查询，值为 [pending build]。");
             indent++;
-            WriteStringMember(builder, indent, model.Visibility, "Commit", model.Commit, "当前提交的完整哈希。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Sha", model.Sha, "RepositorySha 已有值时原样采用。否则是 Commit 的前 9 位；不足 9 位时用全长。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Root", model.Root, "仓库根目录，使用正斜杠，非空时以斜杠结尾。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Url", model.Url, "仓库地址。仅当 PublishRepositoryUrl=true，或已经设置 RepositoryUrl 时填充。", csharpLanguageVersion);
-            WriteStringMember(builder, indent, model.Visibility, "Branch", model.Branch, "当前分支。拉取请求场景为 pr 加编号。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Commit", model.Commit, "Full hash of the current commit. / 当前提交的完整哈希。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Sha", model.Sha, "Uses RepositorySha verbatim when set; otherwise the first 9 characters of Commit, or the full length when shorter. / RepositorySha 已有值时原样采用。否则是 Commit 的前 9 位；不足 9 位时用全长。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Root", model.Root, "Repository root with forward slashes, ending in a slash when non-empty. / 仓库根目录，使用正斜杠，非空时以斜杠结尾。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Url", model.Url, "Repository URL. Only filled when PublishRepositoryUrl=true or RepositoryUrl is already set. / 仓库地址。仅当 PublishRepositoryUrl=true，或已经设置 RepositoryUrl 时填充。", csharpLanguageVersion);
+            WriteStringMember(builder, indent, model.Visibility, "Branch", model.Branch, "Current branch; pull requests produce \"pr\" plus the number. / 当前分支。拉取请求场景为 pr 加编号。", csharpLanguageVersion);
             indent--;
             WriteClose(builder, indent);
             indent--;
@@ -160,7 +160,7 @@ internal sealed class CSharpSourceEmitter
             var indent = scope.Indent;
             WriteRoot(builder, indent, model.Visibility);
             indent++;
-            WriteNestedClassOpen(builder, indent, "Resources", "嵌入资源的强类型访问。Text 按 UTF-8 读取并缓存，GetBytes 与 GetStream 每次重新打开。");
+            WriteNestedClassOpen(builder, indent, "Resources", "Strongly-typed access to embedded resources. Text is read as UTF-8 and cached; GetBytes and GetStream reopen the resource. / 嵌入资源的强类型访问。Text 按 UTF-8 读取并缓存，GetBytes 与 GetStream 每次重新打开。");
             indent++;
             EmitResourceChildren(builder, root, indent);
             if (root.ChildOrder.Count > 0)
@@ -184,10 +184,10 @@ internal sealed class CSharpSourceEmitter
             throw new ArgumentNullException(nameof(model));
         }
 
-        return EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "字符串资源", avoidEnclosingName: !model.NamesAreFinal, namesAreFinal: model.NamesAreFinal);
+        return EmitArea(model, csharpLanguageVersion, "AssemblyMeta.Strings", "Strings", "Compile-time constants generated from neutral .resx files; satellite cultures are not included. / 由中性 resx 生成的编译期字符串常量。卫星文化资源不参与生成。", "String resource {0}. / 字符串资源 {0}。", avoidEnclosingName: !model.NamesAreFinal, namesAreFinal: model.NamesAreFinal);
     }
 
-    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentPrefix, bool avoidEnclosingName = false, bool namesAreFinal = false)
+    private EmitResult EmitArea(ConstantsModel model, int languageVersion, string packageId, string className, string classSummary, string defaultCommentFormat, bool avoidEnclosingName = false, bool namesAreFinal = false)
     {
         if (model is null)
         {
@@ -209,7 +209,7 @@ internal sealed class CSharpSourceEmitter
                 var comment = constant.Comment;
                 if (string.IsNullOrWhiteSpace(comment))
                 {
-                    comment = defaultCommentPrefix + " " + (constant.Name ?? "") + "。";
+                    comment = string.Format(defaultCommentFormat, constant.Name ?? "");
                 }
 
                 AddConstant(root, new ConstantRecord(constant.Name ?? "", constant.Value ?? "", "string", comment ?? ""), model.Visibility, languageVersion, diagnostics, className, avoidEnclosingName, namesAreFinal);
@@ -242,7 +242,7 @@ internal sealed class CSharpSourceEmitter
         {
             if (!namesAreFinal)
             {
-                diagnostics.Add(Error("AM0002", "常量名无效", "存在空的常量名，已忽略。"));
+                diagnostics.Add(Error("AM0002", "Invalid constant name / 常量名无效", "An empty constant name was ignored. / 存在空的常量名，已忽略。"));
             }
 
             return;
@@ -263,7 +263,7 @@ internal sealed class CSharpSourceEmitter
             }
             else if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
             {
-                diagnostics.Add(Error("AM0002", "常量名无效", "常量“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
+                diagnostics.Add(Error("AM0002", "Invalid constant name / 常量名无效", "Constant “" + name + "” contains segment “" + segments[i] + "” that cannot be mapped to a C# identifier and was ignored. / 常量“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
                 return;
             }
             else
@@ -275,7 +275,7 @@ internal sealed class CSharpSourceEmitter
         var typeName = constant.EffectiveType;
         if (!IdentifierSanitizer.IsStringType(typeName) && string.IsNullOrWhiteSpace(constant.Value))
         {
-            diagnostics.Add(Error("AM0003", "常量值无效", "常量“" + name + "”的类型不是 string，但 Value 为空，已忽略。"));
+            diagnostics.Add(Error("AM0003", "Invalid constant value / 常量值无效", "Constant “" + name + "” has a non-string type but an empty Value and was ignored. / 常量“" + name + "”的类型不是 string，但 Value 为空，已忽略。"));
             return;
         }
 
@@ -289,13 +289,13 @@ internal sealed class CSharpSourceEmitter
                 var renamed = identifier + "_";
                 diagnostics.Add(Warning(
                     "AM0008",
-                    "名称与外层类型冲突",
-                    "常量“" + name + "”的片段“" + Bare(identifier) + "”与外层类型同名，已改为“" + Bare(renamed) + "”。"));
+                    "Name conflicts with enclosing type / 名称与外层类型冲突",
+                    "Segment “" + Bare(identifier) + "” of constant “" + name + "” matches the enclosing type and was renamed to “" + Bare(renamed) + "”. / 常量“" + name + "”的片段“" + Bare(identifier) + "”与外层类型同名，已改为“" + Bare(renamed) + "”。"));
                 identifier = renamed;
             }
 
             var isLeaf = i == identifiers.Length - 1;
-            var child = node.TryDescend(identifier, isLeaf, name, "常量", diagnostics, reportDuplicate: !namesAreFinal);
+            var child = node.TryDescend(identifier, isLeaf, name, "constant", "常量", diagnostics, reportDuplicate: !namesAreFinal);
             if (child is null)
             {
                 return;
@@ -375,7 +375,7 @@ internal sealed class CSharpSourceEmitter
 
         if (!IdentifierSanitizer.TryEscapeNamespace(ns!, out var escaped) || string.IsNullOrEmpty(escaped))
         {
-            diagnostics.Add(Warning("AM0005", "命名空间无效", "AssemblyMetaNamespace“" + ns + "”不是有效的命名空间，已回退到全局命名空间。"));
+            diagnostics.Add(Warning("AM0005", "Invalid namespace / 命名空间无效", "AssemblyMetaNamespace “" + ns + "” is not a valid namespace and fell back to the global namespace. / AssemblyMetaNamespace“" + ns + "”不是有效的命名空间，已回退到全局命名空间。"));
             return null;
         }
 
@@ -385,7 +385,7 @@ internal sealed class CSharpSourceEmitter
     private static void WriteHeader(StringBuilder builder, string packageId)
     {
         builder.Append("// <auto-generated/>\n");
-        builder.Append("// 由 ").Append(packageId).Append(" 在编译期生成。请勿手动修改。\n");
+        builder.Append("// Generated by ").Append(packageId).Append(" at compile time. Do not edit manually. / 由 ").Append(packageId).Append(" 在编译期生成，请勿手动修改。\n");
         builder.Append("#nullable enable\n");
         builder.Append("#pragma warning disable\n\n");
     }
@@ -435,7 +435,7 @@ internal sealed class CSharpSourceEmitter
         {
             if (!namesAreFinal)
             {
-                diagnostics.Add(Error("AM0002", "资源名无效", "存在空的资源名或清单名，已忽略。"));
+                diagnostics.Add(Error("AM0002", "Invalid resource name / 资源名无效", "An empty resource or manifest name was ignored. / 存在空的资源名或清单名，已忽略。"));
             }
 
             return;
@@ -456,7 +456,7 @@ internal sealed class CSharpSourceEmitter
             }
             else if (!IdentifierSanitizer.TrySanitize(segments[i], out var identifier))
             {
-                diagnostics.Add(Error("AM0002", "资源名无效", "资源“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
+                diagnostics.Add(Error("AM0002", "Invalid resource name / 资源名无效", "Resource “" + name + "” contains segment “" + segments[i] + "” that cannot be mapped to a C# identifier and was ignored. / 资源“" + name + "”包含无法映射为 C# 标识符的片段“" + segments[i] + "”，已忽略。"));
                 return;
             }
             else
@@ -473,7 +473,7 @@ internal sealed class CSharpSourceEmitter
             var identifier = namesAreFinal
                 ? identifiers[i]
                 : DisambiguateResource(identifiers[i], parent, i == 0, isLeaf, name, diagnostics);
-            var child = node.TryDescend(identifier, isLeaf, name, "资源", diagnostics, reportDuplicate: !namesAreFinal);
+            var child = node.TryDescend(identifier, isLeaf, name, "resource", "资源", diagnostics, reportDuplicate: !namesAreFinal);
             if (child is null)
             {
                 return;
@@ -490,27 +490,31 @@ internal sealed class CSharpSourceEmitter
     private static string DisambiguateResource(string identifier, string parent, bool isRootSegment, bool isLeaf, string path, List<DiagnosticReport> diagnostics)
     {
         var bare = Bare(identifier);
-        string? reason = null;
+        string? reasonEn = null;
+        string? reasonZh = null;
         if (parent.Length > 0 && string.Equals(bare, parent, StringComparison.Ordinal))
         {
-            reason = "与外层类型同名";
+            reasonEn = "matches the enclosing type";
+            reasonZh = "与外层类型同名";
         }
         else if (isRootSegment && string.Equals(bare, "Manifest", StringComparison.Ordinal))
         {
-            reason = "与生成的 Manifest 访问器同名";
+            reasonEn = "matches the generated Manifest accessor";
+            reasonZh = "与生成的 Manifest 访问器同名";
         }
         else if (isLeaf && (bare == "Text" || bare == "GetBytes" || bare == "GetStream"))
         {
-            reason = "与资源成员 Text、GetBytes 或 GetStream 同名";
+            reasonEn = "matches resource member Text, GetBytes or GetStream";
+            reasonZh = "与资源成员 Text、GetBytes 或 GetStream 同名";
         }
 
-        if (reason is null)
+        if (reasonEn is null)
         {
             return identifier;
         }
 
         var renamed = identifier + "_";
-        diagnostics.Add(Warning("AM0008", "资源名已调整", "资源“" + path + "”的片段“" + bare + "”" + reason + "，已改为“" + Bare(renamed) + "”。"));
+        diagnostics.Add(Warning("AM0008", "Adjusted resource name / 资源名已调整", "Segment “" + bare + "” of resource “" + path + "” " + reasonEn + " and was renamed to “" + Bare(renamed) + "”. / 资源“" + path + "”的片段“" + bare + "”" + reasonZh + "，已改为“" + Bare(renamed) + "”。"));
         return renamed;
     }
 
@@ -536,7 +540,7 @@ internal sealed class CSharpSourceEmitter
 
     private static string ResourceSummary(ResourceRecord resource)
     {
-        var manifest = "清单资源名 " + (resource.ManifestName ?? "") + "。";
+        var manifest = "Manifest resource name " + (resource.ManifestName ?? "") + ". / 清单资源名 " + (resource.ManifestName ?? "") + "。";
         if (string.IsNullOrWhiteSpace(resource.Comment))
         {
             return manifest;
@@ -581,7 +585,7 @@ internal sealed class CSharpSourceEmitter
         Line(builder, inner + 1, "var stream = Assembly.GetManifestResourceStream(name);");
         Line(builder, inner + 1, "if (stream == null)");
         Line(builder, inner + 1, "{");
-        Line(builder, inner + 2, "throw new System.InvalidOperationException(\"找不到嵌入资源“\" + name + \"”。\");");
+        Line(builder, inner + 2, "throw new System.InvalidOperationException(\"Embedded resource “\" + name + \"” was not found. / 找不到嵌入资源“\" + name + \"”。\");");
         Line(builder, inner + 1, "}");
         Line(builder, inner + 1, "return stream;");
         Line(builder, inner, "}");
@@ -644,15 +648,16 @@ internal sealed class CSharpSourceEmitter
 
         public List<string> ChildOrder { get; } = new();
 
-        public NameNode<TLeaf>? TryDescend(string identifier, bool isLeaf, string path, string kind, List<DiagnosticReport> diagnostics, bool reportDuplicate = true)
+        public NameNode<TLeaf>? TryDescend(string identifier, bool isLeaf, string path, string kindEn, string kindZh, List<DiagnosticReport> diagnostics, bool reportDuplicate = true)
         {
+            var title = "Duplicate " + kindEn + " name / " + kindZh + "名重复";
             if (!Children.TryGetValue(identifier, out var existing))
             {
                 if (Leaf is not null)
                 {
                     if (reportDuplicate)
                     {
-                        diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
+                        diagnostics.Add(Error("AM0001", title, "The " + kindEn + " “" + path + "” conflicts with existing member “" + LeafPath + "” and was ignored. / " + kindZh + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
                     }
 
                     return null;
@@ -668,7 +673,7 @@ internal sealed class CSharpSourceEmitter
             {
                 if (reportDuplicate)
                 {
-                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员冲突，已忽略。"));
+                    diagnostics.Add(Error("AM0001", title, "The " + kindEn + " “" + path + "” conflicts with an existing member and was ignored. / " + kindZh + "“" + path + "”与已有成员冲突，已忽略。"));
                 }
 
                 return null;
@@ -678,7 +683,7 @@ internal sealed class CSharpSourceEmitter
             {
                 if (reportDuplicate)
                 {
-                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
+                    diagnostics.Add(Error("AM0001", title, "The " + kindEn + " “" + path + "” conflicts with existing member “" + existing.LeafPath + "” and was ignored. / " + kindZh + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
                 }
 
                 return null;

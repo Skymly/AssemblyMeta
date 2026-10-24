@@ -6,7 +6,7 @@
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Project</PackageId>
-    <Description>把 opt-in 的项目属性生成为 AssemblyMeta.Project 编译期常量。</Description>
+    <Description>Generates opt-in project properties as AssemblyMeta.Project compile-time constants. / 把 opt-in 的项目属性生成为 AssemblyMeta.Project 编译期常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;project;constants;msbuild</PackageTags>
   </PropertyGroup>

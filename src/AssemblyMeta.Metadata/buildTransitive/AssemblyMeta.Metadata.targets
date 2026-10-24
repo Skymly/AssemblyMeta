@@ -24,6 +24,6 @@
       Items="@(AssemblyMetadata)">
       <Output TaskParameter="Payload" PropertyName="AssemblyMeta_MetadataPayload" />
     </EncodeMetadata>
-    <Message Importance="Low" Text="AssemblyMeta 已准备 Metadata 载荷。" />
+    <Message Importance="Low" Text="AssemblyMeta prepared the Metadata payload. / AssemblyMeta 已准备 Metadata 载荷。" />
   </Target>
 </Project>

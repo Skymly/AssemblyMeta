@@ -74,8 +74,8 @@ public static class SourceEmission
             {
                 new(
                     "AM0004",
-                    "AssemblyMeta 载荷无效",
-                    "无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。",
+                    "Invalid AssemblyMeta payload / AssemblyMeta 载荷无效",
+                    "Could not parse the " + kind + " compile-time payload. Clean obj and rebuild. / 无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。",
                     DiagnosticSeverityKind.Error),
             },
         };

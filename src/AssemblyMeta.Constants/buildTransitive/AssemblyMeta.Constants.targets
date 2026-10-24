@@ -23,6 +23,6 @@
       FileConstants="@(FileConstant)">
       <Output TaskParameter="Payload" PropertyName="AssemblyMeta_ConstantsPayload" />
     </EncodeConstants>
-    <Message Importance="Low" Text="AssemblyMeta 已准备 Constants 载荷。" />
+    <Message Importance="Low" Text="AssemblyMeta prepared the Constants payload. / AssemblyMeta 已准备 Constants 载荷。" />
   </Target>
 </Project>

@@ -6,7 +6,7 @@
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Git</PackageId>
-    <Description>把 SourceLink 与 CI 环境中的 Git 信息生成为 AssemblyMeta.Git 编译期常量。</Description>
+    <Description>Generates git information from SourceLink and CI environments as AssemblyMeta.Git compile-time constants. / 把 SourceLink 与 CI 环境中的 Git 信息生成为 AssemblyMeta.Git 编译期常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;git;sourcelink;constants</PackageTags>
   </PropertyGroup>

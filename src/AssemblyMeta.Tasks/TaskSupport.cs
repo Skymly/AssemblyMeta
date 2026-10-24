@@ -10,7 +10,7 @@ internal static class TaskSupport
         MemberVisibilityParser.TryParse(visibility, out var parsed, out var recognized);
         if (!recognized)
         {
-            task.Log.LogWarning("无法识别 AssemblyMetaVisibility“{0}”，已使用 internal。", visibility);
+            task.Log.LogWarning("Unrecognized AssemblyMetaVisibility “{0}”; fell back to internal. / 无法识别 AssemblyMetaVisibility“{0}”，已使用 internal。", visibility);
         }
 
         return parsed;

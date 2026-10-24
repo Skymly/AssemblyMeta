@@ -157,7 +157,7 @@ public static class MemberNames
                 continue;
             }
 
-            Accept(root, members, generatorDiagnostics, item.Name, value, type, comment, null, AreaKind.Constants, "常量");
+            Accept(root, members, generatorDiagnostics, item.Name, value, type, comment, null, AreaKind.Constants, "constant", "常量");
         }
 
         foreach (var item in request.FileConstants)
@@ -175,7 +175,7 @@ public static class MemberNames
                 continue;
             }
 
-            Accept(root, members, generatorDiagnostics, record.Name, record.Value, "string", record.Comment, null, AreaKind.Constants, "常量");
+            Accept(root, members, generatorDiagnostics, record.Name, record.Value, "string", record.Comment, null, AreaKind.Constants, "constant", "常量");
         }
     }
 
@@ -185,9 +185,9 @@ public static class MemberNames
         {
             var raw = rawName ?? "";
             var message = string.IsNullOrWhiteSpace(raw)
-                ? "存在空的常量名，已忽略。"
-                : "常量“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。";
-            generatorDiagnostics.Add(Error("AM0002", "常量名无效", message));
+                ? "An empty constant name was ignored. / 存在空的常量名，已忽略。"
+                : "Constant “" + raw + "” contains segment “" + invalidSegment + "” that cannot be mapped to a C# identifier and was ignored. / 常量“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。";
+            generatorDiagnostics.Add(Error("AM0002", "Invalid constant name / 常量名无效", message));
             return;
         }
 
@@ -208,7 +208,7 @@ public static class MemberNames
             var manifest = (item.ManifestName ?? "").Trim();
             if (manifest.Length == 0)
             {
-                taskDiagnostics.Add(Warning("AM0009", "嵌入资源已跳过", "嵌入资源“" + spec + "”没有清单名，已跳过。") with { File = spec });
+                taskDiagnostics.Add(Warning("AM0009", "Embedded resource skipped / 嵌入资源已跳过", "Embedded resource “" + spec + "” has no manifest name and was skipped. / 嵌入资源“" + spec + "”没有清单名，已跳过。") with { File = spec });
                 continue;
             }
 
@@ -230,7 +230,7 @@ public static class MemberNames
                     out var record);
                 if (!created)
                 {
-                    taskDiagnostics.Add(Warning("AM0010", "嵌入资源已跳过", "嵌入资源“" + spec + "”无法映射为标识符，已跳过。") with { File = spec });
+                    taskDiagnostics.Add(Warning("AM0010", "Embedded resource skipped / 嵌入资源已跳过", "Embedded resource “" + spec + "” cannot be mapped to an identifier and was skipped. / 嵌入资源“" + spec + "”无法映射为标识符，已跳过。") with { File = spec });
                     continue;
                 }
 
@@ -238,7 +238,7 @@ public static class MemberNames
                 manifest = record.ManifestName;
             }
 
-            Accept(root, members, generatorDiagnostics, raw, manifest, "string", item.Comment ?? "", manifest, AreaKind.Resources, "资源");
+            Accept(root, members, generatorDiagnostics, raw, manifest, "string", item.Comment ?? "", manifest, AreaKind.Resources, "resource", "资源");
         }
     }
 
@@ -249,7 +249,7 @@ public static class MemberNames
             var spec = item.Spec ?? "";
             if (item.OutsideWithoutLink)
             {
-                taskDiagnostics.Add(Warning("AM0010", "字符串资源已跳过", "resx“" + spec + "”位于项目外且没有 Link，已跳过。") with { File = spec });
+                taskDiagnostics.Add(Warning("AM0010", "String resource skipped / 字符串资源已跳过", "resx “" + spec + "” is outside the project and has no Link, skipped. / resx“" + spec + "”位于项目外且没有 Link，已跳过。") with { File = spec });
                 continue;
             }
 
@@ -262,7 +262,7 @@ public static class MemberNames
             }
             else if (!StringResourceNaming.TryCreate(item.LogicalPath ?? "", item.Key ?? "", value, comment, out var record))
             {
-                taskDiagnostics.Add(Warning("AM0010", "字符串资源已跳过", "已忽略 resx“" + spec + "”中的无效键“" + (item.Key ?? "") + "”。") with { File = spec });
+                taskDiagnostics.Add(Warning("AM0010", "String resource skipped / 字符串资源已跳过", "Invalid key “" + (item.Key ?? "") + "” in resx “" + spec + "” was ignored. / 已忽略 resx“" + spec + "”中的无效键“" + (item.Key ?? "") + "”。") with { File = spec });
                 continue;
             }
             else
@@ -274,10 +274,10 @@ public static class MemberNames
 
             if (string.IsNullOrWhiteSpace(comment))
             {
-                comment = "字符串资源 " + raw + "。";
+                comment = "String resource " + raw + ". / 字符串资源 " + raw + "。";
             }
 
-            Accept(root, members, generatorDiagnostics, raw, value, "string", comment, null, AreaKind.Strings, "常量");
+            Accept(root, members, generatorDiagnostics, raw, value, "string", comment, null, AreaKind.Strings, "constant", "常量");
         }
     }
 
@@ -291,17 +291,18 @@ public static class MemberNames
         string comment,
         string? manifest,
         AreaKind area,
-        string duplicateKind)
+        string duplicateKindEn,
+        string duplicateKindZh)
     {
         if (!TrySegments(rawName, out var identifiers, out var invalidSegment))
         {
             var raw = rawName ?? "";
             var message = string.IsNullOrWhiteSpace(raw)
-                ? (area == AreaKind.Resources ? "存在空的资源名或清单名，已忽略。" : "存在空的常量名，已忽略。")
+                ? (area == AreaKind.Resources ? "An empty resource or manifest name was ignored. / 存在空的资源名或清单名，已忽略。" : "An empty constant name was ignored. / 存在空的常量名，已忽略。")
                 : (area == AreaKind.Resources
-                    ? "资源“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。"
-                    : "常量“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。");
-            var title = area == AreaKind.Resources ? "资源名无效" : "常量名无效";
+                    ? "Resource “" + raw + "” contains segment “" + invalidSegment + "” that cannot be mapped to a C# identifier and was ignored. / 资源“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。"
+                    : "Constant “" + raw + "” contains segment “" + invalidSegment + "” that cannot be mapped to a C# identifier and was ignored. / 常量“" + raw + "”包含无法映射为 C# 标识符的片段“" + invalidSegment + "”，已忽略。");
+            var title = area == AreaKind.Resources ? "Invalid resource name / 资源名无效" : "Invalid constant name / 常量名无效";
             generatorDiagnostics.Add(Error("AM0002", title, message));
             return;
         }
@@ -317,8 +318,8 @@ public static class MemberNames
                 var renamed = identifier + "_";
                 generatorDiagnostics.Add(Warning(
                     "AM0008",
-                    "名称与外层类型冲突",
-                    "常量“" + rawName + "”的片段“" + Bare(identifier) + "”与外层类型同名，已改为“" + Bare(renamed) + "”。"));
+                    "Name conflicts with enclosing type / 名称与外层类型冲突",
+                    "Segment “" + Bare(identifier) + "” of constant “" + rawName + "” matches the enclosing type and was renamed to “" + Bare(renamed) + "”. / 常量“" + rawName + "”的片段“" + Bare(identifier) + "”与外层类型同名，已改为“" + Bare(renamed) + "”。"));
                 identifier = renamed;
                 identifiers[i] = identifier;
             }
@@ -328,7 +329,7 @@ public static class MemberNames
                 identifiers[i] = identifier;
             }
 
-            var child = node.TryDescend(identifier, isLeaf, rawName ?? "", duplicateKind, generatorDiagnostics);
+            var child = node.TryDescend(identifier, isLeaf, rawName ?? "", duplicateKindEn, duplicateKindZh, generatorDiagnostics);
             if (child is null)
             {
                 return;
@@ -353,27 +354,31 @@ public static class MemberNames
     private static string DisambiguateResource(string identifier, string parent, bool isRootSegment, bool isLeaf, string path, List<DiagnosticReport> diagnostics)
     {
         var bare = Bare(identifier);
-        string? reason = null;
+        string? reasonEn = null;
+        string? reasonZh = null;
         if (parent.Length > 0 && string.Equals(bare, parent, StringComparison.Ordinal))
         {
-            reason = "与外层类型同名";
+            reasonEn = "matches the enclosing type";
+            reasonZh = "与外层类型同名";
         }
         else if (isRootSegment && string.Equals(bare, "Manifest", StringComparison.Ordinal))
         {
-            reason = "与生成的 Manifest 访问器同名";
+            reasonEn = "matches the generated Manifest accessor";
+            reasonZh = "与生成的 Manifest 访问器同名";
         }
         else if (isLeaf && (bare == "Text" || bare == "GetBytes" || bare == "GetStream"))
         {
-            reason = "与资源成员 Text、GetBytes 或 GetStream 同名";
+            reasonEn = "matches resource member Text, GetBytes or GetStream";
+            reasonZh = "与资源成员 Text、GetBytes 或 GetStream 同名";
         }
 
-        if (reason is null)
+        if (reasonEn is null)
         {
             return identifier;
         }
 
         var renamed = identifier + "_";
-        diagnostics.Add(Warning("AM0008", "资源名已调整", "资源“" + path + "”的片段“" + bare + "”" + reason + "，已改为“" + Bare(renamed) + "”。"));
+        diagnostics.Add(Warning("AM0008", "Adjusted resource name / 资源名已调整", "Segment “" + bare + "” of resource “" + path + "” " + reasonEn + " and was renamed to “" + Bare(renamed) + "”. / 资源“" + path + "”的片段“" + bare + "”" + reasonZh + "，已改为“" + Bare(renamed) + "”。"));
         return renamed;
     }
 
@@ -426,13 +431,14 @@ public static class MemberNames
 
         public Dictionary<string, Node> Children { get; } = new(StringComparer.Ordinal);
 
-        public Node? TryDescend(string identifier, bool isLeaf, string path, string kind, List<DiagnosticReport> diagnostics)
+        public Node? TryDescend(string identifier, bool isLeaf, string path, string kindEn, string kindZh, List<DiagnosticReport> diagnostics)
         {
+            var title = "Duplicate " + kindEn + " name / " + kindZh + "名重复";
             if (!Children.TryGetValue(identifier, out var existing))
             {
                 if (HasLeaf)
                 {
-                    diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
+                    diagnostics.Add(Error("AM0001", title, "The " + kindEn + " “" + path + "” conflicts with existing member “" + LeafPath + "” and was ignored. / " + kindZh + "“" + path + "”与已有成员“" + LeafPath + "”冲突，已忽略。"));
                     return null;
                 }
 
@@ -443,13 +449,13 @@ public static class MemberNames
 
             if (isLeaf && (existing.HasLeaf || existing.Children.Count > 0))
             {
-                diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员冲突，已忽略。"));
+                diagnostics.Add(Error("AM0001", title, "The " + kindEn + " “" + path + "” conflicts with an existing member and was ignored. / " + kindZh + "“" + path + "”与已有成员冲突，已忽略。"));
                 return null;
             }
 
             if (!isLeaf && existing.HasLeaf)
             {
-                diagnostics.Add(Error("AM0001", kind + "名重复", kind + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
+                diagnostics.Add(Error("AM0001", title, "The " + kindEn + " “" + path + "” conflicts with existing member “" + existing.LeafPath + "” and was ignored. / " + kindZh + "“" + path + "”与已有成员“" + existing.LeafPath + "”冲突，已忽略。"));
                 return null;
             }
 

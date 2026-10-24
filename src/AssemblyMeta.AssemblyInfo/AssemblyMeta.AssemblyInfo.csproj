@@ -6,7 +6,7 @@
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.AssemblyInfo</PackageId>
-    <Description>把 SDK 默认的 9 个程序集特性生成为 AssemblyMeta.Info 编译期常量。</Description>
+    <Description>Generates the 9 SDK default assembly attributes as AssemblyMeta.Info compile-time constants. / 把 SDK 默认的 9 个程序集特性生成为 AssemblyMeta.Info 编译期常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;assembly;constants</PackageTags>
   </PropertyGroup>

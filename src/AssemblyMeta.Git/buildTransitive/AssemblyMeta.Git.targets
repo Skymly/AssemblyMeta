@@ -64,6 +64,6 @@
       Unavailable="$(_AssemblyMetaGitUnavailable)">
       <Output TaskParameter="Payload" PropertyName="AssemblyMeta_GitPayload" />
     </EncodeGit>
-    <Message Importance="Low" Text="AssemblyMeta 已准备 Git 载荷。" />
+    <Message Importance="Low" Text="AssemblyMeta prepared the Git payload. / AssemblyMeta 已准备 Git 载荷。" />
   </Target>
 </Project>

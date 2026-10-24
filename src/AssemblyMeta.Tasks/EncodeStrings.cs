@@ -49,7 +49,7 @@ public sealed class EncodeStrings : Microsoft.Build.Utilities.Task
                 var fullPath = ResolvePath(item.ItemSpec);
                 if (!File.Exists(fullPath))
                 {
-                    TaskSupport.LogCodeError(this, "AM0011", fullPath, "找不到 resx：{0}", fullPath);
+                    TaskSupport.LogCodeError(this, "AM0011", fullPath, "resx not found: {0} / 找不到 resx：{0}", fullPath);
                     continue;
                 }
 
@@ -60,19 +60,19 @@ public sealed class EncodeStrings : Microsoft.Build.Utilities.Task
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
                 {
-                    TaskSupport.LogCodeError(this, "AM0011", fullPath, "无法读取 resx {0}：{1}", fullPath, ex.Message);
+                    TaskSupport.LogCodeError(this, "AM0011", fullPath, "Cannot read resx {0}: {1} / 无法读取 resx {0}：{1}", fullPath, ex.Message);
                     continue;
                 }
 
                 if (!ResxReader.TryRead(xml, out var entries, out var skipped, out var error))
                 {
-                    TaskSupport.LogCodeError(this, "AM0011", fullPath, "无法解析 resx {0}：{1}", fullPath, error ?? "");
+                    TaskSupport.LogCodeError(this, "AM0011", fullPath, "Cannot parse resx {0}: {1} / 无法解析 resx {0}：{1}", fullPath, error ?? "");
                     continue;
                 }
 
                 foreach (var skippedName in skipped)
                 {
-                    TaskSupport.LogCodeWarning(this, "AM0007", fullPath, "已跳过 resx 中的非字符串项“{0}”。", skippedName);
+                    TaskSupport.LogCodeWarning(this, "AM0007", fullPath, "Skipped non-string entry “{0}” in resx. / 已跳过 resx 中的非字符串项“{0}”。", skippedName);
                 }
 
                 foreach (var entry in entries)

@@ -168,7 +168,7 @@ public class PayloadAndEmitterTests
 
         Assert.Equal("Hello", result.Members[0].Name);
         Assert.Equal("Strings_", result.Members[1].Name);
-        Assert.Equal("字符串资源 Strings。", result.Members[1].Comment);
+        Assert.Equal("String resource Strings. / 字符串资源 Strings。", result.Members[1].Comment);
         Assert.Equal(2, result.Members.Count);
         Assert.Contains(result.GeneratorDiagnostics, diagnostic => diagnostic.Id == "AM0008");
         Assert.Contains(result.GeneratorDiagnostics, diagnostic => diagnostic.Id == "AM0001");
@@ -365,12 +365,12 @@ public class PayloadAndEmitterTests
             Assert.Null(rejected.Source);
             var diagnostic = Assert.Single(rejected.Diagnostics);
             Assert.Equal("AM0004", diagnostic.Id);
-            Assert.Equal("AssemblyMeta 载荷无效", diagnostic.Title);
-            Assert.Equal("无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
+            Assert.Equal("Invalid AssemblyMeta payload / AssemblyMeta 载荷无效", diagnostic.Title);
+            Assert.Equal("Could not parse the " + kind + " compile-time payload. Clean obj and rebuild. / 无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", diagnostic.Message);
 
             var empty = SourceEmission.Emit("", kind, 1100);
             Assert.Null(empty.Source);
-            Assert.Equal("无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", Assert.Single(empty.Diagnostics).Message);
+            Assert.Equal("Could not parse the " + kind + " compile-time payload. Clean obj and rebuild. / 无法解析 " + kind + " 编译期载荷。请清理 obj 后重新生成。", Assert.Single(empty.Diagnostics).Message);
 
             if (kind == SourceKind.AssemblyInfo)
             {

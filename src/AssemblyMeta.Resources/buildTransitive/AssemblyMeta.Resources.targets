@@ -23,6 +23,6 @@
       Items="@(EmbeddedResource)">
       <Output TaskParameter="Payload" PropertyName="AssemblyMeta_ResourcesPayload" />
     </EncodeResources>
-    <Message Importance="Low" Text="AssemblyMeta 已准备 Resources 载荷。" />
+    <Message Importance="Low" Text="AssemblyMeta prepared the Resources payload. / AssemblyMeta 已准备 Resources 载荷。" />
   </Target>
 </Project>

@@ -21,7 +21,7 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <NoWarn>$(NoWarn);NU5128;NU5104;NU5125</NoWarn>
     <PackageId>AssemblyMeta</PackageId>
-    <Description>AssemblyMeta 元包，聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources 与 Strings，把程序集元信息在编译期生成为强类型常量。</Description>
+    <Description>Meta-package aggregating AssemblyInfo, Constants, Project, Metadata, Git, Resources and Strings; generates assembly metadata as strongly-typed constants at compile time. / AssemblyMeta 元包，聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources 与 Strings，把程序集元信息在编译期生成为强类型常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>roslyn;source-generator;constants;msbuild</PackageTags>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AssemblyMetaAddPlaceholder</TargetsForTfmSpecificContentInPackage>

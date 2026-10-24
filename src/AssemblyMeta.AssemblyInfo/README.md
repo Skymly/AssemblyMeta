@@ -1,10 +1,20 @@
 # AssemblyMeta.AssemblyInfo
 
-把 SDK 默认生成的 9 个程序集特性，在编译期投影为 `AssemblyMeta.Info` 常量。
+Projects the 9 SDK-generated assembly attributes as `AssemblyMeta.Info` constants at compile time.
 
 ```csharp
 var version = AssemblyMeta.Info.Version;
 ```
+
+Covers `Configuration`, `Company`, `Title`, `Description`, `Product`, `Copyright`, `Version`, `InformationalVersion` and `FileVersion`.
+
+All nine members are always emitted. An empty string stays an empty string — the generator never substitutes the assembly name. Under Microsoft.NET.Sdk the SDK itself fills empty `Authors` with the assembly name, empty `Company` with `Authors`, and empty `AssemblyTitle`/`Product` with the assembly name. Unset `Description` and `Copyright` remain empty strings. Trademarks and other assembly attributes produce no members.
+
+`Version` maps `AssemblyVersion`, not the NuGet `Version`. The nine constants are emitted even with `GenerateAssemblyInfo=false`.
+
+---
+
+把 SDK 默认生成的 9 个程序集特性，在编译期投影为 `AssemblyMeta.Info` 常量。
 
 覆盖：`Configuration`、`Company`、`Title`、`Description`、`Product`、`Copyright`、`Version`、`InformationalVersion`、`FileVersion`。
 

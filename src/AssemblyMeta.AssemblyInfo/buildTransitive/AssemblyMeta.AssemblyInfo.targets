@@ -31,6 +31,6 @@
       FileVersion="$(FileVersion)">
       <Output TaskParameter="Payload" PropertyName="AssemblyMeta_AssemblyInfoPayload" />
     </EncodeAssemblyInfo>
-    <Message Importance="Low" Text="AssemblyMeta 已准备 AssemblyInfo 载荷。" />
+    <Message Importance="Low" Text="AssemblyMeta prepared the AssemblyInfo payload. / AssemblyMeta 已准备 AssemblyInfo 载荷。" />
   </Target>
 </Project>

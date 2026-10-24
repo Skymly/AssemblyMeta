@@ -26,7 +26,7 @@ public sealed class EncodeConstants : Microsoft.Build.Utilities.Task
             MemberVisibilityParser.TryParse(Visibility, out var visibility, out var recognized);
             if (!recognized)
             {
-                Log.LogWarning("无法识别 AssemblyMetaVisibility“{0}”，已使用 internal。", Visibility);
+                Log.LogWarning("Unrecognized AssemblyMetaVisibility “{0}”; fell back to internal. / 无法识别 AssemblyMetaVisibility“{0}”，已使用 internal。", Visibility);
             }
 
             var constants = new List<ConstantNameInput>();
