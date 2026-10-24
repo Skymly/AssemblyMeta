@@ -2,12 +2,12 @@
 
 ## 1.0.0-preview
 
-预发布，不是稳定版。包版本是 `1.0.0-preview`，来源只有 `Directory.Build.props` 里的 `AssemblyMetaPackageVersion`。稳定版 `1.0.0` 还没有推送。NuGet 上还没有这些包。
+预发布，不是稳定版。包版本是 `1.0.0-preview`，来源只有 `Directory.Build.props` 里的 `AssemblyMetaPackageVersion`。八个 `1.0.0-preview` 包已于 2026-10-23 发布到 nuget.org。稳定版 `1.0.0` 还没有推送。
 
 ### 包
 
 - 元包 `AssemblyMeta` 聚合 `AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata`、`AssemblyMeta.Git`、`AssemblyMeta.Resources`、`AssemblyMeta.Strings`。
-- 七个子包包含 `analyzers/dotnet/cs`、`tasks/netstandard2.0`、`buildTransitive`。元包只聚合这七个依赖。
+- 七个子包包含 `analyzers/dotnet/roslyn4.11/cs`、`tasks/netstandard2.0`、`buildTransitive`。元包只聚合这七个依赖。
 - 没有包图标，没有符号包。许可是 MIT。没有赞助检查、维护费或遥测。
 
 ### 生成物
@@ -33,4 +33,4 @@
 
 ## 1.0.0
 
-稳定版尚未推送。NuGet 上还没有这些包。包是 `AssemblyMeta`、`AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata`、`AssemblyMeta.Git`、`AssemblyMeta.Resources`、`AssemblyMeta.Strings`。
+稳定版尚未推送。`1.0.0` 的包在 NuGet 上还不存在，已发布的是 `1.0.0-preview`。包是 `AssemblyMeta`、`AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata`、`AssemblyMeta.Git`、`AssemblyMeta.Resources`、`AssemblyMeta.Strings`。

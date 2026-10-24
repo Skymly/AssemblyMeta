@@ -1,5 +1,7 @@
 # AssemblyMeta
 
+中文 | [English](README.en.md)
+
 对标 [ThisAssembly](https://clarius.org/ThisAssembly)：把项目/程序集元信息在编译期生成为强类型常量（Roslyn Source Generator），消除运行时反射样板代码。
 
 ```csharp
@@ -10,8 +12,8 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
 
 - License：MIT（纯免费，无维护费模式）
-- NuGet：`AssemblyMeta`（Trusted Publishing，标签触发发布）
-- 仓库：`Skymly/AssemblyMeta`（空闲）
+- NuGet：[`AssemblyMeta`](https://www.nuget.org/packages/AssemblyMeta)（Trusted Publishing，标签触发发布）
+- 仓库：[`Skymly/AssemblyMeta`](https://github.com/Skymly/AssemblyMeta)
 
 
 ## 当前进度
@@ -32,15 +34,23 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 
 ## 差异化（vs ThisAssembly）
 
+两边都是 `IIncrementalGenerator`，都只生成 C#，都支持 file-based apps（`#:package`）。下表只列真实差别，其中一些是取舍而不是单向优势。
+
 | 点 | ThisAssembly | AssemblyMeta |
 |---|---|---|
-| 许可 | MIT + OSMF 维护费（SponsorLink 检查 CI，有社区争议） | 纯 MIT |
-| 语言 | 仅 C# | 仅 C# |
-| 生成器 | Source Generator | `IIncrementalGenerator` + 严格缓存 |
-| 构建 | — | deterministic build 友好，支持 file-based apps（`#:package`） |
-| Strings | 运行时按资源取值 | 编译期常量；占位符留在字面量里；卫星 resx 不参与 |
-| public 成员 | get-only 属性 | `static readonly` 字段 |
+| 许可 | 源码 MIT；2.1 起 NuGet 包附 OSMF EULA：安装时须接受，营收用户付维护费；没有技术强制，自行编译不受约束 | SPDX `MIT`；不用接受许可，不收费 |
+| 增量输入 | AdditionalTexts 合并 AnalyzerConfigOptions，再合并 ParseOptions | 只有一条载荷字符串和语言版本；七个生成器都有缓存测试 |
+| 换行 | 生成源码与多行常量值随构建 OS（Windows 上 CRLF，Linux 上 LF） | 固定 `\n`，不同 OS 构建结果一致 |
+| Strings | 运行时按资源取值；支持卫星文化，`{0}` 与具名占位符生成带参方法 | 编译期常量；占位符留在字面量里；卫星 resx 不参与 |
+| 成员形态 | `internal` 一律 `const`；`public` 是 `=>` 属性 | 非常量类型自动 `static readonly`；`public` 时统一是字段，不能写进特性参数 |
 | 命名空间 | 未设置和空白都是全局 | 未设置用 `RootNamespace`；显式空白才是全局 |
+| Git | SDK 9+ 本地分支前缀剥错（`feature/demo` 变成 `s/heads/feature/demo`）；提交号不足 9 位构建失败 | 分支按前缀剥离；短提交号用全长；另认 Azure DevOps 与 Jenkins 的 PR 号 |
+| 文本资源 | 默认文本扩展名含 `.resx`，运行时访问 `Text` 找不到清单资源 | `.resx` 默认不进入 Resources，交给 Strings |
+| 命名健壮性 | C# 关键字不转义；片段冲突抛异常，生成器崩溃 | 关键字加 `@`；冲突与改写报告 `AM0001`/`AM0008` |
+| 诊断 | TA001–TA003 | `AM0001`–`AM0011`，分生成器与 MSBuild 两路 |
+| 发布 | 长期 `NUGET_API_KEY` | OIDC Trusted Publishing，限定推送者 |
+
+AssemblyMeta 的缺口：Strings 没有本地化和带参格式化方法；`AssemblyMeta.Info` 固定九个字段，上游收集全部 `Assembly*` 特性；没有 `Root`/`RootComment`、`Kind`、Vsix；文档与诊断以中文为主。
 
 ## 生成入口
 
@@ -48,18 +58,18 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 - 顶层语句需要 `using` 那个命名空间，才能直接写 `AssemblyMeta.名字`
 - 各子包向该 partial 类挂嵌套类型（`Info`、`Constants`、`Git`、`Project`、`Metadata`、`Resources`、`Strings`）
 
-## 包规划
+## 包
 
-| 包 | 功能 | 优先级 |
-|---|---|---|
-| `AssemblyMeta` | meta 包，汇总全部子包 | P0 |
-| `AssemblyMeta.AssemblyInfo` | AssemblyVersion/InformationalVersion/Title 等特性常量 | P0 |
-| `AssemblyMeta.Constants` | `<Constant>` MSBuild 项 → 强类型常量（含 `FileConstant` 文件常量） | P0 |
-| `AssemblyMeta.Project` | `<ProjectProperty>` opt-in 项目属性常量 | M2 |
-| `AssemblyMeta.Metadata` | `<AssemblyMetadata>` 项常量 | M2 |
-| `AssemblyMeta.Git` | Commit/Sha/Root/Url/Branch（依赖 SourceLink） | M2 |
-| `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） | M3 |
-| `AssemblyMeta.Strings` | resx 资源常量 | M3 |
+| 包 | 功能 |
+|---|---|
+| `AssemblyMeta` | 元包，聚合下列七个子包 |
+| `AssemblyMeta.AssemblyInfo` | 九个程序集信息常量 |
+| `AssemblyMeta.Constants` | `<Constant>` / `<FileConstant>` MSBuild 项 → 强类型常量 |
+| `AssemblyMeta.Project` | `<ProjectProperty>` opt-in 项目属性常量 |
+| `AssemblyMeta.Metadata` | `<AssemblyMetadata>` 项常量 |
+| `AssemblyMeta.Git` | Commit/Sha/Root/Url/Branch（SDK 内置 SourceLink） |
+| `AssemblyMeta.Resources` | `EmbeddedResource` 强类型访问（Text/GetBytes/GetStream） |
+| `AssemblyMeta.Strings` | 中性 resx 编译期常量 |
 
 ## 技术架构
 
@@ -83,12 +93,6 @@ MSBuild props/targets
 - `buildTransitive` 把 props 和 targets 交给写下 `PackageReference` 的项目。分析器停在这一层，不出现在再引用该项目的下一个项目里
 - 每个生成器的增量输入只有一条载荷字符串和 C# 语言版本
 - 只生成 C#。不按语言分派 emitter
-
-## 里程碑
-
-- **M1** 骨架端到端：meta 包 + AssemblyInfo + Constants，`dotnet pack` → 真实 `dotnet build` 验证生成代码
-- **M2** Project + Metadata + Git（已落地）
-- **M3** Resources + Strings + 文档站（已落地）
 
 ## 测试策略
 
