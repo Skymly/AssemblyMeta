@@ -2,7 +2,7 @@
 
 ## 1.0.0-preview
 
-预发布，不是稳定版。包版本是 `1.0.0-preview`，来源只有 `Directory.Build.props` 里的 `AssemblyMetaPackageVersion`。八个 `1.0.0-preview` 包已于 2026-10-23 发布到 nuget.org。稳定版 `1.0.0` 还没有推送。
+预发布。八个 `1.0.0-preview` 包已于 2026-10-23 发布到 nuget.org。稳定版 `1.0.0` 已于 2026-10-24 发布。
 
 ### 包
 
@@ -33,4 +33,9 @@
 
 ## 1.0.0
 
-稳定版尚未推送。`1.0.0` 的包在 NuGet 上还不存在，已发布的是 `1.0.0-preview`。包是 `AssemblyMeta`、`AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata`、`AssemblyMeta.Git`、`AssemblyMeta.Resources`、`AssemblyMeta.Strings`。
+首个稳定版，已于 2026-10-24 发布到 nuget.org。包版本来自 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。元包 `AssemblyMeta` 聚合 `AssemblyMeta.AssemblyInfo`、`AssemblyMeta.Constants`、`AssemblyMeta.Project`、`AssemblyMeta.Metadata`、`AssemblyMeta.Git`、`AssemblyMeta.Resources`、`AssemblyMeta.Strings` 七个子包。
+
+- 行为与 `1.0.0-preview` 相同：生成器在 `analyzers/dotnet/roslyn4.11/cs`，任务在 `tasks/netstandard2.0`，props/targets 在 `buildTransitive`。
+- 包内 DLL 版本与包版本一致，携带嵌入式 PDB 与 SourceLink。
+- 许可 MIT。没有包图标，没有符号包。没有赞助检查、维护费或遥测。
+- 诊断 AM0001–AM0011 为英中双语，仓库提供中英文 README。

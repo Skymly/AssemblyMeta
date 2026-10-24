@@ -26,7 +26,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 
 ## 发布
 
-包版本只有 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送标签 `v` 加这个版本。当前版本是 `1.0.0-preview`，推 `v1.0.0-preview`。
+包版本只有 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送标签 `v` 加这个版本。当前版本是 `1.0.0`，推 `v1.0.0`。
 
 `.github/workflows/release.yml` 在该标签上跑 `./eng/verify.ps1`，再用 NuGet Trusted Publishing 发到 `https://api.nuget.org/v3/index.json`。先推七个子包，再推元包，然后用 `CHANGELOG.md` 对应一节建 GitHub Release。不使用长期 API key，仓库里也不放 NuGet 密钥。只有 `Skymly` 或 `wys0610` 推送的标签会发布；代理代推时认 `github.triggering_actor`。其他人推标签会让这次发布失败，而不是静默跳过。
 

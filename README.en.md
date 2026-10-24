@@ -26,7 +26,7 @@ The behavior of 1.0.0 is recorded in [CHANGELOG.md](CHANGELOG.md). The meta-pack
 
 ## Release
 
-The package version lives only in `Directory.Build.props` as `AssemblyMetaPackageVersion`. Push a tag `v` plus that version. The current version is `1.0.0-preview`, so push `v1.0.0-preview`.
+The package version lives only in `Directory.Build.props` as `AssemblyMetaPackageVersion`. Push a tag `v` plus that version. The current version is `1.0.0`, so push `v1.0.0`.
 
 `.github/workflows/release.yml` runs `./eng/verify.ps1` on that tag, then publishes to `https://api.nuget.org/v3/index.json` via NuGet Trusted Publishing. The seven sub-packages go first, then the meta-package, then a GitHub Release is created from the matching `CHANGELOG.md` section. No long-lived API key is used and no NuGet secret lives in the repo. Only tags pushed by `Skymly` or `wys0610` publish; agent-pushed tags resolve via `github.triggering_actor`. Tags from anyone else fail the release instead of being silently skipped.
 
