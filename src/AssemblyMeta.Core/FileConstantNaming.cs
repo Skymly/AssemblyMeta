@@ -54,7 +54,10 @@ internal static class FileConstantNaming
             return false;
         }
 
-        return Path.IsPathRooted(path) || path!.StartsWith("/", StringComparison.Ordinal) || path!.StartsWith("\\", StringComparison.Ordinal);
+        return Path.IsPathRooted(path)
+            || path!.StartsWith("/", StringComparison.Ordinal)
+            || path!.StartsWith("\\", StringComparison.Ordinal)
+            || (path!.Length >= 2 && char.IsLetter(path[0]) && path[1] == ':');
     }
 
     private static string Normalize(string path)

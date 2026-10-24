@@ -42,6 +42,12 @@ internal static class StringResourceNaming
         }
 
         var culture = name.Substring(dot + 1);
+        // ICU 在 Unix 上连 Designer 这种非 BCP47 名字都能建出文化，先卡形状再交给 GetCultureInfo。
+        if (!HasCultureShape(culture))
+        {
+            return false;
+        }
+
         try
         {
             var info = CultureInfo.GetCultureInfo(culture);
@@ -51,6 +57,59 @@ internal static class StringResourceNaming
         {
             return false;
         }
+    }
+
+    private static bool HasCultureShape(string culture)
+    {
+        var parts = culture.Split('-');
+        if (parts.Length == 0 || parts.Length > 3)
+        {
+            return false;
+        }
+
+        if (parts[0].Length < 2 || parts[0].Length > 3 || !AllLetters(parts[0]))
+        {
+            return false;
+        }
+
+        for (var i = 1; i < parts.Length; i++)
+        {
+            var part = parts[i];
+            var script = part.Length == 4 && AllLetters(part);
+            var region = (part.Length == 2 && AllLetters(part)) || (part.Length == 3 && AllDigits(part));
+            if (!script && !region)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool AllLetters(string value)
+    {
+        foreach (var ch in value)
+        {
+            if (!char.IsLetter(ch))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool AllDigits(string value)
+    {
+        foreach (var ch in value)
+        {
+            if (!char.IsDigit(ch))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static string PrefixFromPath(string? logicalPath)
