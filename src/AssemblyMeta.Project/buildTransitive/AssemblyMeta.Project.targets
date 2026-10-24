@@ -2,6 +2,8 @@
   <Import Project="$(MSBuildThisFileDirectory)AssemblyMeta.Namespace.targets" Condition="'$(_AssemblyMetaNamespaceTargetsImported)' != 'true'" />
   <PropertyGroup>
     <_AssemblyMetaProjectTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaProjectTasksAssembly>
+    <!-- 点名 SourceRevisionId 等 SourceLink 属性时，先跑初始化才有值。 -->
+    <AssemblyMetaProjectInitializeDependsOn Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">InitializeSourceControlInformation</AssemblyMetaProjectInitializeDependsOn>
   </PropertyGroup>
 
   <UsingTask TaskName="AssemblyMeta.Tasks.EncodeProject"
@@ -14,7 +16,7 @@
   -->
   <Target Name="AssemblyMetaPrepareProject"
           BeforeTargets="GenerateMSBuildEditorConfigFileCore"
-          DependsOnTargets="AssemblyMetaResolveNamespace"
+          DependsOnTargets="$(AssemblyMetaProjectInitializeDependsOn);AssemblyMetaResolveNamespace"
           Condition="Exists('$(_AssemblyMetaProjectTasksAssembly)')">
     <ItemGroup>
       <ProjectProperty Include="$(ProjectProperty)" Condition="'$(ProjectProperty)' != ''" />
@@ -33,6 +35,6 @@
       Properties="@(_AssemblyMetaResolvedProjectProperty)">
       <Output TaskParameter="Payload" PropertyName="AssemblyMeta_ProjectPayload" />
     </EncodeProject>
-    <Message Importance="Low" Text="AssemblyMeta 已准备 Project 载荷。" />
+    <Message Importance="Low" Text="AssemblyMeta prepared the Project payload. / AssemblyMeta 已准备 Project 载荷。" />
   </Target>
 </Project>
