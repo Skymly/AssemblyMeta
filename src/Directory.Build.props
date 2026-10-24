@@ -1,0 +1,15 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <!-- src 下所有项目的 DLL 版本跟随包版本：AssemblyVersion/FileVersion 取数字部分，
+         InformationalVersion 是 $(Version)+<提交号>。samples 与 tests 不受影响。 -->
+    <Version>$(AssemblyMetaPackageVersion)</Version>
+    <!-- 打进 nupkg 的 DLL 携带嵌入式 PDB 与 SourceLink（SDK 内置，无 Microsoft.SourceLink.* 引用）。 -->
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>

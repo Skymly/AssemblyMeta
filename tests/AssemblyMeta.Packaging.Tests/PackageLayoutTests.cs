@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Xml.Linq;
 
 namespace AssemblyMeta.Packaging.Tests;
@@ -17,10 +20,14 @@ public class PackageLayoutTests
         "AssemblyMeta.Strings",
     };
 
+    private static readonly Guid SourceLinkKind = new("CC110556-A091-4D38-9FEC-25AB9A351A6A");
+
     [Fact]
     public void Eight_packages_have_the_recorded_layout()
     {
         var root = RepoRoot.Find();
+        var packageVersion = ReadPackageVersion(root);
+        var fileVersion = packageVersion.Split('-')[0] + ".0";
         var output = Path.Combine(Path.GetTempPath(), "am-pack-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(output);
         try
@@ -29,6 +36,7 @@ public class PackageLayoutTests
             Assert.Equal(0, packed.ExitCode);
             Assert.DoesNotMatch(@"(?i)warning [A-Z]{2}\d+", packed.Text);
             Assert.DoesNotMatch(@"[1-9]\d* 个警告", packed.Text);
+            Assert.DoesNotMatch(@"[1-9]\d* Warning", packed.Text);
             Assert.Empty(Directory.GetFiles(output, "*.snupkg"));
 
             var packages = Directory.GetFiles(output, "*.nupkg");
@@ -37,7 +45,7 @@ public class PackageLayoutTests
             foreach (var path in packages)
             {
                 var package = Package.Read(path);
-                Assert.False(string.IsNullOrWhiteSpace(package.Version));
+                Assert.Equal(packageVersion, package.Version);
                 Assert.EndsWith(package.Id + "." + package.Version + ".nupkg", Path.GetFileName(path), StringComparison.Ordinal);
                 byId.Add(package.Id, package);
             }
@@ -52,11 +60,22 @@ public class PackageLayoutTests
             foreach (var id in SubpackageIds)
             {
                 var package = byId[id];
-                Assert.Contains(package.Entries, entry => entry.StartsWith("analyzers/dotnet/cs/", StringComparison.Ordinal));
+                Assert.Contains(package.Entries, entry => entry.StartsWith("analyzers/dotnet/roslyn4.11/cs/", StringComparison.Ordinal));
+                Assert.DoesNotContain(package.Entries, entry => entry.StartsWith("analyzers/dotnet/cs/", StringComparison.Ordinal));
                 Assert.Contains(package.Entries, entry => entry.StartsWith("tasks/netstandard2.0/", StringComparison.Ordinal));
                 Assert.Contains(package.Entries, entry => entry.StartsWith("buildTransitive/", StringComparison.Ordinal));
                 Assert.Contains("buildTransitive/AssemblyMeta.Namespace.props", package.Entries, StringComparer.Ordinal);
                 Assert.Contains("buildTransitive/AssemblyMeta.Namespace.targets", package.Entries, StringComparer.Ordinal);
+
+                var dlls = package.Entries.Where(entry => entry.EndsWith(".dll", StringComparison.Ordinal)).ToArray();
+                Assert.NotEmpty(dlls);
+                using var zip = ZipFile.OpenRead(package.Path);
+                foreach (var dll in dlls)
+                {
+                    var extract = Path.Combine(output, package.Id + "." + dll.Replace('/', '_'));
+                    zip.GetEntry(dll)!.ExtractToFile(extract, overwrite: true);
+                    AssertVersionAndSymbols(extract, packageVersion, fileVersion);
+                }
             }
 
             foreach (var package in byId.Values)
@@ -81,6 +100,38 @@ public class PackageLayoutTests
         }
     }
 
+    private static string ReadPackageVersion(string root)
+    {
+        var doc = XDocument.Load(Path.Combine(root, "Directory.Build.props"));
+        var version = doc.Root!.Elements("PropertyGroup").Elements("AssemblyMetaPackageVersion").Single().Value;
+        Assert.False(string.IsNullOrWhiteSpace(version));
+        return version;
+    }
+
+    private static void AssertVersionAndSymbols(string dllPath, string packageVersion, string fileVersion)
+    {
+        var info = FileVersionInfo.GetVersionInfo(dllPath);
+        Assert.Equal(fileVersion, info.FileVersion);
+        Assert.True(
+            info.ProductVersion?.StartsWith(packageVersion, StringComparison.Ordinal) == true,
+            dllPath + " ProductVersion=" + info.ProductVersion);
+
+        using var stream = File.OpenRead(dllPath);
+        using var pe = new PEReader(stream);
+        Assert.Equal(fileVersion, pe.GetMetadataReader().GetAssemblyDefinition().Version.ToString());
+
+        var embedded = Assert.Single(pe.ReadDebugDirectory().Where(entry => entry.Type == DebugDirectoryEntryType.EmbeddedPortablePdb));
+        using var pdb = pe.ReadEmbeddedPortablePdbDebugDirectoryData(embedded);
+        var pdbReader = pdb.GetMetadataReader();
+        var sourceLink = pdbReader.CustomDebugInformation
+            .Select(handle => pdbReader.GetCustomDebugInformation(handle))
+            .Where(information => pdbReader.GetGuid(information.Kind) == SourceLinkKind)
+            .Select(information => pdbReader.GetBlobBytes(information.Value))
+            .ToArray();
+        var json = Assert.Single(sourceLink);
+        Assert.Contains("\"documents\"", Encoding.UTF8.GetString(json));
+    }
+
     private static (int ExitCode, string Text) Pack(string root, string output)
     {
         var start = new ProcessStartInfo("dotnet", "pack \"" + Path.Combine(root, "AssemblyMeta.slnx") + "\" -c Release -o \"" + output + "\"")
@@ -99,6 +150,7 @@ public class PackageLayoutTests
 
     private sealed class Package
     {
+        public required string Path { get; init; }
         public required string Id { get; init; }
         public required string Version { get; init; }
         public required string Description { get; init; }
@@ -130,6 +182,7 @@ public class PackageLayoutTests
                 .ToArray() ?? Array.Empty<string>();
             return new Package
             {
+                Path = path,
                 Id = Value(metadata, ns, "id"),
                 Version = Value(metadata, ns, "version"),
                 Description = Value(metadata, ns, "description"),
