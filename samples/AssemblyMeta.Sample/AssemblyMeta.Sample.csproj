@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AssemblyMeta" Version="1.0.0" />
+    <PackageReference Include="AssemblyMeta" Version="1.1.0" />
     <Content Include="Content\Docs\License.md" />
     <Content Include="Content\Docs\12. Readme (copy).txt" />
     <Content Include="..\linked\Readme.txt" Link="Included\Readme.txt" />
