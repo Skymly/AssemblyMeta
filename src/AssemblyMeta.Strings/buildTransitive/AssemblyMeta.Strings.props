@@ -2,11 +2,15 @@
   <!-- 未设置的命名空间先记成哨兵，项目文件里的空字符串会盖掉它。 -->
   <Import Project="$(MSBuildThisFileDirectory)AssemblyMeta.Namespace.props" Condition="'$(_AssemblyMetaNamespacePropsImported)' != 'true'" />
   <ItemGroup>
-    <CompilerVisibleProperty Include="AssemblyMeta_StringsPayload" />
-    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="WithCulture" />
-    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="Culture" />
-    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="Link" />
-    <CompilerVisibleItemMetadata Include="EmbeddedResource" MetadataName="AssemblyMetaStrings" />
+    <CompilerVisibleProperty Include="AssemblyMetaNamespace" />
+    <CompilerVisibleProperty Include="AssemblyMetaVisibility" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Link" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="RelativeDir" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Filename" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Extension" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="WithCulture" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Culture" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="AssemblyMetaStrings" />
 
     <PackageReference Update="AssemblyMeta.Strings" PrivateAssets="all" />
     <PackageReference Update="AssemblyMeta" PrivateAssets="all" />

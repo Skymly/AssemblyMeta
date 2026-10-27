@@ -1,4 +1,6 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Threading;
 using AssemblyMeta.AssemblyInfo;
 using AssemblyMeta.Constants;
 using AssemblyMeta.Core;
@@ -10,10 +12,11 @@ using AssemblyMeta.Strings;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 
-var cases = new (string Name, IIncrementalGenerator Generator, string Key, string Payload)[]
+var cases = new (string Name, Func<string?> Run)[]
 {
-    ("AssemblyInfo", new AssemblyInfoGenerator(), AssemblyInfoGenerator.PayloadKey, PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel
+    ("AssemblyInfo", () => Run(new AssemblyInfoGenerator(), AssemblyInfoGenerator.PayloadKey, PayloadCodec.EncodeAssemblyInfo(new AssemblyInfoModel
     {
         Configuration = "Release",
         Company = "Skymly",
@@ -24,36 +27,33 @@ var cases = new (string Name, IIncrementalGenerator Generator, string Key, strin
         Version = "1.0.0.0",
         InformationalVersion = "1.0.0",
         FileVersion = "1.0.0.0",
-    })),
-    ("Constants", new ConstantsGenerator(), ConstantsGenerator.PayloadKey, PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
+    }))),
+    ("Constants", () => Run(new ConstantsGenerator(), ConstantsGenerator.PayloadKey, PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
     {
         new ConstantRecord("Http.TimeoutSeconds", "30", "int", ""),
-    }, Array.Empty<DiagnosticReport>())),
-    ("Project", new ProjectGenerator(), ProjectGenerator.PayloadKey, PayloadCodec.EncodeProject(null, MemberVisibility.Internal, new[]
+    }, Array.Empty<DiagnosticReport>()))),
+    ("Project", () => Run(new ProjectGenerator(), ProjectGenerator.PayloadKey, PayloadCodec.EncodeProject(null, MemberVisibility.Internal, new[]
     {
         new ConstantRecord("AssemblyName", "Bench", "string", ""),
         new ConstantRecord("TargetFrameworkIdentifier", ".NETCoreApp", "string", ""),
-    })),
-    ("Metadata", new MetadataGenerator(), MetadataGenerator.PayloadKey, PayloadCodec.EncodeMetadata(null, MemberVisibility.Internal, new[]
+    }))),
+    ("Metadata", () => Run(new MetadataGenerator(), MetadataGenerator.PayloadKey, PayloadCodec.EncodeMetadata(null, MemberVisibility.Internal, new[]
     {
         new ConstantRecord("RepositoryUrl", "https://github.com/Skymly/AssemblyMeta", "string", ""),
-    })),
-    ("Git", new GitGenerator(), GitGenerator.PayloadKey, PayloadCodec.EncodeGit(new GitModel
+    }))),
+    ("Git", () => Run(new GitGenerator(), GitGenerator.PayloadKey, PayloadCodec.EncodeGit(new GitModel
     {
         Commit = "0123456789abcdef",
         Sha = "012345678",
         Root = "C:/Code/Skymly/AssemblyMeta/",
         Url = "https://github.com/Skymly/AssemblyMeta",
         Branch = "goal/v1",
-    })),
-    ("Resources", new ResourcesGenerator(), ResourcesGenerator.PayloadKey, PayloadCodec.EncodeResources(null, MemberVisibility.Internal, new[]
+    }))),
+    ("Resources", () => Run(new ResourcesGenerator(), ResourcesGenerator.PayloadKey, PayloadCodec.EncodeResources(null, MemberVisibility.Internal, new[]
     {
         new ResourceRecord("Content.Docs.License", "Bench.Content.Docs.License.md", ""),
-    }, Array.Empty<DiagnosticReport>())),
-    ("Strings", new StringsGenerator(), StringsGenerator.PayloadKey, PayloadCodec.EncodeStrings(null, MemberVisibility.Internal, new[]
-    {
-        new ConstantRecord("Hello", "hello {0}", "string", ""),
-    }, Array.Empty<DiagnosticReport>())),
+    }, Array.Empty<DiagnosticReport>()))),
+    ("Strings", () => RunStrings(new StringsGenerator())),
 };
 
 const int warmup = 10;
@@ -63,7 +63,7 @@ Console.WriteLine("name\tus\tbytes\tsourceChars");
 foreach (var item in cases)
 {
     string? source = null;
-    var measured = Measure(() => source = Run(item.Generator, item.Key, item.Payload), warmup, samples);
+    var measured = Measure(() => source = item.Run(), warmup, samples);
     sink += source?.Length ?? 0;
     Console.WriteLine($"{item.Name}\t{measured.Microseconds}\t{measured.Bytes}\t{source?.Length ?? 0}");
 }
@@ -101,56 +101,86 @@ static (long Microseconds, long Bytes) Measure(Action action, int warmupCount, i
     return (times[sampleCount / 2], bytes[sampleCount / 2]);
 }
 
-static string? Run(IIncrementalGenerator generator, string payloadKey, string payload)
-{
-    var compilation = CSharpCompilation.Create(
+static CSharpCompilation BenchCompilation()
+    => CSharpCompilation.Create(
         "AssemblyMeta.Bench.Input",
         new[] { CSharpSyntaxTree.ParseText("namespace Host; internal static class Marker {}") },
         new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+static string? Run(IIncrementalGenerator generator, string payloadKey, string payload)
+{
     GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
     driver = driver
         .WithUpdatedParseOptions(new CSharpParseOptions(LanguageVersion.CSharp12))
-        .WithUpdatedAnalyzerConfigOptions(new BenchOptionsProvider(payloadKey, payload));
-    driver = driver.RunGenerators(compilation);
+        .WithUpdatedAnalyzerConfigOptions(new BenchOptionsProvider(new Dictionary<string, string> { [payloadKey] = payload }));
+    driver = driver.RunGenerators(BenchCompilation());
     var generated = driver.GetRunResult().Results[0].GeneratedSources;
     return generated.Length == 0 ? null : generated[0].SourceText.ToString();
 }
 
+static string? RunStrings(IIncrementalGenerator generator)
+{
+    const string path = @"C:\repo\Strings.resx";
+    var texts = ImmutableArray.Create<AdditionalText>(new BenchAdditionalText(
+        path,
+        "<root><data name=\"Hello\" xml:space=\"preserve\"><value>hello {0}</value></data></root>"));
+    var fileOptions = new Dictionary<string, string>
+    {
+        ["build_metadata.AdditionalFiles.Filename"] = "Strings",
+        ["build_metadata.AdditionalFiles.Extension"] = ".resx",
+    };
+    GeneratorDriver driver = CSharpGeneratorDriver.Create(
+        new[] { generator.AsSourceGenerator() },
+        additionalTexts: texts,
+        parseOptions: new CSharpParseOptions(LanguageVersion.CSharp12),
+        optionsProvider: new BenchOptionsProvider(new Dictionary<string, string>(), fileOptions));
+    driver = driver.RunGenerators(BenchCompilation());
+    var generated = driver.GetRunResult().Results[0].GeneratedSources;
+    return generated.Length == 0 ? null : generated[0].SourceText.ToString();
+}
+
+file sealed class BenchAdditionalText : AdditionalText
+{
+    private readonly SourceText _text;
+
+    public BenchAdditionalText(string path, string text)
+    {
+        Path = path;
+        _text = SourceText.From(text);
+    }
+
+    public override string Path { get; }
+
+    public override SourceText GetText(CancellationToken cancellationToken = default) => _text;
+}
+
 file sealed class BenchOptions : AnalyzerConfigOptions
 {
-    private readonly string _key;
-    private readonly string _payload;
+    private readonly IReadOnlyDictionary<string, string> _values;
 
-    public BenchOptions(string key, string payload)
+    public BenchOptions(IReadOnlyDictionary<string, string> values)
     {
-        _key = key;
-        _payload = payload;
+        _values = values;
     }
 
     public override bool TryGetValue(string key, out string value)
-    {
-        if (string.Equals(key, _key, StringComparison.Ordinal))
-        {
-            value = _payload;
-            return true;
-        }
-
-        value = "";
-        return false;
-    }
+        => _values.TryGetValue(key, out value!);
 }
 
 file sealed class BenchOptionsProvider : AnalyzerConfigOptionsProvider
 {
-    public BenchOptionsProvider(string key, string payload)
+    private readonly AnalyzerConfigOptions _fileOptions;
+
+    public BenchOptionsProvider(IReadOnlyDictionary<string, string> global, IReadOnlyDictionary<string, string>? file = null)
     {
-        GlobalOptions = new BenchOptions(key, payload);
+        GlobalOptions = new BenchOptions(global);
+        _fileOptions = file is null ? GlobalOptions : new BenchOptions(file);
     }
 
     public override AnalyzerConfigOptions GlobalOptions { get; }
 
     public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => GlobalOptions;
 
-    public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => GlobalOptions;
+    public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => _fileOptions;
 }

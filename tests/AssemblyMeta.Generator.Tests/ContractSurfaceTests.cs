@@ -1,4 +1,5 @@
 using AssemblyMeta.Core;
+using AssemblyMeta.Core.Emit;
 
 namespace AssemblyMeta.Generator.Tests;
 
@@ -160,12 +161,16 @@ public class ContractSurfaceTests
         Assert.Contains("public static System.IO.Stream GetStream()", resources.Source);
         Assert.Contains("Demo.Content.Docs.License.md", resources.Source);
 
-        var strings = SourceEmission.Emit(PayloadCodec.EncodeStrings(null, MemberVisibility.Internal, new[]
+        var strings = new CSharpSourceEmitter().EmitStrings(new ConstantsModel
         {
-            new ConstantRecord("Shop.Closed", "Closed today {0}", "string", ""),
-            new ConstantRecord("Errors.NotFound", "missing", "string", ""),
-            new ConstantRecord("Hello", "Hello {who}", "string", ""),
-        }), SourceKind.Strings, 1100);
+            Visibility = MemberVisibility.Internal,
+            Constants = new[]
+            {
+                new ConstantRecord("Shop.Closed", "Closed today {0}", "string", ""),
+                new ConstantRecord("Errors.NotFound", "missing", "string", ""),
+                new ConstantRecord("Hello", "Hello {who}", "string", ""),
+            },
+        }, 1100);
         Assert.NotNull(strings.Source);
         var stringsClass = strings.Source.IndexOf("public static partial class Strings\n", StringComparison.Ordinal);
         Assert.True(stringsClass >= 0);

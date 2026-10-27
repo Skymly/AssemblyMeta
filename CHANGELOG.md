@@ -1,5 +1,10 @@
 # 变更记录
 
+## 未发布
+
+- `AssemblyMeta.Strings` 的 resx 改经 `AdditionalFiles` 由生成器直读：IDE 里保存 resx 后生成物即时刷新。`EncodeStrings` 任务与 `AssemblyMeta_StringsPayload` 移除，Strings 包不再带 `tasks/`。
+- `AM0007`、`AM0010`、`AM0011` 改由生成器报告并带文件位置；`AM0011` 收窄为无法读取或解析。新增 `AM0012`：无法识别的 `AssemblyMetaVisibility`（仅 Strings）。生成物成员不变。
+
 ## 1.0.0-preview
 
 预发布。八个 `1.0.0-preview` 包已于 2026-10-23 发布到 nuget.org。稳定版 `1.0.0` 已于 2026-10-24 发布。

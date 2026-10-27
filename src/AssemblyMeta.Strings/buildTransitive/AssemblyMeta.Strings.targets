@@ -1,28 +1,23 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)AssemblyMeta.Namespace.targets" Condition="'$(_AssemblyMetaNamespaceTargetsImported)' != 'true'" />
-  <PropertyGroup>
-    <_AssemblyMetaStringsTasksAssembly>$(MSBuildThisFileDirectory)../tasks/netstandard2.0/AssemblyMeta.Tasks.dll</_AssemblyMetaStringsTasksAssembly>
-  </PropertyGroup>
-
-  <UsingTask TaskName="AssemblyMeta.Tasks.EncodeStrings"
-             AssemblyFile="$(_AssemblyMetaStringsTasksAssembly)"
-             Condition="Exists('$(_AssemblyMetaStringsTasksAssembly)')" />
 
   <!--
-    AssignCulture 会在 PrepareResourceNames 里给卫星 resx 标上 WithCulture=true。
-    那些文件不进入常量。任务读取的是 resx 源文件，不是编译后的 .resources。
+    resx 作为 AdditionalFiles 交给生成器直读：IDE 里保存 resx 即刷新，不等下一次构建。
+    卫星判定需要 PrepareResourceNames 里 AssignCulture 打上的 WithCulture，所以加项和拷元数据都在这个构建期目标里。
+    卫星过滤与 AssemblyMetaStrings 排除由生成器按 build_metadata.AdditionalFiles.* 逐项判定。
   -->
   <Target Name="AssemblyMetaPrepareStrings"
           BeforeTargets="GenerateMSBuildEditorConfigFileCore"
           DependsOnTargets="PrepareResourceNames;AssemblyMetaResolveNamespace"
-          Condition="Exists('$(_AssemblyMetaStringsTasksAssembly)') and '$(IsCrossTargetingBuild)' != 'true'">
-    <EncodeStrings
-      Namespace="$(AssemblyMetaNamespace)"
-      Visibility="$(AssemblyMetaVisibility)"
-      ProjectDirectory="$(MSBuildProjectDirectory)"
-      Items="@(EmbeddedResource)">
-      <Output TaskParameter="Payload" PropertyName="AssemblyMeta_StringsPayload" />
-    </EncodeStrings>
-    <Message Importance="Low" Text="AssemblyMeta prepared the Strings payload. / AssemblyMeta 已准备 Strings 载荷。" />
+          Condition="'$(IsCrossTargetingBuild)' != 'true'">
+    <ItemGroup>
+      <AdditionalFiles Include="@(EmbeddedResource)"
+                       Condition="'%(EmbeddedResource.Extension)' == '.resx' or $([System.String]::Copy('%(EmbeddedResource.Identity)').ToLowerInvariant().EndsWith('.resx'))"
+                       Link="%(EmbeddedResource.Link)"
+                       WithCulture="%(EmbeddedResource.WithCulture)"
+                       Culture="%(EmbeddedResource.Culture)"
+                       AssemblyMetaStrings="%(EmbeddedResource.AssemblyMetaStrings)" />
+    </ItemGroup>
+    <Message Importance="Low" Text="AssemblyMeta passed resx files to the generator as additional files. / AssemblyMeta 已把 resx 作为 AdditionalFiles 交给生成器。" />
   </Target>
 </Project>

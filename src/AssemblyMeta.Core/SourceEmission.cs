@@ -12,7 +12,6 @@ public enum SourceKind
     Metadata,
     Git,
     Resources,
-    Strings,
 }
 
 /// <summary>把载荷字符串收成 C# 源码和诊断。不读文件，不按语言分派。</summary>
@@ -56,10 +55,6 @@ public static class SourceEmission
             case SourceKind.Resources:
                 return PayloadCodec.TryDecodeResources(payload, out var resources)
                     ? emitter.EmitResources(resources, csharpLanguageVersion)
-                    : Invalid(kind);
-            case SourceKind.Strings:
-                return PayloadCodec.TryDecodeStrings(payload, out var strings)
-                    ? emitter.EmitStrings(strings, csharpLanguageVersion)
                     : Invalid(kind);
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind));

@@ -39,21 +39,6 @@ internal static class TaskSupport
             messageArgs: args);
     }
 
-    public static void LogCodeError(Microsoft.Build.Utilities.Task task, string code, string? file, string message, params object[] args)
-    {
-        task.Log.LogError(
-            subcategory: "",
-            errorCode: code,
-            helpKeyword: "",
-            file: file ?? "",
-            lineNumber: 0,
-            columnNumber: 0,
-            endLineNumber: 0,
-            endColumnNumber: 0,
-            message: message,
-            messageArgs: args);
-    }
-
     public static bool IsTrue(string? value)
         => string.Equals(value?.Trim(), "true", System.StringComparison.OrdinalIgnoreCase);
 

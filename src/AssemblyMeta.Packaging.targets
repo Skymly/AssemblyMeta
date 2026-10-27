@@ -32,7 +32,7 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)AssemblyMeta.Tasks\AssemblyMeta.Tasks.csproj">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)AssemblyMeta.Tasks\AssemblyMeta.Tasks.csproj" Condition="'$(AssemblyMetaIncludeTasks)' != 'false'">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
@@ -54,14 +54,14 @@
            Text="Generator output not found: $(_GeneratorOut)$(AssemblyMetaGeneratorAssembly). Build the matching Generator project first. / 找不到生成器输出：$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)。请先生成对应的 Generator 项目。" />
     <Error Condition="!Exists('$(_GeneratorOut)AssemblyMeta.Core.dll')"
            Text="AssemblyMeta.Core.dll not found: $(_GeneratorOut) / 找不到 AssemblyMeta.Core.dll：$(_GeneratorOut)" />
-    <Error Condition="!Exists('$(_TasksOut)AssemblyMeta.Tasks.dll')"
+    <Error Condition="'$(AssemblyMetaIncludeTasks)' != 'false' and !Exists('$(_TasksOut)AssemblyMeta.Tasks.dll')"
            Text="Task assembly not found: $(_TasksOut)AssemblyMeta.Tasks.dll / 找不到任务程序集：$(_TasksOut)AssemblyMeta.Tasks.dll" />
     <WriteLinesToFile File="$(_Placeholder)" Lines="" Overwrite="true" />
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)" PackagePath="analyzers/dotnet/roslyn4.11/cs" />
       <TfmSpecificPackageFile Include="$(_GeneratorOut)AssemblyMeta.Core.dll" PackagePath="analyzers/dotnet/roslyn4.11/cs" />
-      <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Tasks.dll" PackagePath="tasks/netstandard2.0" />
-      <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Core.dll" PackagePath="tasks/netstandard2.0" />
+      <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Tasks.dll" PackagePath="tasks/netstandard2.0" Condition="'$(AssemblyMetaIncludeTasks)' != 'false'" />
+      <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Core.dll" PackagePath="tasks/netstandard2.0" Condition="'$(AssemblyMetaIncludeTasks)' != 'false'" />
       <TfmSpecificPackageFile Include="$(_Placeholder)" PackagePath="lib/netstandard2.0" />
     </ItemGroup>
   </Target>

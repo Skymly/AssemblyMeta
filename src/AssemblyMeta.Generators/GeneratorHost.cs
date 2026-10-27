@@ -47,7 +47,7 @@ internal static class GeneratorHost
         });
     }
 
-    private static Diagnostic Create(DiagnosticReport report)
+    internal static Diagnostic Create(DiagnosticReport report)
     {
         var severity = report.Severity switch
         {
@@ -63,6 +63,9 @@ internal static class GeneratorHost
             "AssemblyMeta",
             severity,
             isEnabledByDefault: true);
-        return Diagnostic.Create(descriptor, Location.None, report.Message);
+        var location = string.IsNullOrEmpty(report.File)
+            ? Location.None
+            : Location.Create(report.File!, default, default);
+        return Diagnostic.Create(descriptor, location, report.Message);
     }
 }

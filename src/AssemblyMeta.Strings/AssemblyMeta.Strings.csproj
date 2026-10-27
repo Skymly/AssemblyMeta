@@ -5,6 +5,8 @@
     <AssemblyMetaGeneratorAssembly>AssemblyMeta.Strings.Generator.dll</AssemblyMetaGeneratorAssembly>
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
+    <!-- resx 经 AdditionalFiles 直读，不需要 MSBuild 任务。 -->
+    <AssemblyMetaIncludeTasks>false</AssemblyMetaIncludeTasks>
     <PackageId>AssemblyMeta.Strings</PackageId>
     <Description>Generates neutral .resx entries as AssemblyMeta.Strings compile-time string constants. / 把中性 resx 生成为 AssemblyMeta.Strings 编译期字符串常量。</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

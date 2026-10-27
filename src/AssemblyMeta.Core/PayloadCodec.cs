@@ -17,7 +17,6 @@ public static class PayloadCodec
     private static readonly byte[] MetadataMagic = { (byte)'A', (byte)'M', (byte)'M', (byte)'D' };
     private static readonly byte[] GitMagic = { (byte)'A', (byte)'M', (byte)'G', (byte)'T' };
     private static readonly byte[] ResourcesMagic = { (byte)'A', (byte)'M', (byte)'R', (byte)'S' };
-    private static readonly byte[] StringsMagic = { (byte)'A', (byte)'M', (byte)'S', (byte)'T' };
     private const int Version = 1;
 
     public static string EncodeAssemblyInfo(AssemblyInfoModel model)
@@ -276,15 +275,6 @@ public static class PayloadCodec
 
         return EncodeNamed(ResourcesMagic, ns, visibility, constants, namingDiagnostics);
     }
-
-    public static string EncodeStrings(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
-        => EncodeNamed(StringsMagic, ns, visibility, constants);
-
-    public static string EncodeStrings(string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants, IReadOnlyList<DiagnosticReport> namingDiagnostics)
-        => EncodeNamed(StringsMagic, ns, visibility, constants, namingDiagnostics);
-
-    public static bool TryDecodeStrings(string? payload, out ConstantsModel model)
-        => TryDecodeNamed(payload, StringsMagic, out model);
 
     private static string EncodeNamed(byte[] magic, string? ns, MemberVisibility visibility, IReadOnlyList<ConstantRecord> constants)
     {

@@ -1,11 +1,8 @@
-using System.Collections;
 using System.Text;
 using AssemblyMeta.Core;
+using AssemblyMeta.Core.Emit;
 using AssemblyMeta.Resources;
 using AssemblyMeta.Strings;
-using AssemblyMeta.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.CodeAnalysis;
 
 namespace AssemblyMeta.Generator.Tests;
@@ -13,26 +10,26 @@ namespace AssemblyMeta.Generator.Tests;
 public class ResourcesStringsTests
 {
     [Fact]
-    public void Resource_and_string_payloads_roundtrip_and_do_not_cross_decode()
+    public void Resource_and_constant_payloads_roundtrip_and_do_not_cross_decode()
     {
         var resources = PayloadCodec.EncodeResources("Demo.App", MemberVisibility.Public, new[]
         {
             new ResourceRecord("Content.Docs.License", "Demo.App.Content.Docs.License.md", "a;b#c\r\n\"q\""),
         });
-        var strings = PayloadCodec.EncodeStrings(null, MemberVisibility.Internal, new[]
+        var constants = PayloadCodec.EncodeConstants(null, MemberVisibility.Internal, new[]
         {
             new ConstantRecord("Hello", "你好; #\r\n", "string", "问候"),
         });
         Assert.DoesNotContain("#", resources);
-        Assert.DoesNotContain("\n", strings);
+        Assert.DoesNotContain("\n", constants);
         Assert.True(PayloadCodec.TryDecodeResources(resources, out var decodedResources));
         Assert.Equal("Demo.App", decodedResources.Namespace);
         Assert.Equal("a;b#c\r\n\"q\"", decodedResources.Resources[0].Comment);
-        Assert.True(PayloadCodec.TryDecodeStrings(strings, out var decodedStrings));
-        Assert.Null(decodedStrings.Namespace);
-        Assert.Equal("你好; #\r\n", decodedStrings.Constants[0].Value);
-        Assert.False(PayloadCodec.TryDecodeStrings(resources, out _));
-        Assert.False(PayloadCodec.TryDecodeResources(strings, out _));
+        Assert.True(PayloadCodec.TryDecodeConstants(constants, out var decodedConstants));
+        Assert.Null(decodedConstants.Namespace);
+        Assert.Equal("你好; #\r\n", decodedConstants.Constants[0].Value);
+        Assert.False(PayloadCodec.TryDecodeConstants(resources, out _));
+        Assert.False(PayloadCodec.TryDecodeResources(constants, out _));
         Assert.False(PayloadCodec.TryDecodeResources("@@@", out _));
     }
 
@@ -59,46 +56,50 @@ public class ResourcesStringsTests
     }
 
     [Fact]
-    public void Encode_strings_reports_AM0007_and_AM0011()
+    public void Strings_generator_reports_AM0007_and_AM0011_with_file_locations()
     {
-        var directory = Path.Combine(Path.GetTempPath(), "am-resx-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(directory);
-        try
-        {
-            var resxPath = Path.Combine(directory, "Messages.resx");
-            File.WriteAllText(resxPath, """
-                <root>
-                  <data name="Hello" xml:space="preserve"><value>hi</value></data>
-                  <data name="Icon" type="System.Drawing.Icon, System.Drawing"><value>AAAA</value></data>
-                </root>
-                """);
-            var engine = new RecordingBuildEngine();
-            var task = new EncodeStrings
+        const string good = @"C:\repo\Messages.resx";
+        const string broken = @"C:\repo\Broken.resx";
+        var (diagnostics, _) = GeneratorTestHost.Run(
+            new StringsGenerator(),
+            new (string Path, string? Text)[]
             {
-                BuildEngine = engine,
-                ProjectDirectory = directory,
-                Items = new ITaskItem[]
-                {
-                    ResxItem("Messages.resx"),
-                    ResxItem("Missing.resx"),
-                },
-            };
+                (good, """
+                    <root>
+                      <data name="Hello" xml:space="preserve"><value>hi</value></data>
+                      <data name="Icon" type="System.Drawing.Icon, System.Drawing"><value>AAAA</value></data>
+                    </root>
+                    """),
+                (broken, "<root>"),
+            },
+            fileOptions: new Dictionary<string, IReadOnlyDictionary<string, string>>
+            {
+                [good] = ResxOptions(filename: "Messages"),
+                [broken] = ResxOptions(filename: "Broken"),
+            });
 
-            Assert.False(task.Execute());
-            Assert.Contains("AM0007", engine.Codes);
-            Assert.Contains("AM0011", engine.Codes);
-        }
-        finally
-        {
-            Directory.Delete(directory, true);
-        }
+        var am0007 = Assert.Single(diagnostics, diagnostic => diagnostic.Id == "AM0007");
+        Assert.Equal(DiagnosticSeverity.Warning, am0007.Severity);
+        Assert.Equal(good, am0007.Location.GetLineSpan().Path);
+        var am0011 = Assert.Single(diagnostics, diagnostic => diagnostic.Id == "AM0011");
+        Assert.Equal(DiagnosticSeverity.Error, am0011.Severity);
+        Assert.Equal(broken, am0011.Location.GetLineSpan().Path);
     }
 
-    private static TaskItem ResxItem(string spec)
+    [Fact]
+    public void Strings_generator_reports_AM0010_for_resx_outside_without_link()
     {
-        var item = new TaskItem(spec);
-        item.SetMetadata("WithCulture", "false");
-        return item;
+        const string path = @"C:\shared\Away.resx";
+        var (diagnostics, source) = GeneratorTestHost.Run(
+            new StringsGenerator(),
+            new (string Path, string? Text)[] { (path, "<root><data name=\"Hello\"><value>x</value></data></root>") },
+            fileOptions: new Dictionary<string, IReadOnlyDictionary<string, string>>
+            {
+                [path] = ResxOptions(relativeDir: @"C:\shared\", filename: "Away"),
+            });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == "AM0010");
+        Assert.DoesNotContain("Hello", source);
     }
 
     [Fact]
@@ -195,27 +196,24 @@ public class ResourcesStringsTests
     [Fact]
     public void Strings_generator_emits_constants_and_cache_hits()
     {
-        var named = MemberNames.Name(new MemberNameRequest
-        {
-            Area = MemberNameArea.Strings,
-            Strings = new[]
-            {
-                new StringNameInput { Name = "Hello", Value = "你好", Comment = "问候" },
-                new StringNameInput { Name = "Shopping.OutOfStock", Value = "缺货" },
-                new StringNameInput { Name = "Greeting", Value = "你好，{0}" },
-                new StringNameInput { Name = "Strings", Value = "self" },
-                new StringNameInput { Name = "Hello", Value = "other" },
-            },
-        });
-        var records = new ConstantRecord[named.Members.Count];
-        for (var i = 0; i < records.Length; i++)
-        {
-            var member = named.Members[i];
-            records[i] = new ConstantRecord(member.Name, member.Value, member.Type, member.Comment);
-        }
+        const string path = @"C:\repo\Strings.resx";
+        const string xml = """
+            <root>
+              <data name="Hello" xml:space="preserve"><value>你好</value><comment>问候</comment></data>
+              <data name="Shopping_OutOfStock"><value>缺货</value></data>
+              <data name="Greeting"><value>你好，{0}</value></data>
+              <data name="Strings"><value>self</value></data>
+              <data name="Hello"><value>other</value></data>
+            </root>
+            """;
+        var globals = new Dictionary<string, string> { ["build_property.AssemblyMetaNamespace"] = "Demo" };
+        var fileOptions = new Dictionary<string, IReadOnlyDictionary<string, string>> { [path] = ResxOptions() };
 
-        var payload = PayloadCodec.EncodeStrings("Demo", MemberVisibility.Internal, records, named.GeneratorDiagnostics);
-        var (diagnostics, source) = GeneratorTestHost.Run(new StringsGenerator(), StringsGenerator.PayloadKey, payload);
+        var (diagnostics, source) = GeneratorTestHost.Run(
+            new StringsGenerator(),
+            new[] { (path, (string?)xml) },
+            globals,
+            fileOptions);
         Assert.Contains("namespace Demo", source);
         Assert.Contains("问候", source);
         Assert.Contains("public const string Greeting = \"你好，{0}\";", source);
@@ -226,34 +224,124 @@ public class ResourcesStringsTests
         Assert.Equal("缺货", GeneratorTestHost.ExecuteConstant(source!, "Demo.AssemblyMeta+Strings+Shopping", "OutOfStock"));
         Assert.Equal("self", GeneratorTestHost.ExecuteConstant(source!, "Demo.AssemblyMeta+Strings", "Strings_"));
 
-        var changed = PayloadCodec.EncodeStrings("Demo", MemberVisibility.Internal, new[]
+        var changed = new[] { (path, (string?)"<root><data name=\"Hello\"><value>其他</value></data></root>") };
+        GeneratorTestHost.AssertCached(
+            new StringsGenerator(),
+            new[] { (path, (string?)xml) },
+            changed,
+            globals,
+            fileOptions);
+    }
+
+    [Fact]
+    public void Strings_generator_skips_satellite_and_excluded_files()
+    {
+        const string neutral = @"C:\repo\Strings.resx";
+        const string satellite = @"C:\repo\Strings.fr.resx";
+        const string cultured = @"C:\repo\Named.resx";
+        const string excluded = @"C:\repo\Off.resx";
+        const string xml = "<root><data name=\"Hello\"><value>x</value></data></root>";
+        var (_, source) = GeneratorTestHost.Run(
+            new StringsGenerator(),
+            new (string Path, string? Text)[] { (neutral, xml), (satellite, xml), (cultured, xml), (excluded, xml) },
+            fileOptions: new Dictionary<string, IReadOnlyDictionary<string, string>>
+            {
+                [neutral] = ResxOptions(),
+                [satellite] = ResxOptions(filename: "Strings.fr"),
+                [cultured] = ResxOptions(filename: "Named", withCulture: "true"),
+                [excluded] = ResxOptions(filename: "Off", assemblyMetaStrings: "false"),
+            });
+
+        Assert.NotNull(source);
+        Assert.Equal(1, source!.Split(new[] { "= \"x\";" }, StringSplitOptions.None).Length - 1);
+    }
+
+    [Fact]
+    public void Strings_generator_warns_AM0012_on_unrecognized_visibility()
+    {
+        const string path = @"C:\repo\Strings.resx";
+        var (diagnostics, source) = GeneratorTestHost.Run(
+            new StringsGenerator(),
+            new (string Path, string? Text)[] { (path, "<root><data name=\"Hello\"><value>x</value></data></root>") },
+            new Dictionary<string, string> { ["build_property.AssemblyMetaVisibility"] = "bogus" },
+            new Dictionary<string, IReadOnlyDictionary<string, string>> { [path] = ResxOptions() });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == "AM0012");
+        Assert.Contains("public const string Hello", source);
+    }
+
+    [Fact]
+    public void Strings_language_version_invalidates_emission()
+    {
+        const string path = @"C:\repo\Strings.resx";
+        const string xml = "<root><data name=\"Note\"><value>line1&#10;line2</value></data></root>";
+        GeneratorTestHost.AssertLanguageVersionInvalidates(
+            new StringsGenerator(),
+            new[] { (path, (string?)xml) },
+            fileOptions: new Dictionary<string, IReadOnlyDictionary<string, string>> { [path] = ResxOptions() });
+    }
+
+    private static Dictionary<string, string> ResxOptions(
+        string relativeDir = "",
+        string filename = "Strings",
+        string extension = ".resx",
+        string? link = null,
+        string? withCulture = null,
+        string? assemblyMetaStrings = null)
+    {
+        var values = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            new ConstantRecord("Hello", "其他", "", ""),
-        });
-        GeneratorTestHost.AssertCached(new StringsGenerator(), StringsGenerator.PayloadKey, payload, changed);
+            ["build_metadata.AdditionalFiles.RelativeDir"] = relativeDir,
+            ["build_metadata.AdditionalFiles.Filename"] = filename,
+            ["build_metadata.AdditionalFiles.Extension"] = extension,
+        };
+        if (link is not null)
+        {
+            values["build_metadata.AdditionalFiles.Link"] = link;
+        }
+
+        if (withCulture is not null)
+        {
+            values["build_metadata.AdditionalFiles.WithCulture"] = withCulture;
+        }
+
+        if (assemblyMetaStrings is not null)
+        {
+            values["build_metadata.AdditionalFiles.AssemblyMetaStrings"] = assemblyMetaStrings;
+        }
+
+        return values;
     }
 
     [Fact]
     public void Public_strings_are_static_readonly()
     {
-        var emitted = SourceEmission.Emit(PayloadCodec.EncodeStrings(null, MemberVisibility.Public, new[]
+        var emitted = new CSharpSourceEmitter().EmitStrings(new ConstantsModel
         {
-            new ConstantRecord("Hello", "你好", "", ""),
-        }), SourceKind.Strings, 1100);
+            Visibility = MemberVisibility.Public,
+            Constants = new[] { new ConstantRecord("Hello", "你好", "", "") },
+        }, 1100);
         Assert.Contains("public static readonly string Hello = \"你好\";", emitted.Source);
         Assert.DoesNotContain("const string Hello", emitted.Source);
     }
 
-    [Theory]
-    [InlineData("Resources")]
-    [InlineData("Strings")]
-    public void Missing_payload_emits_nothing_for_resources_and_strings(string area)
+    [Fact]
+    public void Missing_payload_emits_nothing_for_resources()
     {
-        IIncrementalGenerator generator = area == "Resources" ? new ResourcesGenerator() : new StringsGenerator();
-        var key = area == "Resources" ? ResourcesGenerator.PayloadKey : StringsGenerator.PayloadKey;
-        var (missingDiagnostics, missing) = GeneratorTestHost.Run(generator, key, null);
+        var (missingDiagnostics, missing) = GeneratorTestHost.Run(new ResourcesGenerator(), ResourcesGenerator.PayloadKey, null);
         Assert.Null(missing);
         Assert.DoesNotContain(missingDiagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Strings_without_resx_emits_empty_class()
+    {
+        var (diagnostics, source) = GeneratorTestHost.Run(
+            new StringsGenerator(),
+            Array.Empty<(string Path, string? Text)>());
+        Assert.NotNull(source);
+        Assert.Contains("partial class Strings", source!);
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
     }
 
     [Fact]
@@ -269,29 +357,3 @@ public class ResourcesStringsTests
     }
 }
 
-file sealed class RecordingBuildEngine : IBuildEngine
-{
-    public List<string> Codes { get; } = new();
-
-    public void LogErrorEvent(BuildErrorEventArgs e) => Codes.Add(e.Code);
-
-    public void LogWarningEvent(BuildWarningEventArgs e) => Codes.Add(e.Code);
-
-    public void LogMessageEvent(BuildMessageEventArgs e)
-    {
-    }
-
-    public void LogCustomEvent(CustomBuildEventArgs e)
-    {
-    }
-
-    public bool ContinueOnError => true;
-
-    public int LineNumberOfTaskNode => 0;
-
-    public int ColumnNumberOfTaskNode => 0;
-
-    public string ProjectFileOfTaskNode => "";
-
-    public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties, IDictionary targetOutputs) => true;
-}

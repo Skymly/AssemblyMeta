@@ -62,7 +62,14 @@ public class PackageLayoutTests
                 var package = byId[id];
                 Assert.Contains(package.Entries, entry => entry.StartsWith("analyzers/dotnet/roslyn4.11/cs/", StringComparison.Ordinal));
                 Assert.DoesNotContain(package.Entries, entry => entry.StartsWith("analyzers/dotnet/cs/", StringComparison.Ordinal));
-                Assert.Contains(package.Entries, entry => entry.StartsWith("tasks/netstandard2.0/", StringComparison.Ordinal));
+                if (id == "AssemblyMeta.Strings")
+                {
+                    Assert.DoesNotContain(package.Entries, entry => entry.StartsWith("tasks/", StringComparison.Ordinal));
+                }
+                else
+                {
+                    Assert.Contains(package.Entries, entry => entry.StartsWith("tasks/netstandard2.0/", StringComparison.Ordinal));
+                }
                 Assert.Contains(package.Entries, entry => entry.StartsWith("buildTransitive/", StringComparison.Ordinal));
                 Assert.Contains("buildTransitive/AssemblyMeta.Namespace.props", package.Entries, StringComparer.Ordinal);
                 Assert.Contains("buildTransitive/AssemblyMeta.Namespace.targets", package.Entries, StringComparer.Ordinal);

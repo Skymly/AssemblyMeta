@@ -18,7 +18,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 
 ## 当前进度
 
-1.0.0 的行为记在 [CHANGELOG.md](CHANGELOG.md)。元包聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings。生成器是 `IIncrementalGenerator`，数据经 Base64 载荷进入 `build_property.*`，不使用 `AdditionalFiles`。文档站用 `dotnet docfx docs/docfx.json` 构建到 `artifacts/docs`。
+1.0.0 的行为记在 [CHANGELOG.md](CHANGELOG.md)。元包聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings。生成器是 `IIncrementalGenerator`。没有文件锚点的数据经 Base64 载荷进入 `build_property.*`；Strings 的 resx 文件内容走 `AdditionalFiles`，IDE 保存即刷新。文档站用 `dotnet docfx docs/docfx.json` 构建到 `artifacts/docs`。
 
 - 架构说明：[docs/架构.md](docs/架构.md)
 - 使用说明：[docs/使用说明.md](docs/使用说明.md)
@@ -39,7 +39,7 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 | 点 | ThisAssembly | AssemblyMeta |
 |---|---|---|
 | 许可 | 源码 MIT；2.1 起 NuGet 包附 OSMF EULA：安装时须接受，营收用户付维护费；没有技术强制，自行编译不受约束 | SPDX `MIT`；不用接受许可，不收费 |
-| 增量输入 | AdditionalTexts 合并 AnalyzerConfigOptions，再合并 ParseOptions | 只有一条载荷字符串和语言版本；七个生成器都有缓存测试 |
+| 增量输入 | AdditionalTexts 合并 AnalyzerConfigOptions，再合并 ParseOptions | 载荷生成器只有一条载荷字符串和语言版本；Strings 是 resx 附加文件加标量；七个生成器都有缓存测试 |
 | 换行 | 生成源码与多行常量值随构建 OS（Windows 上 CRLF，Linux 上 LF） | 固定 `\n`，不同 OS 构建结果一致 |
 | Strings | 运行时按资源取值；支持卫星文化，`{0}` 与具名占位符生成带参方法 | 编译期常量；占位符留在字面量里；卫星 resx 不参与 |
 | 成员形态 | `internal` 一律 `const`；`public` 是 `=>` 属性 | 非常量类型自动 `static readonly`；`public` 时统一是字段，不能写进特性参数 |
@@ -91,7 +91,7 @@ MSBuild props/targets
 要点：
 
 - `buildTransitive` 把 props 和 targets 交给写下 `PackageReference` 的项目。分析器停在这一层，不出现在再引用该项目的下一个项目里
-- 每个生成器的增量输入只有一条载荷字符串和 C# 语言版本
+- 六个载荷生成器的增量输入只有一条载荷字符串和 C# 语言版本；Strings 的输入是 resx `AdditionalFiles` 加两个标量属性
 - 只生成 C#。不按语言分派 emitter
 
 ## 测试策略
