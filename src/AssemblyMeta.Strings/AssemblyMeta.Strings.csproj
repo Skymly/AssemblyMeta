@@ -3,6 +3,9 @@
     <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Strings.Generator\AssemblyMeta.Strings.Generator.csproj</AssemblyMetaGeneratorProject>
     <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Strings.Generator\</AssemblyMetaGeneratorProjectDir>
     <AssemblyMetaGeneratorAssembly>AssemblyMeta.Strings.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaVisualBasicGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Strings.VisualBasic.Generator\AssemblyMeta.Strings.VisualBasic.Generator.csproj</AssemblyMetaVisualBasicGeneratorProject>
+    <AssemblyMetaVisualBasicGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Strings.VisualBasic.Generator\</AssemblyMetaVisualBasicGeneratorProjectDir>
+    <AssemblyMetaVisualBasicGeneratorAssembly>AssemblyMeta.Strings.VisualBasic.Generator.dll</AssemblyMetaVisualBasicGeneratorAssembly>
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <!-- resx 经 AdditionalFiles 直读，不需要 MSBuild 任务。 -->

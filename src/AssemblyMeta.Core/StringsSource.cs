@@ -16,10 +16,23 @@ public sealed record ResxFileInput(
     string? Culture,
     string? AssemblyMetaStrings);
 
-/// <summary>把 resx 文件直接收成 Strings 的 C# 源码和诊断。不读文件，不接 MSBuild 或 Roslyn。</summary>
+/// <summary>把 resx 文件直接收成 Strings 源码和诊断。不读文件，不接 MSBuild 或 Roslyn。</summary>
 public static class StringsSource
 {
     public static EmitResult Emit(string? ns, string? visibility, IReadOnlyList<ResxFileInput> files, int csharpLanguageVersion)
+    {
+        var prepared = Prepare(ns, visibility, files);
+        return Finish(prepared.Diagnostics, new CSharpSourceEmitter().EmitStrings(prepared.Model, csharpLanguageVersion));
+    }
+
+    /// <summary>与 <see cref="Emit"/> 读同一组 resx，写成 Visual Basic。不改 C# 发射。</summary>
+    public static EmitResult EmitVisualBasic(string? ns, string? visibility, IReadOnlyList<ResxFileInput> files)
+    {
+        var prepared = Prepare(ns, visibility, files);
+        return Finish(prepared.Diagnostics, new VisualBasicSourceEmitter().EmitStrings(prepared.Model));
+    }
+
+    private static PreparedStrings Prepare(string? ns, string? visibility, IReadOnlyList<ResxFileInput> files)
     {
         var diagnostics = new List<DiagnosticReport>();
         var inputs = new List<StringNameInput>();
@@ -114,8 +127,10 @@ public static class StringsSource
             records.Add(new ConstantRecord(member.Name, member.Value, member.Type, member.Comment));
         }
 
-        var emitted = new CSharpSourceEmitter().EmitStrings(
-            new ConstantsModel
+        return new PreparedStrings
+        {
+            Diagnostics = diagnostics,
+            Model = new ConstantsModel
             {
                 Namespace = ns,
                 Visibility = parsed,
@@ -123,7 +138,11 @@ public static class StringsSource
                 NamesAreFinal = true,
                 NamingDiagnostics = named.GeneratorDiagnostics,
             },
-            csharpLanguageVersion);
+        };
+    }
+
+    private static EmitResult Finish(List<DiagnosticReport> diagnostics, EmitResult emitted)
+    {
         diagnostics.AddRange(emitted.Diagnostics);
         return new EmitResult { Source = emitted.Source, Diagnostics = diagnostics };
     }
@@ -133,4 +152,11 @@ public static class StringsSource
 
     private static bool IsFalse(string? value)
         => string.Equals(value?.Trim(), "false", StringComparison.OrdinalIgnoreCase);
+
+    private sealed class PreparedStrings
+    {
+        public List<DiagnosticReport> Diagnostics { get; init; } = new();
+
+        public ConstantsModel Model { get; init; } = new();
+    }
 }

@@ -1,5 +1,12 @@
 # 变更记录
 
+## 1.2.0
+
+- Visual Basic 项目引用现有七个子包后，能编译并读到与 C# 相同的七块值。VB 生成器标了 `LanguageNames.VisualBasic`，程序集放在 `analyzers/dotnet/roslyn4.11/vb`，旁边有 `AssemblyMeta.Core.dll`。`analyzers/dotnet/roslyn4.11/cs` 仍只有 C# 生成器。C# 生成源码不变。`SourceEmission.Emit` 仍只服务 C#。
+- 根类型是 `Friend Partial Module AssemblyMeta`（`AssemblyMetaVisibility=public` 时为 `Public`）。嵌套类型是 `Class`，成员 `Shared`。`Const` 与 `Shared ReadOnly` 的选用和 C# 的 `const` / `static readonly` 相同。
+- `Type` 仍写 C# 别名。VB 只映射能做常量的那一组，例如 `int` 写成 `Integer`，`float` 写成 `Single`。映射表以外，或值无法写成 VB 字面量时，报告 `AM0013` 并跳过，不写出非法源码。多行值用 `"line1" & vbLf & "line2"`，与 C# 11+ raw string 一样把回车折成换行。关键字用方括号。只差大小写的名字在 VB 里报告 `AM0001`。
+- 生成文件是 `.g.vb`，不写 `Imports`，在 `Option Strict On` 下编译。不做 F#，也不做 file-based VB。
+
 ## 1.1.0
 
 八个包已于 2026-10-27 发布到 nuget.org。
