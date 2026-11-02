@@ -10,7 +10,7 @@ Generates MSBuild items as strongly-typed `AssemblyMeta.Constants`.
 </ItemGroup>
 ```
 
-- `Type` defaults to `string`. Newlines inside strings use raw string literals on C# 11+.
+- `Type` defaults to `string`. Newlines inside strings use raw string literals on C# 11+. Visual Basic maps the same C# aliases and joins lines with `vbLf`.
 - For non-`string` types, `Value` is emitted verbatim as a C# expression.
 - `FileConstant` values are project-relative forward-slash paths; `Link` wins when present. Files outside the project without a `Link` are skipped.
 
@@ -18,6 +18,6 @@ Generates MSBuild items as strongly-typed `AssemblyMeta.Constants`.
 
 把 MSBuild 项生成为 `AssemblyMeta.Constants` 强类型常量。
 
-- `Type` 缺省为 `string`。字符串里的换行在 C# 11+ 使用 raw string literal。
+- `Type` 缺省为 `string`。字符串里的换行在 C# 11+ 使用 raw string literal。Visual Basic 映射同一组 C# 别名，多行用 `vbLf` 拼接。
 - 非 `string` 类型把 `Value` 当作 C# 表达式原样输出。
 - `FileConstant` 的值是相对项目的正斜杠路径；有 `Link` 时用链接路径。项目外且没有 `Link` 的文件会被跳过。

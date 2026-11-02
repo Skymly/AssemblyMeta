@@ -3,6 +3,9 @@
     <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Git.Generator\AssemblyMeta.Git.Generator.csproj</AssemblyMetaGeneratorProject>
     <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Git.Generator\</AssemblyMetaGeneratorProjectDir>
     <AssemblyMetaGeneratorAssembly>AssemblyMeta.Git.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaVisualBasicGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Git.VisualBasic.Generator\AssemblyMeta.Git.VisualBasic.Generator.csproj</AssemblyMetaVisualBasicGeneratorProject>
+    <AssemblyMetaVisualBasicGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Git.VisualBasic.Generator\</AssemblyMetaVisualBasicGeneratorProjectDir>
+    <AssemblyMetaVisualBasicGeneratorAssembly>AssemblyMeta.Git.VisualBasic.Generator.dll</AssemblyMetaVisualBasicGeneratorAssembly>
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Git</PackageId>

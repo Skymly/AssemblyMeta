@@ -26,7 +26,7 @@ var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 
 ## 发布
 
-包版本只有 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送标签 `v` 加这个版本。当前版本是 `1.1.0`，推 `v1.1.0`。
+包版本只有 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送标签 `v` 加这个版本。当前版本是 `1.2.0`，推 `v1.2.0`。
 
 `.github/workflows/release.yml` 在该标签上跑 `./eng/verify.ps1`，再用 NuGet Trusted Publishing 发到 `https://api.nuget.org/v3/index.json`。先推七个子包，再推元包，然后用 `CHANGELOG.md` 对应一节建 GitHub Release。不使用长期 API key，仓库里也不放 NuGet 密钥。只有 `Skymly` 或 `wys0610` 推送的标签会发布；代理代推时认 `github.triggering_actor`。其他人推标签会让这次发布失败，而不是静默跳过。
 
@@ -34,7 +34,7 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 
 ## 差异化（vs ThisAssembly）
 
-两边都是 `IIncrementalGenerator`，当前都只生成 C#，都支持 file-based apps（`#:package`）。下一版做 VB，路线在 [docs/plans/vb.md](docs/plans/vb.md)。下表只列真实差别，其中一些是取舍而不是单向优势。
+两边都是 `IIncrementalGenerator`。AssemblyMeta 生成 C# 和 Visual Basic；file-based apps（`#:package`）仍只有 C#。下表只列真实差别，其中一些是取舍而不是单向优势。
 
 | 点 | ThisAssembly | AssemblyMeta |
 |---|---|---|
@@ -46,11 +46,11 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 | 命名空间 | 未设置和空白都是全局 | 未设置用 `RootNamespace`；显式空白才是全局 |
 | Git | SDK 9+ 本地分支前缀剥错（`feature/demo` 变成 `s/heads/feature/demo`）；提交号不足 9 位构建失败 | 分支按前缀剥离；短提交号用全长；另认 Azure DevOps 与 Jenkins 的 PR 号 |
 | 文本资源 | 默认文本扩展名含 `.resx`，运行时访问 `Text` 找不到清单资源 | `.resx` 默认不进入 Resources，交给 Strings |
-| 命名健壮性 | C# 关键字不转义；片段冲突抛异常，生成器崩溃 | 关键字加 `@`；冲突与改写报告 `AM0001`/`AM0008` |
-| 诊断 | TA001–TA003 | `AM0001`–`AM0011`，分生成器与 MSBuild 两路 |
+| 命名健壮性 | C# 关键字不转义；片段冲突抛异常，生成器崩溃 | C# 关键字加 `@`；VB 关键字用方括号；VB 里只差大小写报 `AM0001`；冲突与改写报告 `AM0001`/`AM0008` |
+| 诊断 | TA001–TA003 | `AM0001`–`AM0013`，分生成器与 MSBuild 两路 |
 | 发布 | 长期 `NUGET_API_KEY` | OIDC Trusted Publishing，限定推送者 |
 
-仍不做的：Strings 没有本地化和带参格式化方法；`AssemblyMeta.Info` 固定九个字段，上游收集全部 `Assembly*` 特性；没有 `Root`/`RootComment`、`Kind`、Vsix、F#。文档站以中文为主，诊断是英中双语。
+仍不做的：F#；Strings 没有本地化和带参格式化方法；`AssemblyMeta.Info` 固定九个字段，上游收集全部 `Assembly*` 特性；没有 `Root`/`RootComment`、`Kind`、Vsix、F#。文档站以中文为主，诊断是英中双语。
 
 ## 生成入口
 
@@ -92,7 +92,7 @@ MSBuild props/targets
 
 - `buildTransitive` 把 props 和 targets 交给写下 `PackageReference` 的项目。分析器停在这一层，不出现在再引用该项目的下一个项目里
 - 六个载荷生成器的增量输入只有一条载荷字符串和 C# 语言版本；Strings 的输入是 resx `AdditionalFiles` 加两个标量属性
-- 当前只生成 C#。不按语言分派 emitter。VB 见 [docs/plans/vb.md](docs/plans/vb.md)
+- C# 与 Visual Basic 各有一套生成器，不按语言分派。`SourceEmission.Emit` 仍只服务 C#。VB 程序集在 `analyzers/dotnet/roslyn4.11/vb`
 
 ## 测试策略
 

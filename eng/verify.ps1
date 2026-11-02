@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
@@ -103,6 +103,12 @@ Write-Host '== 直接引用 Strings =='
 dotnet build ./samples/Strings/Strings.csproj -c Release
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 dotnet run --project ./samples/Strings/Strings.csproj -c Release --no-build
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+Write-Host '== Visual Basic 样例 =='
+dotnet build ./samples/VisualBasic/VisualBasic.vbproj -c Release
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+dotnet run --project ./samples/VisualBasic/VisualBasic.vbproj -c Release --no-build
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host '== 文档站 =='
