@@ -34,7 +34,7 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 
 ## 差异化（vs ThisAssembly）
 
-两边都是 `IIncrementalGenerator`，都只生成 C#，都支持 file-based apps（`#:package`）。下表只列真实差别，其中一些是取舍而不是单向优势。
+两边都是 `IIncrementalGenerator`，当前都只生成 C#，都支持 file-based apps（`#:package`）。下一版做 VB，路线在 [docs/plans/vb.md](docs/plans/vb.md)。下表只列真实差别，其中一些是取舍而不是单向优势。
 
 | 点 | ThisAssembly | AssemblyMeta |
 |---|---|---|
@@ -50,7 +50,7 @@ nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `rele
 | 诊断 | TA001–TA003 | `AM0001`–`AM0011`，分生成器与 MSBuild 两路 |
 | 发布 | 长期 `NUGET_API_KEY` | OIDC Trusted Publishing，限定推送者 |
 
-AssemblyMeta 的缺口：Strings 没有本地化和带参格式化方法；`AssemblyMeta.Info` 固定九个字段，上游收集全部 `Assembly*` 特性；没有 `Root`/`RootComment`、`Kind`、Vsix；文档与诊断以中文为主。
+仍不做的：Strings 没有本地化和带参格式化方法；`AssemblyMeta.Info` 固定九个字段，上游收集全部 `Assembly*` 特性；没有 `Root`/`RootComment`、`Kind`、Vsix、F#。文档站以中文为主，诊断是英中双语。
 
 ## 生成入口
 
@@ -92,7 +92,7 @@ MSBuild props/targets
 
 - `buildTransitive` 把 props 和 targets 交给写下 `PackageReference` 的项目。分析器停在这一层，不出现在再引用该项目的下一个项目里
 - 六个载荷生成器的增量输入只有一条载荷字符串和 C# 语言版本；Strings 的输入是 resx `AdditionalFiles` 加两个标量属性
-- 只生成 C#。不按语言分派 emitter
+- 当前只生成 C#。不按语言分派 emitter。VB 见 [docs/plans/vb.md](docs/plans/vb.md)
 
 ## 测试策略
 

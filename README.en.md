@@ -34,7 +34,7 @@ The nuget.org policy trusts the `Skymly/AssemblyMeta` repository, the `release.y
 
 ## Differences vs ThisAssembly
 
-Both sides are `IIncrementalGenerator`, emit C# only, and support file-based apps (`#:package`). The table lists real differences only; some are trade-offs rather than one-way advantages.
+Both sides are `IIncrementalGenerator`, currently emit C# only, and support file-based apps (`#:package`). The next AssemblyMeta release adds VB; the route is [docs/plans/vb.md](docs/plans/vb.md). The table lists real differences only; some are trade-offs rather than one-way advantages.
 
 | Aspect | ThisAssembly | AssemblyMeta |
 |---|---|---|
@@ -50,7 +50,7 @@ Both sides are `IIncrementalGenerator`, emit C# only, and support file-based app
 | Diagnostics | TA001–TA003 | `AM0001`–`AM0011`, split between generator and MSBuild paths |
 | Publishing | Long-lived `NUGET_API_KEY` | OIDC Trusted Publishing restricted to named pushers |
 
-AssemblyMeta's gaps: Strings has no localization and no parameterized formatting methods; `AssemblyMeta.Info` is fixed at nine fields while upstream collects every `Assembly*` attribute; no `Root`/`RootComment`, `Kind`, or Vsix; documentation and diagnostics are primarily Chinese (diagnostic messages are bilingual English/Chinese).
+Still out of scope: Strings has no localization and no parameterized formatting methods; `AssemblyMeta.Info` is fixed at nine fields while upstream collects every `Assembly*` attribute; no `Root`/`RootComment`, `Kind`, Vsix, or F#. The docs site stays Chinese; diagnostic messages are bilingual English/Chinese.
 
 ## Entry point
 
@@ -92,7 +92,7 @@ Key points:
 
 - `buildTransitive` hands props and targets to the project with the `PackageReference`. The analyzer stops at that layer and does not flow to projects referencing it
 - Each generator's incremental input is one payload string plus the C# language version
-- C# only; no per-language emitter dispatch
+- Currently C# only; no per-language emitter dispatch. VB is [docs/plans/vb.md](docs/plans/vb.md)
 
 ## Testing
 
