@@ -32,6 +32,10 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
+    <ProjectReference Include="$(AssemblyMetaVisualBasicGeneratorProject)">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
     <ProjectReference Include="$(MSBuildThisFileDirectory)AssemblyMeta.Tasks\AssemblyMeta.Tasks.csproj" Condition="'$(AssemblyMetaIncludeTasks)' != 'false'">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <PrivateAssets>all</PrivateAssets>
@@ -47,6 +51,7 @@
   <Target Name="_AssemblyMetaAddPackageFiles" DependsOnTargets="Build">
     <PropertyGroup>
       <_GeneratorOut>$(AssemblyMetaGeneratorProjectDir)bin\$(Configuration)\netstandard2.0\</_GeneratorOut>
+      <_VbGeneratorOut>$(AssemblyMetaVisualBasicGeneratorProjectDir)bin\$(Configuration)\netstandard2.0\</_VbGeneratorOut>
       <_TasksOut>$(MSBuildThisFileDirectory)AssemblyMeta.Tasks\bin\$(Configuration)\netstandard2.0\</_TasksOut>
       <_Placeholder>$(IntermediateOutputPath)_._</_Placeholder>
     </PropertyGroup>
@@ -54,12 +59,18 @@
            Text="Generator output not found: $(_GeneratorOut)$(AssemblyMetaGeneratorAssembly). Build the matching Generator project first. / 找不到生成器输出：$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)。请先生成对应的 Generator 项目。" />
     <Error Condition="!Exists('$(_GeneratorOut)AssemblyMeta.Core.dll')"
            Text="AssemblyMeta.Core.dll not found: $(_GeneratorOut) / 找不到 AssemblyMeta.Core.dll：$(_GeneratorOut)" />
+    <Error Condition="!Exists('$(_VbGeneratorOut)$(AssemblyMetaVisualBasicGeneratorAssembly)')"
+           Text="Visual Basic generator output not found: $(_VbGeneratorOut)$(AssemblyMetaVisualBasicGeneratorAssembly). Build the matching Visual Basic Generator project first. / 找不到 Visual Basic 生成器输出：$(_VbGeneratorOut)$(AssemblyMetaVisualBasicGeneratorAssembly)。请先生成对应的 Visual Basic Generator 项目。" />
+    <Error Condition="!Exists('$(_VbGeneratorOut)AssemblyMeta.Core.dll')"
+           Text="AssemblyMeta.Core.dll not found: $(_VbGeneratorOut) / 找不到 AssemblyMeta.Core.dll：$(_VbGeneratorOut)" />
     <Error Condition="'$(AssemblyMetaIncludeTasks)' != 'false' and !Exists('$(_TasksOut)AssemblyMeta.Tasks.dll')"
            Text="Task assembly not found: $(_TasksOut)AssemblyMeta.Tasks.dll / 找不到任务程序集：$(_TasksOut)AssemblyMeta.Tasks.dll" />
     <WriteLinesToFile File="$(_Placeholder)" Lines="" Overwrite="true" />
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(_GeneratorOut)$(AssemblyMetaGeneratorAssembly)" PackagePath="analyzers/dotnet/roslyn4.11/cs" />
       <TfmSpecificPackageFile Include="$(_GeneratorOut)AssemblyMeta.Core.dll" PackagePath="analyzers/dotnet/roslyn4.11/cs" />
+      <TfmSpecificPackageFile Include="$(_VbGeneratorOut)$(AssemblyMetaVisualBasicGeneratorAssembly)" PackagePath="analyzers/dotnet/roslyn4.11/vb" />
+      <TfmSpecificPackageFile Include="$(_VbGeneratorOut)AssemblyMeta.Core.dll" PackagePath="analyzers/dotnet/roslyn4.11/vb" />
       <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Tasks.dll" PackagePath="tasks/netstandard2.0" Condition="'$(AssemblyMetaIncludeTasks)' != 'false'" />
       <TfmSpecificPackageFile Include="$(_TasksOut)AssemblyMeta.Core.dll" PackagePath="tasks/netstandard2.0" Condition="'$(AssemblyMetaIncludeTasks)' != 'false'" />
       <TfmSpecificPackageFile Include="$(_Placeholder)" PackagePath="lib/netstandard2.0" />

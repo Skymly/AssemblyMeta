@@ -12,6 +12,8 @@ public class ChangelogTests
         Assert.Contains("## 1.0.0-preview", text);
         Assert.Contains("## 1.0.0", text);
         Assert.Contains("## 1.1.0", text);
+        Assert.Contains("## 1.2.0", text);
+        Assert.Contains("Visual Basic", text);
         Assert.Contains("AssemblyMeta.AssemblyInfo", text);
         Assert.Contains("AssemblyMeta.Constants", text);
         Assert.Contains("AssemblyMeta.Project", text);

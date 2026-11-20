@@ -26,7 +26,7 @@ The behavior of 1.0.0 is recorded in [CHANGELOG.md](CHANGELOG.md). The meta-pack
 
 ## Release
 
-The package version lives only in `Directory.Build.props` as `AssemblyMetaPackageVersion`. Push a tag `v` plus that version. The current version is `1.1.0`, so push `v1.1.0`.
+The package version lives only in `Directory.Build.props` as `AssemblyMetaPackageVersion`. Push a tag `v` plus that version. The current version is `1.2.0`, so push `v1.2.0`.
 
 `.github/workflows/release.yml` runs `./eng/verify.ps1` on that tag, then publishes to `https://api.nuget.org/v3/index.json` via NuGet Trusted Publishing. The seven sub-packages go first, then the meta-package, then a GitHub Release is created from the matching `CHANGELOG.md` section. No long-lived API key is used and no NuGet secret lives in the repo. Only tags pushed by `Skymly` or `wys0610` publish; agent-pushed tags resolve via `github.triggering_actor`. Tags from anyone else fail the release instead of being silently skipped.
 
@@ -34,7 +34,7 @@ The nuget.org policy trusts the `Skymly/AssemblyMeta` repository, the `release.y
 
 ## Differences vs ThisAssembly
 
-Both sides are `IIncrementalGenerator`, currently emit C# only, and support file-based apps (`#:package`). The next AssemblyMeta release adds VB; the route is [docs/plans/vb.md](docs/plans/vb.md). The table lists real differences only; some are trade-offs rather than one-way advantages.
+Both sides are `IIncrementalGenerator`. AssemblyMeta emits C# and Visual Basic; file-based apps (`#:package`) remain C# only. The table lists real differences only; some are trade-offs rather than one-way advantages.
 
 | Aspect | ThisAssembly | AssemblyMeta |
 |---|---|---|
@@ -46,11 +46,11 @@ Both sides are `IIncrementalGenerator`, currently emit C# only, and support file
 | Namespace | Both unset and blank mean global | Unset uses `RootNamespace`; only explicit blank means global |
 | Git | SDK 9+ mis-strips local branch prefixes (`feature/demo` becomes `s/heads/feature/demo`); a commit hash shorter than 9 chars fails the build | Branches stripped by prefix; short hashes keep full length; also recognizes Azure DevOps and Jenkins PR numbers |
 | Text resources | Default text extensions include `.resx`; `Text` then fails to find the manifest resource | `.resx` stays out of Resources by default and goes to Strings |
-| Naming robustness | C# keywords are not escaped; segment conflicts throw and crash the generator | Keywords get `@`; conflicts and renames report `AM0001`/`AM0008` |
-| Diagnostics | TA001–TA003 | `AM0001`–`AM0011`, split between generator and MSBuild paths |
+| Naming robustness | C# keywords are not escaped; segment conflicts throw and crash the generator | C# keywords get `@`; VB keywords use brackets; names that differ only by case report `AM0001` in VB; conflicts and renames report `AM0001`/`AM0008` |
+| Diagnostics | TA001–TA003 | `AM0001`–`AM0013`, split between generator and MSBuild paths |
 | Publishing | Long-lived `NUGET_API_KEY` | OIDC Trusted Publishing restricted to named pushers |
 
-Still out of scope: Strings has no localization and no parameterized formatting methods; `AssemblyMeta.Info` is fixed at nine fields while upstream collects every `Assembly*` attribute; no `Root`/`RootComment`, `Kind`, Vsix, or F#. The docs site stays Chinese; diagnostic messages are bilingual English/Chinese.
+Still out of scope: F#; Strings has no localization and no parameterized formatting methods; `AssemblyMeta.Info` is fixed at nine fields while upstream collects every `Assembly*` attribute; no `Root`/`RootComment`, `Kind`, Vsix, or F#. The docs site stays Chinese; diagnostic messages are bilingual English/Chinese.
 
 ## Entry point
 
@@ -91,8 +91,8 @@ MSBuild props/targets
 Key points:
 
 - `buildTransitive` hands props and targets to the project with the `PackageReference`. The analyzer stops at that layer and does not flow to projects referencing it
-- Each generator's incremental input is one payload string plus the C# language version
-- Currently C# only; no per-language emitter dispatch. VB is [docs/plans/vb.md](docs/plans/vb.md)
+- C# payload generators take one payload string plus the C# language version. VB generators read the same payload and do not read the C# language version
+- C# and Visual Basic each have their own generator. There is no language-dispatch registry. `SourceEmission.Emit` still serves C# only. VB assemblies live in `analyzers/dotnet/roslyn4.11/vb`
 
 ## Testing
 

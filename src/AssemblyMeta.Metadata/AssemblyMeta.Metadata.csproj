@@ -3,6 +3,9 @@
     <AssemblyMetaGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Metadata.Generator\AssemblyMeta.Metadata.Generator.csproj</AssemblyMetaGeneratorProject>
     <AssemblyMetaGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Metadata.Generator\</AssemblyMetaGeneratorProjectDir>
     <AssemblyMetaGeneratorAssembly>AssemblyMeta.Metadata.Generator.dll</AssemblyMetaGeneratorAssembly>
+    <AssemblyMetaVisualBasicGeneratorProject>$(MSBuildThisFileDirectory)..\AssemblyMeta.Metadata.VisualBasic.Generator\AssemblyMeta.Metadata.VisualBasic.Generator.csproj</AssemblyMetaVisualBasicGeneratorProject>
+    <AssemblyMetaVisualBasicGeneratorProjectDir>$(MSBuildThisFileDirectory)..\AssemblyMeta.Metadata.VisualBasic.Generator\</AssemblyMetaVisualBasicGeneratorProjectDir>
+    <AssemblyMetaVisualBasicGeneratorAssembly>AssemblyMeta.Metadata.VisualBasic.Generator.dll</AssemblyMetaVisualBasicGeneratorAssembly>
     <AssemblyMetaBuildTransitiveDir>$(MSBuildThisFileDirectory)</AssemblyMetaBuildTransitiveDir>
     <AssemblyMetaPackageReadme>$(MSBuildThisFileDirectory)README.md</AssemblyMetaPackageReadme>
     <PackageId>AssemblyMeta.Metadata</PackageId>

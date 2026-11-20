@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SampleVb</RootNamespace>
+    <OptionStrict>On</OptionStrict>
+    <OptionExplicit>On</OptionExplicit>
+    <Nullable>disable</Nullable>
+    <AssemblyName>VisualBasic</AssemblyName>
+    <Version>1.2.3-beta.4</Version>
+    <AssemblyVersion>1.2.3.0</AssemblyVersion>
+    <FileVersion>1.2.3.4</FileVersion>
+    <InformationalVersion>1.2.3-beta.4+local</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Company>Skymly</Company>
+    <Product>AssemblyMeta 示例</Product>
+    <AssemblyTitle>AssemblyMeta 示例标题</AssemblyTitle>
+    <Description>第一行&#10;第二行 "引号" ; 分号 # 井号</Description>
+    <Copyright>Copyright © 2026 Skymly</Copyright>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AssemblyMeta" Version="1.2.0" />
+    <EmbeddedResource Include="Content\Note.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Constant Include="Http.TimeoutSeconds" Value="30" Type="int" Comment="请求超时（秒）" />
+    <Constant Include="Banner" Value="line1&#10;line2" />
+    <Constant Include="Weird" Value="a;b#c &quot;q&quot;" />
+    <AssemblyMetadata Include="DemoKey" Value="a;b#c" />
+  </ItemGroup>
+</Project>

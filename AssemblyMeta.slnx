@@ -1,19 +1,26 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/AssemblyMeta.AssemblyInfo.Generator/AssemblyMeta.AssemblyInfo.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.AssemblyInfo.VisualBasic.Generator/AssemblyMeta.AssemblyInfo.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.AssemblyInfo/AssemblyMeta.AssemblyInfo.csproj" />
     <Project Path="src/AssemblyMeta.Constants.Generator/AssemblyMeta.Constants.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Constants.VisualBasic.Generator/AssemblyMeta.Constants.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Constants/AssemblyMeta.Constants.csproj" />
     <Project Path="src/AssemblyMeta.Core/AssemblyMeta.Core.csproj" />
     <Project Path="src/AssemblyMeta.Git.Generator/AssemblyMeta.Git.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Git.VisualBasic.Generator/AssemblyMeta.Git.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Git/AssemblyMeta.Git.csproj" />
     <Project Path="src/AssemblyMeta.Metadata.Generator/AssemblyMeta.Metadata.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Metadata.VisualBasic.Generator/AssemblyMeta.Metadata.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Metadata/AssemblyMeta.Metadata.csproj" />
     <Project Path="src/AssemblyMeta.Project.Generator/AssemblyMeta.Project.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Project.VisualBasic.Generator/AssemblyMeta.Project.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Project/AssemblyMeta.Project.csproj" />
     <Project Path="src/AssemblyMeta.Resources.Generator/AssemblyMeta.Resources.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Resources.VisualBasic.Generator/AssemblyMeta.Resources.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Resources/AssemblyMeta.Resources.csproj" />
     <Project Path="src/AssemblyMeta.Strings.Generator/AssemblyMeta.Strings.Generator.csproj" />
+    <Project Path="src/AssemblyMeta.Strings.VisualBasic.Generator/AssemblyMeta.Strings.VisualBasic.Generator.csproj" />
     <Project Path="src/AssemblyMeta.Strings/AssemblyMeta.Strings.csproj" />
     <Project Path="src/AssemblyMeta.Tasks/AssemblyMeta.Tasks.csproj" />
     <Project Path="src/AssemblyMeta/AssemblyMeta.csproj" />

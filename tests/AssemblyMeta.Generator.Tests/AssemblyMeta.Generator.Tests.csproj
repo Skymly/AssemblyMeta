@@ -10,6 +10,7 @@
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.11.0" />
     <PackageReference Include="Microsoft.Build.Framework" Version="17.11.31" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.31" />
     <Using Include="Xunit" />
@@ -23,6 +24,9 @@
     <ProjectReference Include="..\..\src\AssemblyMeta.Git.Generator\AssemblyMeta.Git.Generator.csproj" />
     <ProjectReference Include="..\..\src\AssemblyMeta.Resources.Generator\AssemblyMeta.Resources.Generator.csproj" />
     <ProjectReference Include="..\..\src\AssemblyMeta.Strings.Generator\AssemblyMeta.Strings.Generator.csproj" />
+    <ProjectReference Include="..\..\src\AssemblyMeta.Constants.VisualBasic.Generator\AssemblyMeta.Constants.VisualBasic.Generator.csproj" />
+    <ProjectReference Include="..\..\src\AssemblyMeta.Strings.VisualBasic.Generator\AssemblyMeta.Strings.VisualBasic.Generator.csproj" />
+    <ProjectReference Include="..\..\src\AssemblyMeta.Resources.VisualBasic.Generator\AssemblyMeta.Resources.VisualBasic.Generator.csproj" />
     <ProjectReference Include="..\..\src\AssemblyMeta.Tasks\AssemblyMeta.Tasks.csproj" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>AssemblyMeta.Core</RootNamespace>
-    <Description>Models, payload encoding and the C# emitter for AssemblyMeta. Emits C# only. / AssemblyMeta 的模型、载荷编码与 C# emitter。只生成 C#。</Description>
+    <Description>Models, payload encoding, and the C# and Visual Basic emitters for AssemblyMeta. Does not reference Roslyn. / AssemblyMeta 的模型、载荷编码与 C#、Visual Basic emitter。不引用 Roslyn。</Description>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="AssemblyMeta.Tasks" />

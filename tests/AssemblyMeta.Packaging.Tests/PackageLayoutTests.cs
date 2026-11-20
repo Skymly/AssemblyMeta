@@ -62,6 +62,23 @@ public class PackageLayoutTests
                 var package = byId[id];
                 Assert.Contains(package.Entries, entry => entry.StartsWith("analyzers/dotnet/roslyn4.11/cs/", StringComparison.Ordinal));
                 Assert.DoesNotContain(package.Entries, entry => entry.StartsWith("analyzers/dotnet/cs/", StringComparison.Ordinal));
+                var csDlls = package.Entries
+                    .Where(entry => entry.StartsWith("analyzers/dotnet/roslyn4.11/cs/", StringComparison.Ordinal) && entry.EndsWith(".dll", StringComparison.Ordinal))
+                    .Select(entry => entry.Substring(entry.LastIndexOf('/') + 1))
+                    .OrderBy(name => name, StringComparer.Ordinal)
+                    .ToArray();
+                Assert.Equal(
+                    new[] { "AssemblyMeta.Core.dll", id + ".Generator.dll" }.OrderBy(name => name, StringComparer.Ordinal),
+                    csDlls);
+                Assert.DoesNotContain(csDlls, name => name.Contains("VisualBasic", StringComparison.Ordinal));
+                var vbDlls = package.Entries
+                    .Where(entry => entry.StartsWith("analyzers/dotnet/roslyn4.11/vb/", StringComparison.Ordinal) && entry.EndsWith(".dll", StringComparison.Ordinal))
+                    .Select(entry => entry.Substring(entry.LastIndexOf('/') + 1))
+                    .OrderBy(name => name, StringComparer.Ordinal)
+                    .ToArray();
+                Assert.Equal(
+                    new[] { "AssemblyMeta.Core.dll", id + ".VisualBasic.Generator.dll" }.OrderBy(name => name, StringComparer.Ordinal),
+                    vbDlls);
                 if (id == "AssemblyMeta.Strings")
                 {
                     Assert.DoesNotContain(package.Entries, entry => entry.StartsWith("tasks/", StringComparison.Ordinal));
