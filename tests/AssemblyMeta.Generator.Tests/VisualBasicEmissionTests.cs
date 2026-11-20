@@ -27,6 +27,8 @@ public class VisualBasicEmissionTests
                 new("Http.TimeoutSeconds", "30", "int", "请求超时（秒）"),
                 new("Ratio", "1.5f", "float", ""),
                 new("Enabled", "true", "bool", ""),
+                new("Mask", "-0x10", "int", ""),
+                new("Thousands", "1_000", "int", ""),
             },
             Array.Empty<DiagnosticReport>());
         var csharpConstants = SourceEmission.Emit(constants, SourceKind.Constants, 1200);
@@ -46,6 +48,8 @@ public class VisualBasicEmissionTests
         Assert.Equal(csharpValues["TimeoutSeconds"], visualBasicValues["TimeoutSeconds"]);
         Assert.Equal(csharpValues["Ratio"], visualBasicValues["Ratio"]);
         Assert.Equal(csharpValues["Enabled"], visualBasicValues["Enabled"]);
+        Assert.Equal(csharpValues["Mask"], visualBasicValues["Mask"]);
+        Assert.Equal(csharpValues["Thousands"], visualBasicValues["Thousands"]);
 
         const string resx = """
             <?xml version="1.0" encoding="utf-8"?>
@@ -86,6 +90,30 @@ public class VisualBasicEmissionTests
         var visualBasicText = ReadResourceText(CompileVisualBasic(visualBasicResource.Source!, "VisualBasicResources", "Sample.Note.txt", bytes));
         Assert.Equal("仅 Resources 包。\n", csharpText);
         Assert.Equal(csharpText, visualBasicText);
+    }
+
+    [Theory]
+    [InlineData("0x1F", "int")]
+    [InlineData("-0X_Fd", "int")]
+    [InlineData("0xFF_FF_FF_FDu", "uint")]
+    [InlineData("0x1FUL", "ulong")]
+    [InlineData("0x1F", "float")]
+    [InlineData("0xFFFFFFFF", "double")]
+    [InlineData("-0x1D", "decimal")]
+    public void Hexadecimal_constants_match_csharp(string value, string type)
+    {
+        var payload = PayloadCodec.EncodeConstants(
+            "Sample",
+            MemberVisibility.Internal,
+            new[] { new ConstantRecord("Value", value, type, "") },
+            Array.Empty<DiagnosticReport>());
+        var csharp = SourceEmission.Emit(payload, SourceKind.Constants, 1200);
+        var visualBasic = VisualBasicSourceEmission.Emit(payload, SourceKind.Constants);
+        Assert.DoesNotContain(visualBasic.Diagnostics, item => item.Severity == DiagnosticSeverityKind.Error);
+
+        var csharpValue = ReadConstants(CompileCSharp(csharp.Source!, "CSharpHexConstant"))["Value"];
+        var visualBasicValue = ReadConstants(CompileVisualBasic(visualBasic.Source!, "VisualBasicHexConstant"))["Value"];
+        Assert.Equal(csharpValue, visualBasicValue);
     }
 
     [Fact]

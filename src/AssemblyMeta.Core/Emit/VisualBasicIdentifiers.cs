@@ -311,12 +311,27 @@ internal static class VisualBasicIdentifiers
             return false;
         }
 
-        var vbBody = body.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? "&H" + body.Substring(2)
-            : body;
-        expression = vbBody + VisualBasicSuffix(type);
+        var signLength = SignLength(body);
+        var isHex = HasHexPrefix(body, signLength);
+        var vbBody = isHex
+            ? body.Substring(0, signLength) + "&H" + body.Substring(signLength + 2).Replace("_", "")
+            : body.Replace("_", "");
+        var vbSuffix = VisualBasicSuffix(type);
+        if (isHex && vbSuffix is ("F" or "R" or "D"))
+        {
+            // VB hexadecimal literals are integral; preserve the unsigned magnitude before widening.
+            vbSuffix = "UL";
+        }
+
+        expression = vbBody + vbSuffix;
         return true;
     }
+
+    private static int SignLength(string value)
+        => value.Length > 0 && (value[0] == '+' || value[0] == '-') ? 1 : 0;
+
+    private static bool HasHexPrefix(string value, int offset)
+        => value.Length - offset >= 2 && value[offset] == '0' && (value[offset + 1] == 'x' || value[offset + 1] == 'X');
 
     private static bool TrySplitNumber(string value, out string body, out string suffix)
     {
@@ -327,7 +342,9 @@ internal static class VisualBasicIdentifiers
             return false;
         }
 
-        var suffixes = new[] { "ul", "lu", "u", "l", "f", "d", "m" };
+        var suffixes = HasHexPrefix(value, SignLength(value))
+            ? new[] { "ul", "lu", "u", "l" }
+            : new[] { "ul", "lu", "u", "l", "f", "d", "m" };
         var end = value.Length;
         foreach (var candidate in suffixes)
         {
@@ -347,23 +364,14 @@ internal static class VisualBasicIdentifiers
 
     private static bool IsNumberBody(string body)
     {
-        if (body.Length == 0)
-        {
-            return false;
-        }
-
-        var index = 0;
-        if (body[0] == '+' || body[0] == '-')
-        {
-            index++;
-        }
+        var index = SignLength(body);
 
         if (index >= body.Length)
         {
             return false;
         }
 
-        if (body.Length - index > 2 && body[index] == '0' && (body[index + 1] == 'x' || body[index + 1] == 'X'))
+        if (HasHexPrefix(body, index))
         {
             return HasDigits(body, index + 2, hex: true);
         }
