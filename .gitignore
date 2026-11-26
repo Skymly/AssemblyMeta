@@ -8,3 +8,8 @@ docs/_site/
 *.user
 *.suo
 TestResults/
+
+# Local scratch directories
+.scratch/
+.Local/
+.Temp/
