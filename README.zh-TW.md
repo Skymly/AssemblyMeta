@@ -2,7 +2,12 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | **繁體中文** | [日本語](README.ja.md)
 
-對標 [ThisAssembly](https://clarius.org/ThisAssembly)：將專案與組件中繼資料在編譯期產生為強型別常數（Roslyn 原始碼產生器），消除執行階段反射的樣板程式碼。
+[![Verify](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml/badge.svg)](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml)
+[![NuGet](https://img.shields.io/nuget/v/AssemblyMeta?label=NuGet&logo=nuget)](https://www.nuget.org/packages/AssemblyMeta)
+[![GitHub Release](https://img.shields.io/github/v/release/Skymly/AssemblyMeta?label=Release)](https://github.com/Skymly/AssemblyMeta/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+對標 [ThisAssembly](https://clarius.org/ThisAssembly)：基於 Roslyn 增量原始碼產生器，將 MSBuild、組件、Git、資源與字串中繼資料在編譯期產生為強型別 C# 與 Visual Basic 常數——MIT 授權，無執行階段反射樣板程式碼。
 
 ```csharp
 // 取代 Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyVersionAttribute>()...
@@ -11,25 +16,22 @@ var version = AssemblyMeta.Info.Version;
 var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
 
-- 授權條款：MIT（純免費，無維護費模式）
-- NuGet：[`AssemblyMeta`](https://www.nuget.org/packages/AssemblyMeta)（Trusted Publishing，標籤觸發發布）
-- 儲存庫：[`Skymly/AssemblyMeta`](https://github.com/Skymly/AssemblyMeta)
+## 安裝
 
-## 目前進度
+安裝中繼套件（或依需求單獨安裝下方子套件）：
 
-1.0.0 的行為記錄於 [CHANGELOG.md](CHANGELOG.md)。中繼套件聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources 與 Strings。產生器為 `IIncrementalGenerator`。沒有檔案錨點的資料透過 Base64 承載進入 `build_property.*`；Strings 的 `.resx` 檔案內容走 `AdditionalFiles`，IDE 存檔即即時更新。文件網站使用 `dotnet docfx docs/docfx.json` 建置至 `artifacts/docs`。
+```bash
+dotnet add package AssemblyMeta
+```
+
+## 概觀
+
+`AssemblyMeta` 中繼套件彙整七個 `IIncrementalGenerator` 子套件（`AssemblyInfo`、`Constants`、`Project`、`Metadata`、`Git`、`Resources`、`Strings`），同時支援 C# 與 Visual Basic。沒有檔案錨點的資料透過 Base64 承載進入 `build_property.*`；`Strings` 的 `.resx` 檔案走 `AdditionalFiles`，IDE 存檔即即時更新。
 
 - 架構說明（簡體中文）：[docs/架构.md](docs/架构.md)
 - 使用說明（簡體中文）：[docs/使用说明.md](docs/使用说明.md)
 - 端對端驗證：`./eng/verify.ps1`
-
-## 發布
-
-套件版本僅定義於 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送 `v` 加上該版本號的標籤即可觸發發布；目前版本為 `1.2.0`，故推送 `v1.2.0`。
-
-`.github/workflows/release.yml` 會在該標籤上執行 `./eng/verify.ps1`，再透過 NuGet Trusted Publishing 發布至 `https://api.nuget.org/v3/index.json`。依序先推七個子套件，再推中繼套件，最後以 `CHANGELOG.md` 對應章節建立 GitHub Release。不使用長期 API key，儲存庫內亦不存放 NuGet 密鑰。僅接受由 `Skymly` 或 `wys0610` 推送的標籤；代理代推時會解析 `github.triggering_actor`。其他人推送的標籤會使該次發布失敗，而非靜默略過。
-
-nuget.org 原則信任 `Skymly/AssemblyMeta` 儲存庫、`release.yml` 工作流程檔名、套件擁有者 `Skym` 與套件名稱 `AssemblyMeta*`。此 job 不可加入 GitHub Environment（原則未設定）。原則建立後 7 天內須完成一次成功發布才會永久生效。
+- 變更紀錄：[CHANGELOG.md](CHANGELOG.md) · 文件網站建置：`dotnet docfx docs/docfx.json` → `artifacts/docs`
 
 ## 差異化（vs ThisAssembly）
 
@@ -98,7 +100,8 @@ MSBuild props/targets
 - 單元測試：Roslyn 編譯斷言（由 `Microsoft.CodeAnalysis.CSharp` 驅動產生器並驗證輸出語法樹）
 - 端對端測試：`samples/` 範例專案執行真實 `dotnet build`，斷言編譯產物中的常數值
 
-## 參考資料
+## 發布與參考資料
 
+- 發布由標籤觸發，並透過 NuGet Trusted Publishing（OIDC）自動推送；請參閱 [docs/releasing.md](docs/releasing.md)。
 - ThisAssembly 原始碼：[devlooped/ThisAssembly](https://github.com/devlooped/ThisAssembly)
 - 關鍵 MSBuild 機制：`CompilerVisibleProperty`、`CompilerVisibleItemMetadata`、`EnableSourceControlManagerQueries`

@@ -2,7 +2,12 @@
 
 **English** | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md)
 
-A take on [ThisAssembly](https://clarius.org/ThisAssembly): generates project/assembly metadata as strongly-typed constants at compile time (Roslyn Source Generator), removing runtime reflection boilerplate.
+[![Verify](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml/badge.svg)](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml)
+[![NuGet](https://img.shields.io/nuget/v/AssemblyMeta?label=NuGet&logo=nuget)](https://www.nuget.org/packages/AssemblyMeta)
+[![GitHub Release](https://img.shields.io/github/v/release/Skymly/AssemblyMeta?label=Release)](https://github.com/Skymly/AssemblyMeta/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+A take on [ThisAssembly](https://clarius.org/ThisAssembly): Roslyn incremental source generators that emit MSBuild, assembly, Git, resource, and string metadata as strongly-typed C# and Visual Basic compile-time constants — MIT-licensed with zero runtime reflection boilerplate.
 
 ```csharp
 // Instead of Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyVersionAttribute>()...
@@ -11,25 +16,22 @@ var version = AssemblyMeta.Info.Version;
 var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
 
-- License: MIT (free, no maintenance-fee model)
-- NuGet: [`AssemblyMeta`](https://www.nuget.org/packages/AssemblyMeta) (Trusted Publishing, tag-triggered releases)
-- Repository: [`Skymly/AssemblyMeta`](https://github.com/Skymly/AssemblyMeta)
+## Installation
 
-## Status
+Install the meta-package (or any individual sub-package listed below):
 
-The behavior of 1.0.0 is recorded in [CHANGELOG.md](CHANGELOG.md). The meta-package aggregates AssemblyInfo, Constants, Project, Metadata, Git, Resources and Strings. Generators are `IIncrementalGenerator`; data flows in as a single Base64 payload via `build_property.*`, without `AdditionalFiles`. The docs site builds with `dotnet docfx docs/docfx.json` into `artifacts/docs`.
+```bash
+dotnet add package AssemblyMeta
+```
+
+## Overview
+
+The `AssemblyMeta` meta-package aggregates seven `IIncrementalGenerator` sub-packages (`AssemblyInfo`, `Constants`, `Project`, `Metadata`, `Git`, `Resources`, and `Strings`) for both C# and Visual Basic. Payload generators receive a single Base64 `build_property.*` payload without `AdditionalFiles`; `Strings` reads `.resx` files via `AdditionalFiles`.
 
 - Architecture (Chinese): [docs/架构.md](docs/架构.md)
 - Usage guide (Chinese): [docs/使用说明.md](docs/使用说明.md)
 - End-to-end verification: `./eng/verify.ps1`
-
-## Release
-
-The package version lives only in `Directory.Build.props` as `AssemblyMetaPackageVersion`. Push a tag `v` plus that version. The current version is `1.2.0`, so push `v1.2.0`.
-
-`.github/workflows/release.yml` runs `./eng/verify.ps1` on that tag, then publishes to `https://api.nuget.org/v3/index.json` via NuGet Trusted Publishing. The seven sub-packages go first, then the meta-package, then a GitHub Release is created from the matching `CHANGELOG.md` section. No long-lived API key is used and no NuGet secret lives in the repo. Only tags pushed by `Skymly` or `wys0610` publish; agent-pushed tags resolve via `github.triggering_actor`. Tags from anyone else fail the release instead of being silently skipped.
-
-The nuget.org policy trusts the `Skymly/AssemblyMeta` repository, the `release.yml` workflow filename, package owner `Skym`, and package names `AssemblyMeta*`. The job must not add a GitHub Environment — the policy has none. A successful publish is required within 7 days of policy creation for it to become permanent.
+- Release history: [CHANGELOG.md](CHANGELOG.md) · Docs site build: `dotnet docfx docs/docfx.json` → `artifacts/docs`
 
 ## Differences vs ThisAssembly
 
@@ -98,7 +100,8 @@ Key points:
 - Unit: Roslyn compilation assertions (`Microsoft.CodeAnalysis.CSharp` drives the generator and checks the emitted syntax trees)
 - e2e: `samples/` projects run real `dotnet build` and assert constants in the compiled output
 
-## References
+## Release & References
 
+- Releases are tag-triggered via NuGet Trusted Publishing (OIDC); see [docs/releasing.md](docs/releasing.md).
 - ThisAssembly source: [devlooped/ThisAssembly](https://github.com/devlooped/ThisAssembly)
 - Key MSBuild mechanisms: `CompilerVisibleProperty`, `CompilerVisibleItemMetadata`, `EnableSourceControlManagerQueries`
