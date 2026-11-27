@@ -2,7 +2,12 @@
 
 [English](README.md) | **简体中文** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md)
 
-对标 [ThisAssembly](https://clarius.org/ThisAssembly)：把项目/程序集元信息在编译期生成为强类型常量（Roslyn Source Generator），消除运行时反射样板代码。
+[![Verify](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml/badge.svg)](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml)
+[![NuGet](https://img.shields.io/nuget/v/AssemblyMeta?label=NuGet&logo=nuget)](https://www.nuget.org/packages/AssemblyMeta)
+[![GitHub Release](https://img.shields.io/github/v/release/Skymly/AssemblyMeta?label=Release)](https://github.com/Skymly/AssemblyMeta/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+对标 [ThisAssembly](https://clarius.org/ThisAssembly)：基于 Roslyn 增量源生成器，将 MSBuild、程序集、Git、资源与字符串元信息在编译期生成为强类型 C# 和 Visual Basic 常量——MIT 许可，无运行时反射样板代码。
 
 ```csharp
 // 代替 Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyVersionAttribute>()...
@@ -11,25 +16,22 @@ var version = AssemblyMeta.Info.Version;
 var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
 
-- License：MIT（纯免费，无维护费模式）
-- NuGet：[`AssemblyMeta`](https://www.nuget.org/packages/AssemblyMeta)（Trusted Publishing，标签触发发布）
-- 仓库：[`Skymly/AssemblyMeta`](https://github.com/Skymly/AssemblyMeta)
+## 安装
 
-## 当前进度
+安装元包（或按需安装下方任一子包）：
 
-1.0.0 的行为记在 [CHANGELOG.md](CHANGELOG.md)。元包聚合 AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings。生成器是 `IIncrementalGenerator`。没有文件锚点的数据经 Base64 载荷进入 `build_property.*`；Strings 的 resx 文件内容走 `AdditionalFiles`，IDE 保存即刷新。文档站用 `dotnet docfx docs/docfx.json` 构建到 `artifacts/docs`。
+```bash
+dotnet add package AssemblyMeta
+```
+
+## 概览
+
+`AssemblyMeta` 元包聚合七个 `IIncrementalGenerator` 子包（`AssemblyInfo`、`Constants`、`Project`、`Metadata`、`Git`、`Resources`、`Strings`），同时支持 C# 与 Visual Basic。无文件锚点的数据经 Base64 载荷进入 `build_property.*`；`Strings` 的 `.resx` 文件走 `AdditionalFiles`，IDE 保存即刷新。
 
 - 架构说明：[docs/架构.md](docs/架构.md)
 - 使用说明：[docs/使用说明.md](docs/使用说明.md)
 - 端到端验证：`./eng/verify.ps1`
-
-## 发布
-
-包版本只有 `Directory.Build.props` 的 `AssemblyMetaPackageVersion`。推送标签 `v` 加这个版本。当前版本是 `1.2.0`，推 `v1.2.0`。
-
-`.github/workflows/release.yml` 在该标签上跑 `./eng/verify.ps1`，再用 NuGet Trusted Publishing 发到 `https://api.nuget.org/v3/index.json`。先推七个子包，再推元包，然后用 `CHANGELOG.md` 对应一节建 GitHub Release。不使用长期 API key，仓库里也不放 NuGet 密钥。只有 `Skymly` 或 `wys0610` 推送的标签会发布；代理代推时认 `github.triggering_actor`。其他人推标签会让这次发布失败，而不是静默跳过。
-
-nuget.org 策略认的是仓库 `Skymly/AssemblyMeta`、工作流文件名 `release.yml`、包主 `Skym`、包名 `AssemblyMeta*`。这个 job 不能加 GitHub Environment，策略里没填。策略创建后 7 天内要有一次成功发布，才会永久生效。
+- 变更记录：[CHANGELOG.md](CHANGELOG.md) · 文档站构建：`dotnet docfx docs/docfx.json` → `artifacts/docs`
 
 ## 差异化（vs ThisAssembly）
 
@@ -98,7 +100,8 @@ MSBuild props/targets
 - 单测：Roslyn 编译断言（`Microsoft.CodeAnalysis.CSharp` 驱动 generator，校验生成语法树）
 - e2e：`samples/` 样例项目走真实 `dotnet build`，断言编译产物中的常量值
 
-## 参考
+## 发布与参考
 
+- 发布由标签触发，并通过 NuGet Trusted Publishing（OIDC）自动推送；详见 [docs/releasing.md](docs/releasing.md)。
 - ThisAssembly 源码：[devlooped/ThisAssembly](https://github.com/devlooped/ThisAssembly)
 - 关键 MSBuild 机制：`CompilerVisibleProperty`、`CompilerVisibleItemMetadata`、`EnableSourceControlManagerQueries`

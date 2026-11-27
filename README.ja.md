@@ -2,7 +2,12 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | **日本語**
 
-[ThisAssembly](https://clarius.org/ThisAssembly) に着想を得た Roslyn ソースジェネレーターです。プロジェクト／アセンブリのメタ情報をコンパイル時に厳密型定数として生成し、実行時リフレクションのボイラープレートを排除します。
+[![Verify](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml/badge.svg)](https://github.com/Skymly/AssemblyMeta/actions/workflows/verify.yml)
+[![NuGet](https://img.shields.io/nuget/v/AssemblyMeta?label=NuGet&logo=nuget)](https://www.nuget.org/packages/AssemblyMeta)
+[![GitHub Release](https://img.shields.io/github/v/release/Skymly/AssemblyMeta?label=Release)](https://github.com/Skymly/AssemblyMeta/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+[ThisAssembly](https://clarius.org/ThisAssembly) に着想を得た Roslyn インクリメンタルソースジェネレーターです。MSBuild・アセンブリ・Git・リソース・文字列のメタ情報をコンパイル時に C# / Visual Basic の厳密型定数として生成し、MIT ライセンスで実行時リフレクションのボイラープレートを排除します。
 
 ```csharp
 // Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyVersionAttribute>()... の代わりに
@@ -11,25 +16,22 @@ var version = AssemblyMeta.Info.Version;
 var timeout = TimeSpan.FromSeconds(AssemblyMeta.Constants.Http.TimeoutSeconds);
 ```
 
-- ライセンス：MIT（完全無料・メンテナンス料モデルなし）
-- NuGet：[`AssemblyMeta`](https://www.nuget.org/packages/AssemblyMeta)（Trusted Publishing、タグ駆動リリース）
-- リポジトリ：[`Skymly/AssemblyMeta`](https://github.com/Skymly/AssemblyMeta)
+## インストール
 
-## 現在の状況
+メタパッケージ（または後述の各サブパッケージ）をインストールします：
 
-1.0.0 の挙動は [CHANGELOG.md](CHANGELOG.md) に記録されています。メタパッケージは AssemblyInfo、Constants、Project、Metadata、Git、Resources、Strings を集約します。ジェネレーターは `IIncrementalGenerator` を実装し、ファイルアンカーのないデータは `build_property.*` 経由の単一 Base64 ペイロードとして渡されます。Strings の `.resx` は `AdditionalFiles` 経由で読み取られ、IDE 保存時に即座に再生成されます。ドキュメントサイトは `dotnet docfx docs/docfx.json` で `artifacts/docs` にビルドされます。
+```bash
+dotnet add package AssemblyMeta
+```
+
+## 概要
+
+`AssemblyMeta` メタパッケージは 7 つの `IIncrementalGenerator` サブパッケージ（`AssemblyInfo`、`Constants`、`Project`、`Metadata`、`Git`、`Resources`、`Strings`）を集約し、C# と Visual Basic の双方に対応します。ファイルアンカーのないデータは単一 Base64 ペイロードとして `build_property.*` 経由で渡され、`Strings` の `.resx` は `AdditionalFiles` 経由で読み取られます。
 
 - アーキテクチャ（中国語）：[docs/架构.md](docs/架构.md)
 - 利用ガイド（中国語）：[docs/使用说明.md](docs/使用说明.md)
 - E2E 検証：`./eng/verify.ps1`
-
-## リリース
-
-パッケージバージョンは `Directory.Build.props` の `AssemblyMetaPackageVersion` のみに定義されています。`v` + そのバージョンのタグをプッシュします（現在が `1.2.0` なら `v1.2.0`）。
-
-`.github/workflows/release.yml` はそのタグで `./eng/verify.ps1` を実行したのち、NuGet Trusted Publishing を用いて `https://api.nuget.org/v3/index.json` へ公開します。7 つのサブパッケージを先にプッシュし、続けてメタパッケージを公開したあと、対応する `CHANGELOG.md` セクションから GitHub Release を作成します。長期 API キーは使わず、リポジトリに NuGet シークレットも保存しません。`Skymly` または `wys0610` がプッシュしたタグのみ公開され、エージェント経由のプッシュは `github.triggering_actor` で判定されます。それ以外のユーザーがプッシュしたタグはサイレントスキップではなく失敗します。
-
-nuget.org 側のポリシーは `Skymly/AssemblyMeta` リポジトリ、`release.yml` ワークフローファイル名、パッケージオーナー `Skym`、パッケージ名 `AssemblyMeta*` を信頼します。ポリシーに GitHub Environment が設定されていないため、ジョブ側にも Environment を追加してはいけません。ポリシー作成から 7 日以内に 1 回公開を成功させると永続化されます。
+- 変更履歴：[CHANGELOG.md](CHANGELOG.md) · ドキュメントビルド：`dotnet docfx docs/docfx.json` → `artifacts/docs`
 
 ## ThisAssembly との違い
 
@@ -98,7 +100,8 @@ MSBuild props/targets
 - 単体テスト：Roslyn コンパイルアサーション（`Microsoft.CodeAnalysis.CSharp` でジェネレーターを駆動し、出力構文木を検証）
 - E2E：`samples/` のサンプルプロジェクトを実際に `dotnet build` し、コンパイル結果内の定数値を検証
 
-## 参考
+## リリース・参考
 
+- リリースはタグ駆動で NuGet Trusted Publishing（OIDC）により公開されます。詳細は [docs/releasing.md](docs/releasing.md) を参照してください。
 - ThisAssembly ソース：[devlooped/ThisAssembly](https://github.com/devlooped/ThisAssembly)
 - 主要な MSBuild 機構：`CompilerVisibleProperty`、`CompilerVisibleItemMetadata`、`EnableSourceControlManagerQueries`
